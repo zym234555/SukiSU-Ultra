@@ -37,6 +37,10 @@ bool ksu_devpts_hook __read_mostly = true;
 
 extern void ksu_escape_to_root();
 
+#ifndef CONFIG_KSU_HOOK_KPROBES
+static bool ksu_sucompat_non_kp __read_mostly = true;
+#endif
+
 static void __user *userspace_stack_buffer(const void *d, size_t len)
 {
 	/* To avoid having to mmap a page in userspace, just write below the stack
@@ -62,6 +66,12 @@ static char __user *ksud_user_path(void)
 int ksu_handle_faccessat(int *dfd, const char __user **filename_user, int *mode, int *__unused_flags)
 {
 	const char su[] = SU_PATH;
+
+#ifndef CONFIG_KSU_HOOK_KPROBES
+	if (!ksu_sucompat_non_kp) {
+ 		return 0;
+ 	}
+#endif
 
 #ifndef CONFIG_KSU_HOOK_KPROBES
 	if (!ksu_faccessat_hook) {
@@ -115,6 +125,12 @@ int ksu_handle_stat(int *dfd, const char __user **filename_user, int *flags)
 	const char su[] = SU_PATH;
 
 #ifndef CONFIG_KSU_HOOK_KPROBES
+	if (!ksu_sucompat_non_kp) {
+ 		return 0;
+ 	}
+#endif
+
+#ifndef CONFIG_KSU_HOOK_KPROBES
 	if (!ksu_stat_hook){
 		return 0;
 	}
@@ -160,6 +176,13 @@ int ksu_handle_execveat_sucompat(int *fd, struct filename **filename_ptr, void *
 	struct filename *filename;
     const char su[] = SU_PATH;
     const char ksud[] = KSUD_PATH;
+
+#ifndef CONFIG_KSU_HOOK_KPROBES
+	if (!ksu_sucompat_non_kp) {
+ 		return 0;
+ 	}
+#endif
+
 #ifndef CONFIG_KSU_HOOK_KPROBES
 	if (!ksu_execveat_sucompat_hook) {
 		return 0;
@@ -194,6 +217,13 @@ int ksu_handle_execve_sucompat(int *fd, const char __user **filename_user, void 
 {
 	const char su[] = SU_PATH;
 	char path[sizeof(su) + 1];
+
+
+#ifndef CONFIG_KSU_HOOK_KPROBES
+	if (!ksu_sucompat_non_kp){
+ 		return 0;
+ 	}
+#endif
 
 #ifndef CONFIG_KSU_HOOK_KPROBES
 	if (!ksu_execve_sucompat_hook) {
@@ -350,6 +380,7 @@ void ksu_sucompat_init()
 	ksu_execve_sucompat_hook = true;
 	ksu_execveat_sucompat_hook = true;
 	ksu_devpts_hook = true;
+	ksu_sucompat_non_kp = true;
 	pr_info("ksu_sucompat_init: hooks enabled: execve/execveat_su, faccessat, stat, devpts\n");
 #endif
 }
@@ -367,6 +398,7 @@ void ksu_sucompat_exit()
 	ksu_execve_sucompat_hook = false;
 	ksu_execveat_sucompat_hook = false;
 	ksu_devpts_hook = false;
+	ksu_sucompat_non_kp = false;
 	pr_info("ksu_sucompat_exit: hooks disabled: execve/execveat_su, faccessat, stat, devpts\n");
 #endif
 }
