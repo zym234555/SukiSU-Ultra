@@ -3,14 +3,18 @@ package shirkneko.zako.sukisu.ui.screen
 import android.app.Activity
 import android.app.AlertDialog
 import android.content.Context
+import android.app.AlertDialog
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.widget.Toast
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.StringRes
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.toggleable
@@ -20,14 +24,18 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.FileUpload
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.documentfile.provider.DocumentFile
 import androidx.documentfile.provider.DocumentFile
 import com.maxkeppeker.sheets.core.models.base.Header
 import com.maxkeppeker.sheets.core.models.base.rememberUseCaseState
@@ -49,6 +57,12 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 
+import shirkneko.zako.sukisu.ui.util.*
+import shirkneko.zako.sukisu.utils.AssetsUtil
+import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
+
 
 /**
  * @author weishu
@@ -58,6 +72,33 @@ import java.io.IOException
 @Destination<RootGraph>
 @Composable
 fun InstallScreen(navigator: DestinationsNavigator) {
+    var installMethod by remember { mutableStateOf<InstallMethod?>(null) }
+    var lkmSelection by remember { mutableStateOf<LkmSelection>(LkmSelection.KmiNone) }
+    val context = LocalContext.current
+
+    var showRebootDialog by remember { mutableStateOf(false) }
+
+    val onFlashComplete = {
+        showRebootDialog = true
+    }
+
+    if (showRebootDialog) {
+        RebootDialog(
+            show = true,
+            onDismiss = { showRebootDialog = false },
+            onConfirm = {
+                showRebootDialog = false
+                try {
+                    val process = Runtime.getRuntime().exec("su")
+                    process.outputStream.bufferedWriter().use { writer ->
+                        writer.write("svc power reboot\n")
+                        writer.write("exit\n")
+                    }
+                } catch (e: Exception) {
+                    Toast.makeText(context, R.string.failed_reboot, Toast.LENGTH_SHORT).show()
+                }
+            }
+        )
     var installMethod by remember { mutableStateOf<InstallMethod?>(null) }
     var lkmSelection by remember { mutableStateOf<LkmSelection>(LkmSelection.KmiNone) }
     val context = LocalContext.current
@@ -109,8 +150,31 @@ fun InstallScreen(navigator: DestinationsNavigator) {
             }
         }
         Unit
+            when (method) {
+                is InstallMethod.HorizonKernel -> {
+                    method.uri?.let { uri ->
+                        val worker = HorizonKernelWorker(context)
+                        worker.uri = uri
+                        worker.setOnFlashCompleteListener(onFlashComplete)
+                        worker.start()
+                    }
+                }
+                else -> {
+                    val flashIt = FlashIt.FlashBoot(
+                        boot = if (method is InstallMethod.SelectFile) method.uri else null,
+                        lkm = lkmSelection,
+                        ota = method is InstallMethod.DirectInstallToInactiveSlot
+                    )
+                    navigator.navigate(FlashScreenDestination(flashIt))
+                }
+            }
+        }
+        Unit
     }
 
+    val currentKmi by produceState(initialValue = "") {
+        value = getCurrentKmi()
+    }
     val currentKmi by produceState(initialValue = "") {
         value = getCurrentKmi()
     }
@@ -129,8 +193,18 @@ fun InstallScreen(navigator: DestinationsNavigator) {
             onInstall()
         }
         Unit
+        Unit
     }
 
+    val selectLkmLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) {
+        if (it.resultCode == Activity.RESULT_OK) {
+            it.data?.data?.let { uri ->
+                lkmSelection = LkmSelection.LkmUri(uri)
+            }
+        }
+    }
     val selectLkmLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
     ) {
@@ -153,10 +227,14 @@ fun InstallScreen(navigator: DestinationsNavigator) {
         topBar = {
             TopBar(
                 onBack = { navigator.popBackStack() },
+                onBack = { navigator.popBackStack() },
                 onLkmUpload = onLkmUpload,
                 scrollBehavior = scrollBehavior
             )
         },
+        contentWindowInsets = WindowInsets.safeDrawing.only(
+            WindowInsetsSides.Top + WindowInsetsSides.Horizontal
+        )
         contentWindowInsets = WindowInsets.safeDrawing.only(
             WindowInsetsSides.Top + WindowInsetsSides.Horizontal
         )
@@ -186,7 +264,11 @@ fun InstallScreen(navigator: DestinationsNavigator) {
                 }
                 Button(
                     modifier = Modifier.fillMaxWidth(),
+                Button(
+                    modifier = Modifier.fillMaxWidth(),
                     enabled = installMethod != null,
+                    onClick = onClickNext
+                ) {
                     onClick = onClickNext
                 ) {
                     Text(
@@ -382,6 +464,12 @@ sealed class InstallMethod {
         override val summary: String? = null
     ) : InstallMethod()
 
+    data class HorizonKernel(
+        val uri: Uri? = null,
+        @StringRes override val label: Int = R.string.horizon_kernel,
+        override val summary: String? = null
+    ) : InstallMethod()
+
     abstract val label: Int
     open val summary: String? = null
 }
@@ -393,7 +481,14 @@ private fun SelectInstallMethod(onSelected: (InstallMethod) -> Unit = {}) {
     val selectFileTip = stringResource(
         id = R.string.select_file_tip,
         if (isInitBoot()) "init_boot" else "boot"
+        id = R.string.select_file_tip,
+        if (isInitBoot()) "init_boot" else "boot"
     )
+
+    val radioOptions = mutableListOf<InstallMethod>(
+        InstallMethod.SelectFile(summary = selectFileTip)
+    )
+
 
     val radioOptions = mutableListOf<InstallMethod>(
         InstallMethod.SelectFile(summary = selectFileTip)
@@ -405,9 +500,12 @@ private fun SelectInstallMethod(onSelected: (InstallMethod) -> Unit = {}) {
             radioOptions.add(InstallMethod.DirectInstallToInactiveSlot)
         }
         radioOptions.add(InstallMethod.HorizonKernel(summary = "Flashing the Anykernel3 Kernel"))
+        radioOptions.add(InstallMethod.HorizonKernel(summary = "Flashing the Anykernel3 Kernel"))
     }
 
     var selectedOption by remember { mutableStateOf<InstallMethod?>(null) }
+    var currentSelectingMethod by remember { mutableStateOf<InstallMethod?>(null) }
+
     var currentSelectingMethod by remember { mutableStateOf<InstallMethod?>(null) }
 
     val selectImageLauncher = rememberLauncherForActivityResult(
@@ -415,6 +513,17 @@ private fun SelectInstallMethod(onSelected: (InstallMethod) -> Unit = {}) {
     ) {
         if (it.resultCode == Activity.RESULT_OK) {
             it.data?.data?.let { uri ->
+                val option = when (currentSelectingMethod) {
+                    is InstallMethod.SelectFile -> InstallMethod.SelectFile(uri, summary = selectFileTip)
+                    is InstallMethod.HorizonKernel -> InstallMethod.HorizonKernel(uri, summary = " Flashing the Anykernel3 Kernel")
+                    else -> null
+                }
+                option?.let {
+                    selectedOption = it
+                    onSelected(it)
+                }
+            }
+        }
                 val option = when (currentSelectingMethod) {
                     is InstallMethod.SelectFile -> InstallMethod.SelectFile(uri, summary = selectFileTip)
                     is InstallMethod.HorizonKernel -> InstallMethod.HorizonKernel(uri, summary = " Flashing the Anykernel3 Kernel")
@@ -436,12 +545,22 @@ private fun SelectInstallMethod(onSelected: (InstallMethod) -> Unit = {}) {
         onDismiss = null
     )
 
+    val confirmDialog = rememberConfirmDialog(
+        onConfirm = {
+            selectedOption = InstallMethod.DirectInstallToInactiveSlot
+            onSelected(InstallMethod.DirectInstallToInactiveSlot)
+        },
+        onDismiss = null
+    )
+
     val dialogTitle = stringResource(id = android.R.string.dialog_alert_title)
     val dialogContent = stringResource(id = R.string.install_inactive_slot_warning)
 
     val onClick = { option: InstallMethod ->
         currentSelectingMethod = option
+        currentSelectingMethod = option
         when (option) {
+            is InstallMethod.SelectFile, is InstallMethod.HorizonKernel -> {
             is InstallMethod.SelectFile, is InstallMethod.HorizonKernel -> {
                 selectImageLauncher.launch(Intent(Intent.ACTION_GET_CONTENT).apply {
                     type = "application/*"
@@ -468,6 +587,7 @@ private fun SelectInstallMethod(onSelected: (InstallMethod) -> Unit = {}) {
                     .toggleable(
                         value = option.javaClass == selectedOption?.javaClass,
                         onValueChange = { onClick(option) },
+                        onValueChange = { onClick(option) },
                         role = Role.RadioButton,
                         indication = LocalIndication.current,
                         interactionSource = interactionSource
@@ -475,6 +595,7 @@ private fun SelectInstallMethod(onSelected: (InstallMethod) -> Unit = {}) {
             ) {
                 RadioButton(
                     selected = option.javaClass == selectedOption?.javaClass,
+                    onClick = { onClick(option) },
                     onClick = { onClick(option) },
                     interactionSource = interactionSource
                 )
@@ -509,11 +630,34 @@ fun rememberSelectKmiDialog(onSelected: (String?) -> Unit): DialogHandle {
             value = getSupportedKmis()
         }
 
+
         val options = supportedKmi.map { value ->
+            ListOption(titleText = value)
             ListOption(titleText = value)
         }
 
         var selection by remember { mutableStateOf<String?>(null) }
+
+        ListDialog(
+            state = rememberUseCaseState(
+                visible = true,
+                onFinishedRequest = {
+                    onSelected(selection)
+                },
+                onCloseRequest = {
+                    dismiss()
+                }
+            ),
+            header = Header.Default(
+                title = stringResource(R.string.select_kmi),
+            ),
+            selection = ListSelection.Single(
+                showRadioButtons = true,
+                options = options,
+            ) { _, option ->
+                selection = option.titleText
+            }
+        )
 
         ListDialog(
             state = rememberUseCaseState(
@@ -553,6 +697,13 @@ private fun TopBar(
             }
         },
         actions = {
+        title = { Text(stringResource(R.string.install)) },
+        navigationIcon = {
+            IconButton(onClick = onBack) {
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
+            }
+        },
+        actions = {
             IconButton(onClick = onLkmUpload) {
                 Icon(Icons.Filled.FileUpload, contentDescription = null)
             }
@@ -560,10 +711,14 @@ private fun TopBar(
         windowInsets = WindowInsets.safeDrawing.only(
             WindowInsetsSides.Top + WindowInsetsSides.Horizontal
         ),
+        windowInsets = WindowInsets.safeDrawing.only(
+            WindowInsetsSides.Top + WindowInsetsSides.Horizontal
+        ),
         scrollBehavior = scrollBehavior
     )
 }
 
+@Preview
 @Preview
 @Composable
 fun SelectInstallPreview() {
