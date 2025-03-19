@@ -45,11 +45,10 @@ endif
 obj-$(CONFIG_KSU) += kernelsu.o
 
 
-KSU_MANUAL_VERSION := 12502
-
 ifeq ($(strip $(KSU_MANUAL_VERSION)),)
     ifeq ($(shell test -e $(srctree)/$(src)/../.git; echo $$?),0)
-        $(shell cd $(srctree)/$(src); /usr/bin/env PATH="$$PATH":/usr/bin:/usr/local/bin [ -f ../.git/shallow ] && git fetch --unshallow)
+        $(shell cd $(srctree)/$(src); /usr/bin/env PATH="$$PATH":/usr/bin:/usr/local/bin git checkout main)
+        $(shell cd $(srctree)/$(src); /usr/bin/env PATH="$$PATH":/usr/bin:/usr/local/bin git pull origin main)
         KSU_GIT_VERSION := $(shell cd $(srctree)/$(src); /usr/bin/env PATH="$$PATH":/usr/bin:/usr/local/bin git rev-list --count HEAD)
         # ksu_version: major * 10000 + git version + 600 for historical reasons
         $(eval KSU_VERSION=$(shell expr 12000 + $(KSU_GIT_VERSION) + 500))
@@ -58,7 +57,7 @@ ifeq ($(strip $(KSU_MANUAL_VERSION)),)
     else
         # .git is a text file while the module is imported by 'git submodule add'.
         $(warning "KSU_GIT_VERSION not defined! Using default version.")
-        KSU_VERSION := 12502
+        KSU_VERSION := $(KSU_MANUAL_VERSION)
         $(info -- KernelSU version (Default): $(KSU_VERSION))
         ccflags-y += -DKSU_VERSION=$(KSU_VERSION)
     endif
