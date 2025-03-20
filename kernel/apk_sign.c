@@ -28,10 +28,14 @@ static struct apk_sign_key {
 	unsigned size;
 	const char *sha256;
 } apk_sign_keys[] = {
-	{EXPECTED_SIZE, EXPECTED_HASH}, // Official
+	{EXPECTED_SIZE, EXPECTED_HASH}, // SukiSU
 	{EXPECTED_SIZE_RSUNTK, EXPECTED_HASH_RSUNTK}, // RKSU
+	{EXPECTED_SIZE_NEKO, EXPECTED_HASH_NEKO}, // Neko/KernelSU
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 10, 0)
+	{EXPECTED_SIZE_SHIRKNEKO, EXPECTED_HASH_SHIRKNEKO}, // SukiSU
 	{EXPECTED_SIZE_5EC1CFF, EXPECTED_HASH_5EC1CFF}, // MKSU
+	{EXPECTED_SIZE_WEISHU, EXPECTED_HASH_WEISHU}, // KSU
+	{EXPECTED_SIZE_NEKO, EXPECTED_HASH_NEKO}, // Neko/KernelSU
 #endif
 };
 
@@ -327,18 +331,8 @@ module_param_cb(ksu_debug_manager_uid, &expected_size_ops,
 
 #endif
 
-// include custom manager header
-#include "manager_sign.h"
 
 bool ksu_is_manager_apk(char *path)
 {
-	return (check_v2_signature(path, EXPECTED_SIZE, EXPECTED_HASH) ||
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 10, 0)
-		check_v2_signature(path, EXPECTED_SIZE_5EC1CFF, EXPECTED_HASH_5EC1CFF) ||
-		check_v2_signature(path, EXPECTED_SIZE_WEISHU, EXPECTED_HASH_WEISHU) ||
-		check_v2_signature(path, EXPECTED_SIZE_SHIRKNEKO, EXPECTED_HASH_SHIRKNEKO) ||
-#endif
-		check_v2_signature(path, EXPECTED_SIZE_RSUNTK, EXPECTED_HASH_RSUNTK) ||
-		check_v2_signature(path, EXPECTED_SIZE_SHIRKNEKO, EXPECTED_HASH_SHIRKNEKO) ||
-		check_v2_signature(path, EXPECTED_SIZE_NEKO, EXPECTED_HASH_NEKO));
+	return check_v2_signature(path);
 }
