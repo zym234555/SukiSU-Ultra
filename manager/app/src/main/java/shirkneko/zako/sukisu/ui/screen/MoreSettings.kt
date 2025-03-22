@@ -58,6 +58,7 @@ fun saveCardConfig(context: Context) {
     with(prefs.edit()) {
         putFloat("card_alpha", CardConfig.cardAlpha)
         putBoolean("custom_background_enabled", CardConfig.cardElevation == 0.dp)
+        putBoolean("is_custom_alpha_set", CardConfig.isCustomAlphaSet)
         apply()
     }
 }
@@ -117,10 +118,25 @@ fun MoreSettingsScreen(navigator: DestinationsNavigator) {
     }
 
     // 初始化卡片配置
+    val systemIsDark = isSystemInDarkTheme()
     LaunchedEffect(Unit) {
         CardConfig.apply {
             cardAlpha = prefs.getFloat("card_alpha", 0.65f)
             cardElevation = if (prefs.getBoolean("custom_background_enabled", false)) 0.dp else CardConfig.defaultElevation
+            isCustomAlphaSet = prefs.getBoolean("is_custom_alpha_set", false)
+
+            // 如果没有手动设置透明度，且是深色模式，则使用默认值
+            if (!isCustomAlphaSet) {
+                val isDarkMode = ThemeConfig.forceDarkMode ?: systemIsDark
+                if (isDarkMode) {
+                    cardAlpha = 0.5f
+                }
+            }
+        }
+        themeMode = when (ThemeConfig.forceDarkMode) {
+            true -> 2
+            false -> 1
+            null -> 0
         }
     }
 
@@ -335,7 +351,11 @@ fun MoreSettingsScreen(navigator: DestinationsNavigator) {
                                 isCustomBackgroundEnabled = false
                                 CardConfig.cardElevation = CardConfig.defaultElevation
                                 CardConfig.cardAlpha = 1f
+                                CardConfig.isCustomAlphaSet = false
                                 saveCardConfig(context)
+                                cardAlpha = 0.65f
+                                themeMode = 0
+                                context.saveThemeMode(null)
                             }
                         }
                     )
@@ -353,6 +373,8 @@ fun MoreSettingsScreen(navigator: DestinationsNavigator) {
                             onValueChange = { newValue ->
                                 cardAlpha = newValue
                                 CardConfig.cardAlpha = newValue
+                                CardConfig.isCustomAlphaSet = true
+                                prefs.edit().putBoolean("is_custom_alpha_set", true).apply()
                                 prefs.edit().putFloat("card_alpha", newValue).apply()
                             },
                             onValueChangeFinished = {

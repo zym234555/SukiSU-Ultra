@@ -149,9 +149,6 @@ fun KernelSUTheme(
 
     if (darkTheme && !dynamicColor) {
         CardConfig.setDarkModeDefaults()
-    } else {
-        CardConfig.cardAlpha = 1f
-        CardConfig.cardElevation = CardConfig.defaultElevation
     }
 
     CardConfig.updateShadowEnabled(!isDarkModeWithCustomBackground)

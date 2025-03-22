@@ -489,7 +489,7 @@ private fun InfoCard() {
 
 
                 Spacer(Modifier.height(16.dp))
-                val deviceModel = Build.DEVICE
+                val deviceModel = getDeviceModel(context)
                 InfoCardItem(stringResource(R.string.home_device_model), deviceModel)
 
 
@@ -571,5 +571,23 @@ private fun WarningCardPreview() {
             message = "Warning message ",
             MaterialTheme.colorScheme.outlineVariant,
             onClick = {})
+    }
+}
+
+private fun getDeviceModel(context: Context): String {
+    return try {
+        val marketName = context.getSystemService(Context.APP_OPS_SERVICE)?.let { appOps ->
+            val systemProperties = Class.forName("android.os.SystemProperties")
+            val getMethod = systemProperties.getMethod("get", String::class.java, String::class.java)
+            getMethod.invoke(null, "ro.product.marketname", "") as String
+        } ?: ""
+
+        if (marketName.isNotEmpty()) {
+            marketName
+        } else {
+            Build.DEVICE
+        }
+    } catch (e: Exception) {
+        Build.DEVICE
     }
 }

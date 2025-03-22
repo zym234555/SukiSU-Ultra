@@ -17,12 +17,14 @@ object CardConfig {
     var cardAlpha by mutableStateOf(1f)
     var cardElevation by mutableStateOf(defaultElevation)
     var isShadowEnabled by mutableStateOf(true)
+    var isCustomAlphaSet by mutableStateOf(false)
 
     fun save(context: Context) {
         val prefs = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
         prefs.edit().apply {
             putFloat("card_alpha", cardAlpha)
             putBoolean("custom_background_enabled", cardElevation == 0.dp)
+            putBoolean("is_custom_alpha_set", isCustomAlphaSet)
             apply()
         }
     }
@@ -31,6 +33,7 @@ object CardConfig {
         val prefs = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
         cardAlpha = prefs.getFloat("card_alpha", 1f)
         cardElevation = if (prefs.getBoolean("custom_background_enabled", false)) 0.dp else defaultElevation
+        isCustomAlphaSet = prefs.getBoolean("is_custom_alpha_set", false)
     }
 
     fun updateShadowEnabled(enabled: Boolean) {
@@ -39,8 +42,10 @@ object CardConfig {
     }
 
     fun setDarkModeDefaults() {
+        if (!isCustomAlphaSet) {
         cardAlpha = 0.5f
         cardElevation = 0.dp
+        }
     }
 }
 
