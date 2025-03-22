@@ -49,6 +49,9 @@ import shirkneko.zako.sukisu.ui.util.getSuSFSFeatures
 import shirkneko.zako.sukisu.ui.util.susfsSUS_SU_0
 import shirkneko.zako.sukisu.ui.util.susfsSUS_SU_2
 import shirkneko.zako.sukisu.ui.util.susfsSUS_SU_Mode
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.ui.input.pointer.pointerInput
+
 
 fun saveCardConfig(context: Context) {
     val prefs = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
@@ -314,73 +317,73 @@ fun MoreSettingsScreen(navigator: DestinationsNavigator) {
                     )
                 }
             }
-
             // 自定义背景开关
-            SwitchItem(
-                icon = Icons.Filled.Wallpaper,
-                title = stringResource(id = R.string.settings_custom_background),
-                summary = stringResource(id = R.string.settings_custom_background_summary),
-                checked = isCustomBackgroundEnabled
-            ) { isChecked ->
-                if (isChecked) {
-                    pickImageLauncher.launch("image/*")
-                } else {
-                    context.saveCustomBackground(null)
-                    isCustomBackgroundEnabled = false
-                    CardConfig.cardElevation = CardConfig.defaultElevation
-                    CardConfig.cardAlpha = 1f
-                    saveCardConfig(context)
+            ListItem(
+                leadingContent = { Icon(Icons.Filled.Wallpaper, null) },
+                headlineContent = { Text(stringResource(id = R.string.settings_custom_background)) },
+                supportingContent = { Text(stringResource(id = R.string.settings_custom_background_summary)) },
+                modifier = Modifier.clickable {
+                    if (isCustomBackgroundEnabled) {
+                        showCardSettings = !showCardSettings
+                    }
+                },
+                trailingContent = {
+                    Switch(
+                        checked = isCustomBackgroundEnabled,
+                        onCheckedChange = { isChecked ->
+                            if (isChecked) {
+                                pickImageLauncher.launch("image/*")
+                            } else {
+                                context.saveCustomBackground(null)
+                                isCustomBackgroundEnabled = false
+                                CardConfig.cardElevation = CardConfig.defaultElevation
+                                CardConfig.cardAlpha = 1f
+                                saveCardConfig(context)
+                            }
+                        }
+                    )
                 }
-            }
+            )
 
-            // 卡片管理展开控制
-            if (ThemeConfig.customBackgroundUri != null) {
+            if (ThemeConfig.customBackgroundUri != null && showCardSettings) {
+                // 透明度 Slider
                 ListItem(
-                    leadingContent = { Icon(Icons.Default.ExpandMore, null) },
-                    headlineContent = { Text(stringResource(R.string.settings_card_manage)) },
-                    modifier = Modifier.clickable { showCardSettings = !showCardSettings }
+                    leadingContent = { Icon(Icons.Filled.Opacity, null) },
+                    headlineContent = { Text(stringResource(R.string.settings_card_alpha)) },
+                    supportingContent = {
+                        Slider(
+                            value = cardAlpha,
+                            onValueChange = { newValue ->
+                                cardAlpha = newValue
+                                CardConfig.cardAlpha = newValue
+                                prefs.edit().putFloat("card_alpha", newValue).apply()
+                            },
+                            onValueChangeFinished = {
+                                CoroutineScope(Dispatchers.IO).launch {
+                                    saveCardConfig(context)
+                                }
+                            },
+                            valueRange = 0f..1f,
+                            colors = getSliderColors(cardAlpha, useCustomColors = true),
+                            thumb = {
+                                SliderDefaults.Thumb(
+                                    interactionSource = remember { MutableInteractionSource() },
+                                    thumbSize = DpSize(0.dp, 0.dp)
+                                )
+                            }
+                        )
+                    }
                 )
 
-                if (showCardSettings) {
-                    // 透明度 Slider
-                    ListItem(
-                        leadingContent = { Icon(Icons.Filled.Opacity, null) },
-                        headlineContent = { Text(stringResource(R.string.settings_card_alpha)) },
-                        supportingContent = {
-                            Slider(
-                                value = cardAlpha,
-                                onValueChange = { newValue ->
-                                    cardAlpha = newValue
-                                    CardConfig.cardAlpha = newValue
-                                    prefs.edit().putFloat("card_alpha", newValue).apply()
-                                },
-                                onValueChangeFinished = {
-                                    CoroutineScope(Dispatchers.IO).launch {
-                                        saveCardConfig(context)
-                                    }
-                                },
-                                valueRange = 0f..1f,
-                                // 确保使用自定义颜色
-                                colors = getSliderColors(cardAlpha, useCustomColors = true),
-                                thumb = {
-                                    SliderDefaults.Thumb(
-                                        interactionSource = remember { MutableInteractionSource() },
-                                        thumbSize = DpSize(0.dp, 0.dp)
-                                    )
-                                }
-                            )
-                        }
-                    )
+                ListItem(
+                    leadingContent = { Icon(Icons.Filled.DarkMode, null) },
+                    headlineContent = { Text(stringResource(R.string.theme_mode)) },
+                    supportingContent = { Text(themeOptions[themeMode]) },
+                    modifier = Modifier.clickable {
+                        showThemeModeDialog = true
+                    }
+                )
 
-
-                    ListItem(
-                        leadingContent = { Icon(Icons.Filled.DarkMode, null) },
-                        headlineContent = { Text(stringResource(R.string.theme_mode)) },
-                        supportingContent = { Text(themeOptions[themeMode]) },
-                        modifier = Modifier.clickable {
-                            showThemeModeDialog = true
-                        }
-                    )
 
                     // 主题模式选择对话框
                     if (showThemeModeDialog) {
@@ -424,7 +427,6 @@ fun MoreSettingsScreen(navigator: DestinationsNavigator) {
             }
         }
     }
-}
 
 @Composable
 private fun getSliderColors(cardAlpha: Float, useCustomColors: Boolean = false): SliderColors {
