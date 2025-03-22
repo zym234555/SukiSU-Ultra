@@ -112,6 +112,8 @@ import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.util.zip.ZipInputStream
 import androidx.compose.ui.graphics.Color
+import androidx.compose.material3.FloatingActionButtonDefaults
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Destination<RootGraph>
@@ -353,16 +355,20 @@ fun ModuleScreen(navigator: DestinationsNavigator) {
                     icon = {
                         Icon(
                             imageVector = Icons.Filled.Add,
-                            contentDescription = moduleInstall,
-                            tint = buttonTextColor
+                            contentDescription = moduleInstall
                         )
                     },
                     text = {
                         Text(
-                            text = moduleInstall,
-                            color = buttonTextColor
+                            text = moduleInstall
                         )
-                    }
+                    },
+                    elevation = FloatingActionButtonDefaults.elevation(
+                        defaultElevation = 0.dp,
+                        pressedElevation = 0.dp,
+                        focusedElevation = 0.dp,
+                        hoveredElevation = 0.dp
+                    )
                 )
             }
         },

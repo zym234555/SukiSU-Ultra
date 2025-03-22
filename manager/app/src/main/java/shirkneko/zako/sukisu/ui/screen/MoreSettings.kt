@@ -119,7 +119,7 @@ fun MoreSettingsScreen(navigator: DestinationsNavigator) {
     // 初始化卡片配置
     LaunchedEffect(Unit) {
         CardConfig.apply {
-            cardAlpha = prefs.getFloat("card_alpha", 0.85f)
+            cardAlpha = prefs.getFloat("card_alpha", 0.65f)
             cardElevation = if (prefs.getBoolean("custom_background_enabled", false)) 0.dp else CardConfig.defaultElevation
         }
     }
@@ -133,7 +133,6 @@ fun MoreSettingsScreen(navigator: DestinationsNavigator) {
         stringResource(R.string.color_orange) to ThemeColors.Orange,
         stringResource(R.string.color_pink) to ThemeColors.Pink,
         stringResource(R.string.color_gray) to ThemeColors.Gray,
-        stringResource(R.string.color_ivory) to ThemeColors.Ivory
     )
 
     var showThemeColorDialog by remember { mutableStateOf(false) }
@@ -262,7 +261,6 @@ fun MoreSettingsScreen(navigator: DestinationsNavigator) {
                             is ThemeColors.Orange -> stringResource(R.string.color_orange)
                             is ThemeColors.Pink -> stringResource(R.string.color_pink)
                             is ThemeColors.Gray -> stringResource(R.string.color_gray)
-                            is ThemeColors.Ivory -> stringResource(R.string.color_ivory)
                             else -> stringResource(R.string.color_default)
                         }
                         Text(currentThemeName)
@@ -289,7 +287,6 @@ fun MoreSettingsScreen(navigator: DestinationsNavigator) {
                                                     ThemeColors.Orange -> "orange"
                                                     ThemeColors.Pink -> "pink"
                                                     ThemeColors.Gray -> "gray"
-                                                    ThemeColors.Ivory -> "ivory"
                                                     else -> "default"
                                                 })
                                                 showThemeColorDialog = false
@@ -446,9 +443,9 @@ private fun getSliderColors(cardAlpha: Float, useCustomColors: Boolean = false):
         // 使用自定义主题色时
         useCustomColors -> {
             SliderDefaults.colors(
-                activeTrackColor = theme.getCustomSliderActiveColor(),
+                activeTrackColor = Color.White,
                 inactiveTrackColor = theme.getCustomSliderInactiveColor(),
-                thumbColor = theme.Primary
+                thumbColor = Color.White
             )
         }
         else -> {

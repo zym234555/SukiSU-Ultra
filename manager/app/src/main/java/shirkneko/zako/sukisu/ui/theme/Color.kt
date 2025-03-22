@@ -27,12 +27,12 @@ sealed class ThemeColors {
         override val OnPrimary = Color(0xFFFFFFFF)
         override val OnSecondary = Color(0xFFFFFFFF)
         override val OnTertiary = Color(0xFFFFFFFF)
-        override val PrimaryContainer = Color(0xFFFFFBE9)
+        override val PrimaryContainer = Color(0xFFFFF7D6)
         override val SecondaryContainer = Color(0xFFFFE6B3)
         override val TertiaryContainer = Color(0xFFD7CCC8)
-        override val OnPrimaryContainer = Color(0xFF000000)
-        override val OnSecondaryContainer = Color(0xFF000000)
-        override val OnTertiaryContainer = Color(0xFF000000)
+        override val OnPrimaryContainer = Color(0xFF1A1600)
+        override val OnSecondaryContainer = Color(0xFF1A1100)
+        override val OnTertiaryContainer = Color(0xFF1A1717)
     }
 
     // Blue Theme
@@ -43,12 +43,12 @@ sealed class ThemeColors {
         override val OnPrimary = Color(0xFFFFFFFF)
         override val OnSecondary = Color(0xFFFFFFFF)
         override val OnTertiary = Color(0xFFFFFFFF)
-        override val PrimaryContainer = Color(0xFFE3F2FD)
+        override val PrimaryContainer = Color(0xFFCBE6FC)
         override val SecondaryContainer = Color(0xFFBBDEFB)
         override val TertiaryContainer = Color(0xFF90CAF9)
-        override val OnPrimaryContainer = Color(0xFF000000)
-        override val OnSecondaryContainer = Color(0xFF000000)
-        override val OnTertiaryContainer = Color(0xFF000000)
+        override val OnPrimaryContainer = Color(0xFF0A1A2E)
+        override val OnSecondaryContainer = Color(0xFF0A192D)
+        override val OnTertiaryContainer = Color(0xFF071B3D)
     }
 
     // Green Theme
@@ -59,12 +59,12 @@ sealed class ThemeColors {
         override val OnPrimary = Color(0xFFFFFFFF)
         override val OnSecondary = Color(0xFFFFFFFF)
         override val OnTertiary = Color(0xFFFFFFFF)
-        override val PrimaryContainer = Color(0xFFE8F5E9)
-        override val SecondaryContainer = Color(0xFFC8E6C9)
-        override val TertiaryContainer = Color(0xFFA5D6A7)
-        override val OnPrimaryContainer = Color(0xFF000000)
-        override val OnSecondaryContainer = Color(0xFF000000)
-        override val OnTertiaryContainer = Color(0xFF000000)
+        override val PrimaryContainer = Color(0xFFC8E6C9)
+        override val SecondaryContainer = Color(0xFFA5D6A7)
+        override val TertiaryContainer = Color(0xFF81C784)
+        override val OnPrimaryContainer = Color(0xFF0A1F0B)
+        override val OnSecondaryContainer = Color(0xFF0A1D0B)
+        override val OnTertiaryContainer = Color(0xFF071F09)
     }
 
     // Purple Theme
@@ -75,12 +75,12 @@ sealed class ThemeColors {
         override val OnPrimary = Color(0xFFFFFFFF)
         override val OnSecondary = Color(0xFFFFFFFF)
         override val OnTertiary = Color(0xFFFFFFFF)
-        override val PrimaryContainer = Color(0xFFF3E5F5)
-        override val SecondaryContainer = Color(0xFFE1BEE7)
-        override val TertiaryContainer = Color(0xFFCE93D8)
-        override val OnPrimaryContainer = Color(0xFF000000)
-        override val OnSecondaryContainer = Color(0xFF000000)
-        override val OnTertiaryContainer = Color(0xFF000000)
+        override val PrimaryContainer = Color(0xFFE1BEE7)
+        override val SecondaryContainer = Color(0xFFCE93D8)
+        override val TertiaryContainer = Color(0xFFB39DDB)
+        override val OnPrimaryContainer = Color(0xFF1F0A23)
+        override val OnSecondaryContainer = Color(0xFF1C0A21)
+        override val OnTertiaryContainer = Color(0xFF12071C)
     }
 
     // Orange Theme
@@ -91,12 +91,12 @@ sealed class ThemeColors {
         override val OnPrimary = Color(0xFFFFFFFF)
         override val OnSecondary = Color(0xFFFFFFFF)
         override val OnTertiary = Color(0xFFFFFFFF)
-        override val PrimaryContainer = Color(0xFFFFF3E0)
-        override val SecondaryContainer = Color(0xFFFFE0B2)
-        override val TertiaryContainer = Color(0xFFFFCC80)
-        override val OnPrimaryContainer = Color(0xFF000000)
-        override val OnSecondaryContainer = Color(0xFF000000)
-        override val OnTertiaryContainer = Color(0xFF000000)
+        override val PrimaryContainer = Color(0xFFFFE0B2)
+        override val SecondaryContainer = Color(0xFFFFCC80)
+        override val TertiaryContainer = Color(0xFFFFB74D)
+        override val OnPrimaryContainer = Color(0xFF1A1100)
+        override val OnSecondaryContainer = Color(0xFF1A1000)
+        override val OnTertiaryContainer = Color(0xFF1A0B00)
     }
 
     // Pink Theme
@@ -107,12 +107,12 @@ sealed class ThemeColors {
         override val OnPrimary = Color(0xFFFFFFFF)
         override val OnSecondary = Color(0xFFFFFFFF)
         override val OnTertiary = Color(0xFFFFFFFF)
-        override val PrimaryContainer = Color(0xFFFCE4EC)
-        override val SecondaryContainer = Color(0xFFF8BBD0)
-        override val TertiaryContainer = Color(0xFFF48FB1)
-        override val OnPrimaryContainer = Color(0xFF000000)
-        override val OnSecondaryContainer = Color(0xFF000000)
-        override val OnTertiaryContainer = Color(0xFF000000)
+        override val PrimaryContainer = Color(0xFFF8BBD0)
+        override val SecondaryContainer = Color(0xFFF48FB1)
+        override val TertiaryContainer = Color(0xFFE91E63)
+        override val OnPrimaryContainer = Color(0xFF2E0A14)
+        override val OnSecondaryContainer = Color(0xFF2B0A13)
+        override val OnTertiaryContainer = Color(0xFF1C0311)
     }
 
     // Gray Theme
@@ -126,25 +126,9 @@ sealed class ThemeColors {
         override val PrimaryContainer = Color(0xFFEEEEEE)
         override val SecondaryContainer = Color(0xFFE0E0E0)
         override val TertiaryContainer = Color(0xFFBDBDBD)
-        override val OnPrimaryContainer = Color(0xFF000000)
-        override val OnSecondaryContainer = Color(0xFF000000)
-        override val OnTertiaryContainer = Color(0xFF000000)
-    }
-
-    // Ivory Theme
-    object Ivory : ThemeColors() {
-        override val Primary = Color(0xFFFAF0E6)
-        override val Secondary = Color(0xFFFFF0E6)
-        override val Tertiary = Color(0xFFD7CCC8)
-        override val OnPrimary = Color(0xFFFFFFFF)
-        override val OnSecondary = Color(0xFFFFFFFF)
-        override val OnTertiary = Color(0xFFFFFFFF)
-        override val PrimaryContainer = Color(0xFFFFFAE3)
-        override val SecondaryContainer = Color(0xFFFFF0E6)
-        override val TertiaryContainer = Color(0xFFFFF0E6)
-        override val OnPrimaryContainer = Color(0xFF000000)
-        override val OnSecondaryContainer = Color(0xFF000000)
-        override val OnTertiaryContainer = Color(0xFF000000)
+        override val OnPrimaryContainer = Color(0xFF1A1A1A)
+        override val OnSecondaryContainer = Color(0xFF171717)
+        override val OnTertiaryContainer = Color(0xFF141414)
     }
 
     companion object {
@@ -155,7 +139,6 @@ sealed class ThemeColors {
             "orange" -> Orange
             "pink" -> Pink
             "gray" -> Gray
-            "ivory" -> Ivory
             else -> Default
         }
     }

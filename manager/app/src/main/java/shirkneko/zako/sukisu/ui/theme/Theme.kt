@@ -39,22 +39,24 @@ object ThemeConfig {
 
 @Composable
 private fun getDarkColorScheme() = darkColorScheme(
-    primary = ThemeConfig.currentTheme.Primary,
-    onPrimary = ThemeConfig.currentTheme.OnPrimary,
-    primaryContainer = ThemeConfig.currentTheme.PrimaryContainer,
+    primary = ThemeConfig.currentTheme.Primary.copy(alpha = 0.8f),
+    onPrimary = Color.White,
+    primaryContainer = ThemeConfig.currentTheme.PrimaryContainer.copy(alpha = 0.15f),
     onPrimaryContainer = Color.White,
-    secondary = ThemeConfig.currentTheme.Secondary,
-    onSecondary = ThemeConfig.currentTheme.OnSecondary,
-    secondaryContainer = ThemeConfig.currentTheme.SecondaryContainer,
+    secondary = ThemeConfig.currentTheme.Secondary.copy(alpha = 0.8f),
+    onSecondary = Color.White,
+    secondaryContainer = ThemeConfig.currentTheme.SecondaryContainer.copy(alpha = 0.15f),
     onSecondaryContainer = Color.White,
-    tertiary = ThemeConfig.currentTheme.Tertiary,
-    onTertiary = ThemeConfig.currentTheme.OnTertiary,
-    tertiaryContainer = ThemeConfig.currentTheme.TertiaryContainer,
+    tertiary = ThemeConfig.currentTheme.Tertiary.copy(alpha = 0.8f),
+    onTertiary = Color.White,
+    tertiaryContainer = ThemeConfig.currentTheme.TertiaryContainer.copy(alpha = 0.15f),
     onTertiaryContainer = Color.White,
-    background = Color.Transparent,
-    surface = Color.Transparent,
     onBackground = Color.White,
-    onSurface = Color.White
+    onSurface = Color.White,
+    surfaceVariant = Color(0xFF2F2F2F),
+    onSurfaceVariant = Color.White.copy(alpha = 0.78f),
+    outline = Color.White.copy(alpha = 0.12f),
+    outlineVariant = Color.White.copy(alpha = 0.12f)
 )
 
 @Composable
@@ -72,7 +74,13 @@ private fun getLightColorScheme() = lightColorScheme(
     tertiaryContainer = ThemeConfig.currentTheme.TertiaryContainer,
     onTertiaryContainer = ThemeConfig.currentTheme.OnTertiaryContainer,
     background = Color.Transparent,
-    surface = Color.Transparent
+    surface = Color.Transparent,
+    onBackground = Color.Black,
+    onSurface = Color.Black,
+    surfaceVariant = Color(0xFFF5F5F5),
+    onSurfaceVariant = Color.Black.copy(alpha = 0.78f),
+    outline = Color.Black.copy(alpha = 0.12f),
+    outlineVariant = Color.Black.copy(alpha = 0.12f)
 )
 
 // 复制图片到应用内部存储
@@ -119,7 +127,13 @@ fun KernelSUTheme(
                 background = Color.Transparent,
                 surface = Color.Transparent,
                 onBackground = Color.White,
-                onSurface = Color.White
+                onSurface = Color.White,
+                onPrimary = Color.White,
+                onSecondary = Color.White,
+                onTertiary = Color.White,
+                onPrimaryContainer = Color.White,
+                onSecondaryContainer = Color.White,
+                onTertiaryContainer = Color.White
             ) else dynamicLightColorScheme(context).copy(
                 background = Color.Transparent,
                 surface = Color.Transparent
@@ -128,6 +142,17 @@ fun KernelSUTheme(
         darkTheme -> getDarkColorScheme()
         else -> getLightColorScheme()
     }
+
+    val isDarkModeWithCustomBackground = darkTheme && ThemeConfig.customBackgroundUri != null
+
+    if (darkTheme && !dynamicColor) {
+        CardConfig.setDarkModeDefaults()
+    } else {
+        CardConfig.cardAlpha = 1f
+        CardConfig.cardElevation = CardConfig.defaultElevation
+    }
+
+    CardConfig.updateShadowEnabled(!isDarkModeWithCustomBackground)
 
     MaterialTheme(
         colorScheme = colorScheme,
@@ -202,7 +227,6 @@ fun KernelSUTheme(
     }
 }
 
-
 fun Context.saveCustomBackground(uri: Uri?) {
     val newUri = uri?.let { copyImageToInternalStorage(it) }
     getSharedPreferences("theme_prefs", Context.MODE_PRIVATE)
@@ -253,7 +277,6 @@ fun Context.saveThemeColors(themeName: String) {
         "orange" -> ThemeColors.Orange
         "pink" -> ThemeColors.Pink
         "gray" -> ThemeColors.Gray
-        "ivory" -> ThemeColors.Ivory
         else -> ThemeColors.Default
     }
 }
@@ -269,7 +292,6 @@ fun Context.loadThemeColors() {
         "orange" -> ThemeColors.Orange
         "pink" -> ThemeColors.Pink
         "gray" -> ThemeColors.Gray
-        "ivory" -> ThemeColors.Ivory
         else -> ThemeColors.Default
     }
 }

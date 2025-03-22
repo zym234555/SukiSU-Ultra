@@ -489,7 +489,7 @@ private fun InfoCard() {
 
 
                 Spacer(Modifier.height(16.dp))
-                val deviceModel = Build.MODEL
+                val deviceModel = Build.DEVICE
                 InfoCardItem(stringResource(R.string.home_device_model), deviceModel)
 
 
