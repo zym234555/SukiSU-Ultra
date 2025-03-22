@@ -44,7 +44,6 @@
     <string name="show_system_apps">Mostrar aplicativos do sistema</string>
     <string name="home_click_to_learn_kernelsu">Aprenda a instalar o KernelSU e usar os módulos</string>
     <string name="home_support_content">O KernelSU é, e sempre será, gratuito e de código aberto. No entanto, você pode nos mostrar que se importa fazendo uma doação.</string>
-    <string name="about_source_code">Veja o código-fonte em %1$s<br/>Junte-se ao nosso canal %2$s</string>
     <string name="profile_namespace_individual">Individual</string>
     <string name="profile_namespace_global">Global</string>
     <string name="profile_namespace_inherited">Herdado</string>
@@ -72,11 +71,10 @@
     <string name="module_start_downloading">Iniciar o download: %s</string>
     <string name="module_downloading">Baixando módulo: %s</string>
     <string name="failed_to_update_sepolicy">Falha ao atualizar as regras do SELinux para: %s</string>
-    <string name="home_learn_kernelsu_url">https://kernelsu.org/guide/what-is-kernelsu.html</string>
+    <string name="home_learn_kernelsu_url" formatted="false">https://kernelsu.org/guide/what-is-kernelsu.html</string>
     <string name="restart_app">Reiniciar</string>
     <string name="launch_app">Lançar</string>
     <string name="force_stop_app">Forçar parada</string>
     <string name="new_version_available">Nova versão: %s está disponível, clique para baixar</string>
-    <string name="require_kernel_version">A versão atual do KernelSU %d é muito baixa para o gerenciador funcionar corretamente. Atualize para a versão %d ou superior!</string>
     <string name="save_log">Salvar Registros</string>
 </resources>

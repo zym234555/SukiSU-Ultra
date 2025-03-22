@@ -18,8 +18,8 @@
     <string name="selinux_status_permissive">Permissive</string>
     <string name="selinux_status_unknown">不明</string>
     <string name="superuser">スーパーユーザー</string>
-    <string name="module_failed_to_enable">モジュールの有効化に失敗しました: %s</string>
-    <string name="module_failed_to_disable">モジュールの無効化に失敗しました: %s</string>
+    <string name="module_failed_to_enable">%s モジュールをオンにできませんでした</string>
+    <string name="module_failed_to_disable">%s モジュールをオフにできませんでした</string>
     <string name="module_empty">モジュールがインストールされていません</string>
     <string name="module">モジュール</string>
     <string name="uninstall">アンインストール</string>
@@ -35,7 +35,7 @@
     <string name="about">アプリについて</string>
     <string name="module_uninstall_confirm">モジュール %s をアンインストールしますか？</string>
     <string name="module_uninstall_success">%s はアンインストールされました</string>
-    <string name="module_uninstall_failed">アンインストールに失敗しました: %s</string>
+    <string name="module_uninstall_failed">%s をアンインストールできませんでした</string>
     <string name="module_version">バージョン</string>
     <string name="module_author">制作者</string>
     <string name="refresh">更新</string>
@@ -50,7 +50,6 @@
     <string name="home_click_to_learn_kernelsu">KernelSU のインストール方法やモジュールの使い方はこちら</string>
     <string name="home_support_title">支援する</string>
     <string name="home_support_content">KernelSU はこれからもずっと無料でオープンソースです。寄付をして頂くことで、開発を支援していただけます。</string>
-    <string name="about_source_code"><![CDATA[%1$s でソースコードを表示<br/>%2$s チャンネルに参加]]></string>
     <string name="profile">アプリのプロファイル</string>
     <string name="profile_default">既定</string>
     <string name="profile_template">テンプレート</string>
@@ -70,7 +69,7 @@
     <string name="module_update">アップデート</string>
     <string name="module_start_downloading">ダウンロードを開始: %s</string>
     <string name="launch_app">起動</string>
-    <string name="force_stop_app">強制停止</string>
+    <string name="force_stop_app" formatted="false">強制停止</string>
     <string name="restart_app">再起動</string>
     <string name="failed_to_update_sepolicy">SELinux ルールの更新に失敗しました %s</string>
     <string name="profile_capabilities">ケーパビリティ</string>
@@ -78,7 +77,6 @@
     <string name="profile_umount_modules_summary">このオプションを有効にすると、KernelSU はこのアプリのモジュールによって変更されたファイルを復元できるようになります。</string>
     <string name="settings_umount_modules_default">既定でモジュールのマウントを解除</string>
     <string name="settings_umount_modules_default_summary">アプリプロファイルの「モジュールのアンマウント」の共通のデフォルト値です。 有効にすると、プロファイルセットを持たないアプリのシステムに対するすべてのモジュールの変更が削除されます。</string>
-    <string name="require_kernel_version">現在の KernelSU バージョン %d はマネージャーが適切に機能するには低すぎます。 バージョン %d 以降にアップグレードしてください！</string>
     <string name="module_changelog">変更履歴</string>
     <string name="app_profile_template_import_success">インポート成功</string>
     <string name="app_profile_export_to_clipboard">クリップボードからエクスポート</string>

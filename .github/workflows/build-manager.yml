@@ -6,7 +6,9 @@ on:
     paths:
       - '.github/workflows/build-manager.yml'
       - 'manager/**'
+      - 'kernel/**'
       - 'userspace/ksud/**'
+      - 'userspace/zakomksd/**'
   pull_request:
     branches: [ "main" ]
     paths:
@@ -28,7 +30,6 @@ on:
         type: boolean
         default: false
         description: "Whether to upload lkm"
-
 jobs:
   check-build-lkm:
     runs-on: ubuntu-latest
@@ -47,7 +48,7 @@ jobs:
             cd tmp
             git config --global init.defaultBranch bot
             git config --global user.name 'Bot'
-            git config --global user.email 'bot@github.5ec1cff.io'
+            git config --global user.email 'bot@github.shirkneko.io'
             git init .
             git remote add origin https://github.com/${{ github.repository }}
             CURRENT_COMMIT="${{ github.event.head_commit.id }}"
@@ -62,7 +63,7 @@ jobs:
             cd ..
             rm -rf tmp
           fi
-          if [ "${{ github.event_name }}" == "push" ] && [ "${{ github.ref }}" == 'refs/heads/main' ]; then
+          if [ "${{ github.event_name }}" == "push" ] && [ "${{ github.ref }}" == 'refs/heads/susfs' ]; then
             need_upload=true
           elif [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
             need_upload="${{ inputs.upload_lkm }}"
@@ -81,7 +82,19 @@ jobs:
     with:
       upload: ${{ needs.check-build-lkm.outputs.upload_lkm == 'true' }}
     secrets: inherit
-
+  build-zakomksd:
+    if: ${{ always() }}
+    needs: [ check-build-lkm, build-lkm ]
+    strategy:
+      matrix:
+        include:
+          - target: aarch64-linux-android
+            os: ubuntu-latest
+    uses: ./.github/workflows/zakomksd.yml
+    with:
+      target: ${{ matrix.target }}
+      os: ${{ matrix.os }}
+      
   build-ksud:
     if: ${{ always() }}
     needs: [ check-build-lkm, build-lkm ]
@@ -123,7 +136,7 @@ jobs:
           fi
 
       - name: Write key
-        if: ${{ ( github.event_name != 'pull_request' && github.ref == 'refs/heads/main' ) || github.ref_type == 'tag' }}
+        if: ${{ ( github.event_name != 'pull_request' && github.ref == 'refs/heads/main' ) || github.ref == 'refs/heads/susfs' || github.ref_type == 'tag' }}
         run: |
           if [ ! -z "${{ secrets.KEYSTORE }}" ]; then
             {
@@ -147,6 +160,12 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
+      - name: Download arm64 zakomksd
+        uses: actions/download-artifact@v4
+        with:
+          name: zakomksd-aarch64-linux-android
+          path: .
+
       - name: Download arm64 ksud
         uses: actions/download-artifact@v4
         with:
@@ -163,8 +182,13 @@ jobs:
         run: |
           mkdir -p app/src/main/jniLibs/arm64-v8a
           mkdir -p app/src/main/jniLibs/x86_64
-          cp -f ../aarch64-linux-android/release/ksud ../manager/app/src/main/jniLibs/arm64-v8a/libksud.so
-          cp -f ../x86_64-linux-android/release/ksud ../manager/app/src/main/jniLibs/x86_64/libksud.so
+          cp -f ../aarch64-linux-android/release/zakomk ../manager/app/src/main/jniLibs/arm64-v8a/libzakomk.so
+          cp -f ../x86_64-linux-android/release/zakomk ../manager/app/src/main/jniLibs/x86_64/libzakomk.so
+
+      - name: Copy zakomksd to app jniLibs
+        run: |
+          mkdir -p app/src/main/jniLibs/arm64-v8a
+          cp -f ../arm64-v8a/zakomksd ../manager/app/src/main/jniLibs/arm64-v8a/libzakomksd.so
 
       - name: Build with Gradle
         run: |
@@ -176,7 +200,6 @@ jobs:
           } >> gradle.properties
           sed -i 's/org.gradle.configuration-cache=true//g' gradle.properties
           ./gradlew clean assembleRelease
-
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         if: ${{ ( github.event_name != 'pull_request' && github.ref == 'refs/heads/main' ) || github.ref_type == 'tag' }}
@@ -190,7 +213,7 @@ jobs:
         with:
           name: "mappings"
           path: "manager/app/build/outputs/mapping/release/"
-
+      
       - name: Bot session cache
         if: github.event_name != 'pull_request' && steps.need_upload.outputs.UPLOAD == 'true'
         id: bot_session_cache

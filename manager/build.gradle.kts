@@ -33,31 +33,27 @@ val androidCompileSdkVersion = 35
 val androidCompileNdkVersion = "28.0.13004108"
 val androidSourceCompatibility = JavaVersion.VERSION_21
 val androidTargetCompatibility = JavaVersion.VERSION_21
-val managerVersionCode by extra(getVersionCode())
-val managerVersionName by extra(getVersionName())
+val managerVersionCode by extra(1 * 12000 + getGitCommitCount() + 500)
+val managerVersionName by extra(getGitDescribe())
 
 fun getGitCommitCount(): Int {
-    val out = ByteArrayOutputStream()
-    exec {
+    return providers.exec {
         commandLine("git", "rev-list", "--count", "HEAD")
-        standardOutput = out
-    }
-    return out.toString().trim().toInt()
+    }.standardOutput.asText.get().trim().toInt()
 }
 
 fun getGitDescribe(): String {
-    val out = ByteArrayOutputStream()
-    exec {
-        commandLine("git", "describe", "--tags", "--always")
-        standardOutput = out
-    }
-    return out.toString().trim()
+    return providers.exec {
+        commandLine("git", "describe", "--tags", "--always", "--abbrev=0")
+    }.standardOutput.asText.get().trim()
 }
+
+
 
 fun getVersionCode(): Int {
     val commitCount = getGitCommitCount()
     val major = 1
-    return major * 10000 + commitCount + 200
+    return major * 12000 + commitCount + 500
 }
 
 fun getVersionName(): String {

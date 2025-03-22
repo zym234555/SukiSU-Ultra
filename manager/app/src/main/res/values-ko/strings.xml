@@ -49,9 +49,8 @@
     <string name="home_click_to_learn_kernelsu">KernelSU 설치 방법과 모듈 사용 방법을 확인합니다</string>
     <string name="home_support_title">지원이 필요합니다</string>
     <string name="home_support_content">KernelSU는 지금도, 앞으로도 항상 무료이며 오픈 소스로 유지됩니다. 기부를 통해 여러분의 관심을 보여주세요.</string>
-    <string name="about_source_code"><![CDATA[%1$s에서 소스 코드 보기<br/>%2$s 채널 참가하기]]></string>
     <string name="home_learn_kernelsu_url">https://kernelsu.org/guide/what-is-kernelsu.html</string>
-    <string name="settings_umount_modules_default_summary">앱 프로필 메뉴의 \"모듈 마운트 해제\" 설정에 대한 전역 기본값을 설정합니다. 활성화 시, 개별 프로필이 설정되지 않은 앱은 시스템에 대한 모듈의 모든 수정사항이 적용되지 않습니다.</string>
+    <string name="settings_umount_modules_default_summary" formatted="false">앱 프로필 메뉴의 \"모듈 마운트 해제\" 설정에 대한 전역 기본값을 설정합니다. 활성화 시, 개별 프로필이 설정되지 않은 앱은 시스템에 대한 모듈의 모든 수정사항이 적용되지 않습니다.</string>
     <string name="restart_app">다시 시작</string>
     <string name="profile_selinux_rules">규칙</string>
     <string name="new_version_available">새 버전: %s이 사용 가능합니다, 여기를 눌러 업그레이드하세요.</string>
@@ -80,7 +79,6 @@
     <string name="save_log">로그 저장</string>
     <string name="module_changelog">업데이트 내역</string>
     <string name="enable_web_debugging_summary">WebUI 디버깅에 사용 가능, 필요할 때만 활성화해주세요.</string>
-    <string name="shrink_sparse_image">스파스 이미지 최소화</string>
     <string name="flashing">플래시 중</string>
     <string name="selected_lkm">선택된 LKM: %s</string>
     <string name="select_file_tip">%1$s 파티션 이미지 권장됨</string>
@@ -88,8 +86,6 @@
     <string name="install_next">다음</string>
     <string name="settings_uninstall_permanent_message">완전히, 그리고 영구히 KernelSU (루트 및 모든 모듈)를 삭제합니다.</string>
     <string name="enable_web_debugging">WebView 디버깅 활성화</string>
-    <string name="require_kernel_version">현재 KernelSU 버전 %d는 매니저가 올바르게 작동하기에 너무 낮습니다. 버전 %d 이상으로 업그레이드해 주세요!</string>
-    <string name="shrink_sparse_image_message">모듈이 위치한 스파스 이미지의 크기를 실제 크기로 조정합니다. 모듈이 비정상적으로 작동할 수 있으니, 필요할 때만 (예: 백업) 사용해 주세요.</string>
     <string name="action">동작</string>
     <string name="settings_uninstall_temporary">임시적 삭제</string>
     <string name="module_changelog_failed">업데이트 내역 가져오기 실패: %s</string>

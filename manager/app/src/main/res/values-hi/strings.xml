@@ -19,7 +19,7 @@
     <string name="profile_namespace_individual">Individual</string>
     <string name="module_failed_to_enable">%s मॉड्यूल चालू करने में विफल</string>
     <string name="force_stop_app">जबर्दस्ती बंद करें</string>
-    <string name="reboot_edl">EDL मोड में रिबूट करें</string>
+    <string name="reboot_edl" formatted="false">EDL मोड में रिबूट करें</string>
     <string name="restart_app">फिर से चालू करें</string>
     <string name="profile_capabilities">क्षमताएं</string>
     <string name="home_superuser_count">सुपरयूजर : %d</string>
@@ -33,7 +33,6 @@
     <string name="profile_default">डिफॉल्ट</string>
     <string name="launch_app">लॉन्च करें</string>
     <string name="safe_mode">सेफ मोड</string>
-    <string name="require_kernel_version">मैनेजर के ठीक से काम करने के लिए वर्तमान KernelSU वर्जन %d बहुत कम है। कृपया वर्जन %d या उच्चतर में अपग्रेड करें!</string>
     <string name="reboot_recovery">रिकवरी में रिबूट करें</string>
     <string name="reboot_userspace">सॉफ्ट रिबूट</string>
     <string name="profile_name">प्रोफाइल का नाम</string>
@@ -76,7 +75,6 @@
     <string name="home_learn_kernelsu_url">https://kernelsu.org/guide/what-is-kernelsu.html</string>
     <string name="failed_to_update_sepolicy">%s के लिए SELinux नियमों को अपटेड करने में विफल</string>
     <string name="reboot_bootloader">बुटलोडर में रिबूट करें</string>
-    <string name="about_source_code">%1$s पर स्रोत कोड देखें<br/>हमारे %2$s चैनल से जुड़ें</string>
     <string name="home_manager_version">मैनेजर वर्जन</string>
     <string name="new_version_available">नया वर्जन: %s उपलब्ध है,अपग्रेड के लिए क्लिक करें</string>
     <string name="save_log">लॉग सहेजें</string>

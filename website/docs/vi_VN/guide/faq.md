@@ -60,7 +60,7 @@ Phiên bản Kernel không liên quan gì đến phiên bản Android, nếu b�
 Hiện tại thì không (có thể có trong tương lai), nhưng có nhiều cách để chuyển sang global mount namespace một cách thủ công, chẳng hạn như:
 
 1. `nsenter -t 1 -m sh` để lấy shell trong global mount namespace.
-2. Thêm `nsenter --mount=/proc/1/ns/mnt` vào lệnh bạn muốn thực thi, sau đó lệnh được thực thi trong global mount namespace. KernelSU cũng [sử dụng cách này](https://github.com/tiann/KernelSU/blob/77056a710073d7a5f7ee38f9e77c9fd0b3256576/manager/app/src/main/java/me/weishu/kernelsu/ui/util/KsuCli.kt#L115)
+2. Thêm `nsenter --mount=/proc/1/ns/mnt` vào lệnh bạn muốn thực thi, sau đó lệnh được thực thi trong global mount namespace. KernelSU cũng [sử dụng cách này](https://github.com/tiann/KernelSU/blob/77056a710073d7a5f7ee38f9e77c9fd0b3256576/manager/app/src/main/java/shirkneko/zako/mksu/ui/util/KsuCli.kt#L115)
 
 ## Tôi là GKI1.0, tôi có thể sử dụng cái này không?
 

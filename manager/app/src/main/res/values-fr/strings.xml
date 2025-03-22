@@ -50,7 +50,6 @@
     <string name="home_support_title">Soutenez-nous</string>
     <string name="home_click_to_learn_kernelsu">Découvrez comment installer KernelSU et utiliser les modules</string>
     <string name="home_support_content">KernelSU est, et restera toujours, gratuit et open source. Vous pouvez cependant nous témoigner de votre soutien en nous faisant un don.</string>
-    <string name="about_source_code"><![CDATA[Voir le code source à %1$s<br/>Rejoignez notre canal %2$s]]></string>
     <string name="profile_template">Modèle</string>
     <string name="profile_default">Par défaut</string>
     <string name="profile_custom">Personnalisé</string>
@@ -74,10 +73,9 @@
     <string name="launch_app">Lancer</string>
     <string name="new_version_available">La nouvelle version %s est disponible, appuyez ici pour mettre à jour.</string>
     <string name="module_start_downloading">Début du téléchargement de : %s</string>
-    <string name="force_stop_app">Forcer l\'arrêt</string>
+    <string name="force_stop_app" formatted="false">Forcer l\'arrêt</string>
     <string name="restart_app">Relancer l\'application</string>
-    <string name="failed_to_update_sepolicy">Échec de la mise à jour des règles SELinux pour %s</string>
-    <string name="require_kernel_version">La version actuelle de KernelSU (%d) est trop ancienne pour que le gestionnaire fonctionne correctement. Veuillez passer à la version %d ou à une version supérieure !</string>
+    <string name="failed_to_update_sepolicy">Échec de la mise à jour des règles SELinux pour : %s</string>
     <string name="app_profile_template_import_success">Importation réussie</string>
     <string name="app_profile_export_to_clipboard">Exporter vers le presse-papiers</string>
     <string name="app_profile_template_export_empty">Impossible de trouver un modèle local à exporter !</string>
@@ -132,6 +130,4 @@
     <string name="module_sort_enabled_first">Trier par activé</string>
     <string name="action">Action</string>
     <string name="log_saved">Journaux enregistrés</string>
-    <string name="settings_disable_su">Désactiver la compatibilité avec su</string>
-    <string name="settings_disable_su_summary">Désactivez temporairement l\'accès des applications aux privilèges root par le biais de la commande su (les processus root existants ne seront pas affectés).</string>
 </resources>

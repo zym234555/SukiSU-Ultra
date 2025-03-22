@@ -50,7 +50,6 @@
     <string name="home_click_to_learn_kernelsu">Дізнайтеся, як інсталювати KernelSU і використовувати модулі</string>
     <string name="home_support_title">Підтримати нас</string>
     <string name="home_support_content">KernelSU є, і завжди буде безкоштовним та з відкритим кодом. Однак, якщо вам не байдуже, можете зробити невеличке пожертвування.</string>
-    <string name="about_source_code"><![CDATA[Переглянути вихідний код на %1$s<br/>Приєднуйтесь до нашого каналу %2$s]]></string>
     <string name="profile">Профіль додатка</string>
     <string name="profile_default">Типовий</string>
     <string name="profile_template">Шаблон</string>
@@ -74,12 +73,11 @@
     <string name="module_downloading">Завантаження модуля: %s</string>
     <string name="module_start_downloading">Початок завантаження: %s</string>
     <string name="launch_app">Запустити</string>
-    <string name="force_stop_app">Примусово зупинити</string>
+    <string name="force_stop_app" formatted="false">Примусово зупинити</string>
     <string name="restart_app">Перезапустити</string>
     <string name="new_version_available">Нова версія: %s доступна, натисніть, щоб завантажити</string>
     <string name="failed_to_update_sepolicy">Не вдалося оновити правила SELinux для: %s</string>
     <string name="module_changelog">Журнал змін</string>
-    <string name="require_kernel_version">Поточна версія KernelSU %d занадто низька, щоб менеджер міг працювати належним чином. Будь ласка, оновіть до версії %d або вище!</string>
     <string name="app_profile_template_import_success">Успішно імпортовано</string>
     <string name="app_profile_export_to_clipboard">Експортувати в буфер обміну</string>
     <string name="app_profile_template_export_empty">Неможливо знайти локальні шаблони для експорту!</string>

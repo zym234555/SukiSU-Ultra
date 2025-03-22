@@ -52,7 +52,6 @@
     <string name="home_click_to_learn_kernelsu">Узнайте, как установить KernelSU и использовать модули</string>
     <string name="home_support_title">Поддержите нас</string>
     <string name="home_support_content">KernelSU был и всегда будет бесплатным и открытым проектом. Однако Вы всегда можете поддержать нас, отправив небольшое пожертвование.</string>
-    <string name="about_source_code"><![CDATA[Посмотреть исходный код на %1$s<br/>Присоединяйтесь к нашему %2$s каналу]]></string>
     <string name="profile" translatable="false">App Profile</string>
     <!--Don't translate this string!-->
     <string name="profile_default">По умолчанию</string>
@@ -79,9 +78,8 @@
     <string name="new_version_available">Новая версия: %s доступна, нажмите чтобы скачать.</string>
     <string name="force_stop_app">Остановить принудительно</string>
     <string name="failed_to_update_sepolicy">Не удалось обновить правила SELinux для %s</string>
-    <string name="launch_app">Запустить</string>
+    <string name="launch_app" formatted="false">Запустить</string>
     <string name="restart_app">Перезапустить</string>
-    <string name="require_kernel_version">Текущая версия KernelSU %d слишком низкая для правильной работы менеджера. Пожалуйста, обновите до версии %d или выше!</string>
     <string name="module_changelog">Список изменений</string>
     <string name="app_profile_template_import_success">Успешный импорт</string>
     <string name="app_profile_export_to_clipboard">Экспортировать в буфер обмена</string>
@@ -136,6 +134,4 @@
     <string name="log_saved">Логи сохранены</string>
     <string name="module_sort_action_first">Сортировать (Сначала с действием)</string>
     <string name="module_sort_enabled_first">Сортировать (Сначала включённые)</string>
-    <string name="settings_disable_su">Отключить su совместимость</string>
-    <string name="settings_disable_su_summary">Временно отключить возможность получения root привилегий любым приложениям с помощью команды su (существующие root процессы не будут затронуты).</string>
 </resources>

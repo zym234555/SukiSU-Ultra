@@ -19,7 +19,7 @@
     <string name="profile_namespace_individual">אישי</string>
     <string name="module_failed_to_enable">הפעלת המודל נכשלה: %s</string>
     <string name="force_stop_app">עצירה בכח</string>
-    <string name="reboot_edl">הפעלה מחדש למצב EDL</string>
+    <string name="reboot_edl" formatted="false">הפעלה מחדש למצב EDL</string>
     <string name="restart_app">איתחול</string>
     <string name="profile_capabilities">יכולת</string>
     <string name="home_superuser_count">משתמשי על: %d</string>
@@ -33,7 +33,6 @@
     <string name="profile_default">ברירת מחדל</string>
     <string name="launch_app">להשיק</string>
     <string name="safe_mode">מצב בטוח</string>
-    <string name="require_kernel_version">גרסת KernelSU הנוכחית %d נמוכה מדי כדי שהמנהל יפעל כראוי. אנא שדרג לגרסה %d ומעלה!</string>
     <string name="reboot_recovery">הפעלה מחדש לריקברי</string>
     <string name="reboot_userspace">רך Reboot</string>
     <string name="profile_name">שם פרופיל</string>
@@ -76,7 +75,6 @@
     <string name="home_learn_kernelsu_url">https://kernelsu.org/guide/what-is-kernelsu.html</string>
     <string name="failed_to_update_sepolicy">נכשל עדכון כללי SELinux עבור: %s</string>
     <string name="reboot_bootloader">הפעלה מחדש לבוטלאודר</string>
-    <string name="about_source_code">ראה את קוד המקור ב%1$s<br/>הצטרף אלינו %2$s בערוץ</string>
     <string name="home_manager_version">גרסת מנהל</string>
     <string name="new_version_available">גרסה חדשה עבור: %s זמינה, לחץ כדי לשדרג</string>
     <string name="save_log">שמור יומנים</string>

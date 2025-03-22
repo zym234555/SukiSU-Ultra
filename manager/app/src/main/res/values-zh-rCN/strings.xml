@@ -7,8 +7,11 @@
     <string name="home_working_version">版本：%d</string>
     <string name="home_superuser_count">超级用户数：%d</string>
     <string name="home_unsupported">不支持</string>
-    <string name="home_unsupported_reason">KernelSU 现在只支持 GKI 内核</string>
+    <string name="home_unsupported_reason">内核上未检测到 KernelSU 驱动程序，内核错误？</string>
     <string name="home_kernel">内核版本</string>
+    <string name="home_susfs">SuSFS：%s</string>
+    <string name="home_susfs_version">SuSFS 版本</string>
+    <string name="home_susfs_sus_su">SuS SU</string>
     <string name="home_manager_version">管理器版本</string>
     <string name="home_fingerprint">系统指纹</string>
     <string name="home_selinux_status">SELinux 状态</string>
@@ -53,7 +56,7 @@
     <string name="home_click_to_learn_kernelsu">了解如何安装 KernelSU 以及如何开发模块</string>
     <string name="home_support_title">支持开发</string>
     <string name="home_support_content">KernelSU 将保持免费开源，向开发者捐赠以表示支持。</string>
-    <string name="about_source_code"><![CDATA[在 %1$s 查看源码<br/>加入我们的 %2$s 频道<br/>加入我们的 <b><a href="https://pd.qq.com/s/8lipl1brp">QQ 频道</a></b>]]></string>
+    <string name="about_source_code"><![CDATA[在 %1$s 查看源码<br/>加入我们的 %2$s 频道<br/>加入我们的 <b><a href="https://qm.qq.com/q/WbrOMxgLG8">QQ 群聊</a></b>]]></string>
     <string name="profile_default">默认</string>
     <string name="profile_template">模版</string>
     <string name="profile_custom">自定义</string>
@@ -67,9 +70,11 @@
     <string name="profile_selinux_context">SELinux</string>
     <string name="profile_umount_modules">卸载模块</string>
     <string name="failed_to_update_app_profile">为 %s 更新 App Profile 失败</string>
-    <string name="require_kernel_version">当前 KernelSU 版本 %d 过低，管理器无法正常工作，请将内核 KernelSU 版本升级至 %d 或以上！</string>
+    <string name="require_kernel_version" formatted="false">当前 KernelSU 版本 %d 过低，管理器无法正常工作，请将内核 KernelSU 版本升级至 %d 或以上！</string>
     <string name="settings_umount_modules_default">默认卸载模块</string>
     <string name="settings_umount_modules_default_summary">App Profile 中“卸载模块”的全局默认值，如果启用，将会为没有设置 Profile 的应用移除所有模块针对系统的修改。</string>
+    <string name="settings_susfs_toggle">隐藏 Kprobe 钩子</string>
+    <string name="settings_susfs_toggle_summary">禁用由 KSU 创建的 Kprobe 钩子，并使用非 Kprobe 内联钩子代替，实现方式类似于不支持 Kprobe 的非 GKI 内核。</string>
     <string name="profile_umount_modules_summary">启用该选项后将允许 KernelSU 为本应用还原被模块修改过的文件。</string>
     <string name="profile_selinux_domain">域</string>
     <string name="profile_selinux_rules">规则</string>
@@ -78,10 +83,9 @@
     <string name="module_start_downloading">开始下载：%s</string>
     <string name="new_version_available">发现新版本：%s，点击升级。</string>
     <string name="launch_app">启动</string>
-    <string name="force_stop_app">强制停止</string>
+    <string name="force_stop_app" formatted="false">强制停止</string>
     <string name="restart_app">重新启动</string>
-    <string name="failed_to_update_sepolicy">为 %s 更新 SELinux 策略失败</string>
-    <string name="su_not_allowed">不允许授予：%s 超级用户权限</string>
+    <string name="failed_to_update_sepolicy">为：%s 更新翻译失败</string>
     <string name="module_changelog">更新日志</string>
     <string name="settings_profile_template">App Profile 模版</string>
     <string name="settings_profile_template_summary">管理本地和在线的 App Profile 模版</string>
@@ -132,6 +136,82 @@
     <string name="selected_lkm">选择的 LKM：%s</string>
     <string name="save_log">保存日志</string>
     <string name="log_saved">日志已保存</string>
-    <string name="settings_disable_su">关闭 su 兼容</string>
-    <string name="settings_disable_su_summary">临时禁止任何应用通过 su 命令获取 root 权限（已运行的 root 进程不受影响）</string>
+    <string name="status_supported">支持</string>
+    <string name="status_not_supported">不支持</string>
+    <string name="status_unknown">未知</string>
+    <string name="sus_su_mode">SuS SU 模式：</string>
+    <!-- Module related -->
+    <string name="module_install_confirm">确认安装模块 %1$s？</string>
+    <string name="unknown_module">未知模块</string>
+    <!-- Restore related -->
+    <string name="restore_confirm_title">确认还原模块</string>
+    <string name="restore_confirm_message">此操作将覆盖所有现有模块，是否继续？</string>
+    <string name="confirm">确定</string>
+    <string name="cancel">取消</string>
+    <!-- Backup related -->
+    <string name="backup_success">备份成功 (tar.gz)</string>
+    <string name="backup_failed">备份失败：%1$s</string>
+    <string name="backup_modules">备份模块</string>
+    <string name="restore_modules">恢复模块</string>
+    <!-- Restore related messages -->
+    <string name="restore_success">模块已成功还原，需重启生效</string>
+    <string name="restore_failed">还原失败：%1$s</string>
+    <string name="restart_now">立即重启</string>
+    <string name="unknown_error">未知错误</string>
+    <!-- Command related -->
+    <string name="command_execution_failed">命令执行失败：%1$s</string>
+    <!-- Allowlist related -->
+    <string name="allowlist_backup_success">应用列表备份成功</string>
+    <string name="allowlist_backup_failed">应用列表备份失败：%1$s</string>
+    <string name="allowlist_restore_confirm_title">确认还原应用列表</string>
+    <string name="allowlist_restore_confirm_message">此操作将覆盖当前的应用列表，是否继续？</string>
+    <string name="allowlist_restore_success">应用列表还原成功</string>
+    <string name="allowlist_restore_failed">应用列表还原失败：%1$s</string>
+    <string name="backup_allowlist">备份应用列表</string>
+    <string name="restore_allowlist">还原应用列表</string>
+    <string name="settings_custom_background">自定义背景</string>
+    <string name="settings_custom_background_summary">选择一张图片作为应用背景</string>
+    <string name="settings_card_manage">卡片管理</string>
+    <string name="settings_card_alpha">卡片透明度</string>
+    <string name="settings_restore_default">恢复默认</string>
+    <string name="home_android_version">Android 版本</string>
+    <string name="home_device_model">设备</string>
+    <string name="su_not_allowed">不允许授予 %s 超级用户权限</string>
+    <string name="settings_disable_su">禁用 su 兼容性</string>
+    <string name="settings_disable_su_summary">临时禁止任何应用程序通过 su 命令获取 Root 权限（现有的 Root 进程不受影响）</string>
+    <string name="using_mksu_manager">你正在使用的是MKSU第三方管理器</string>
+    <string name="module_install_multiple_confirm">确定要安装选择的 %d 个模块吗？</string>
+    <string name="module_install_multiple_confirm_with_names">确定要安装以下 %1$d 个模块吗？\n\n%2$s</string>
+    <string name="more_settings">更多设置</string>
+    <string name="selinux">SELinux</string>
+    <string name="selinux_enabled">强制执行</string>
+    <string name="selinux_disabled">兼容模式</string>
+    <string name="simple_mode">简洁模式</string>
+    <string name="simple_mode_summary">开启后将隐藏不必要的卡片</string>
+    <string name="theme_mode">主题模式</string>
+    <string name="theme_follow_system">跟随系统</string>
+    <string name="theme_light">浅色</string>
+    <string name="theme_dark">深色</string>
+    <string name="manual_hook">Manual Hook</string>
+    <string name="dynamic_color_title">动态颜色</string>
+    <string name="dynamic_color_summary">使用系统主题的动态颜色</string>
+    <string name="choose_theme_color">选择主题色</string>
+    <string name="color_default">黄色</string>
+    <string name="color_blue">蓝色</string>
+    <string name="color_green">绿色</string>
+    <string name="color_purple">紫色</string>
+    <string name="color_orange">橙色</string>
+    <string name="color_pink">粉色</string>
+    <string name="color_gray">高级灰</string>
+    <string name="color_ivory">象牙白</string>
+    <string name="flash_option">刷入选项</string>
+    <string name="flash_option_tip">选择要刷入的文件</string>
+    <string name="horizon_kernel">Anykernel3 刷写</string>
+    <string name="root_required">需要 root 权限</string>
+    <string name="copy_failed">文件复制失败</string>
+    <string name="reboot_complete_title">刷写完成</string>
+    <string name="reboot_complete_msg">是否立即重启？</string>
+    <string name="yes">是</string>
+    <string name="no">否</string>
+    <string name="failed_reboot">重启失败</string>
 </resources>

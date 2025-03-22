@@ -20,8 +20,8 @@ obj-$(CONFIG_KSU) += kernelsu.o
 ifeq ($(shell test -e $(srctree)/$(src)/../.git; echo $$?),0)
 $(shell cd $(srctree)/$(src); /usr/bin/env PATH="$$PATH":/usr/bin:/usr/local/bin [ -f ../.git/shallow ] && git fetch --unshallow)
 KSU_GIT_VERSION := $(shell cd $(srctree)/$(src); /usr/bin/env PATH="$$PATH":/usr/bin:/usr/local/bin git rev-list --count HEAD)
-# ksu_version: major * 10000 + git version + 200 for historical reasons
-$(eval KSU_VERSION=$(shell expr 10000 + $(KSU_GIT_VERSION) + 200))
+# ksu_version: major * 10000 + git version + 600 for historical reasons
+$(eval KSU_VERSION=$(shell expr 12000 + $(KSU_GIT_VERSION) + 500))
 $(info -- KernelSU version: $(KSU_VERSION))
 ccflags-y += -DKSU_VERSION=$(KSU_VERSION)
 else # If there is no .git file, the default version will be passed.
@@ -30,11 +30,11 @@ ccflags-y += -DKSU_VERSION=16
 endif
 
 ifndef KSU_EXPECTED_SIZE
-KSU_EXPECTED_SIZE := 384
+KSU_EXPECTED_SIZE := 0x35c
 endif
 
 ifndef KSU_EXPECTED_HASH
-KSU_EXPECTED_HASH := 7e0c6d7278a3bb8e364e0fcba95afaf3666cf5ff3c245a3b63c8833bd0445cc4
+KSU_EXPECTED_HASH := 947ae944f3de4ed4c21a7e4f7953ecf351bfa2b36239da37a34111ad29993eef
 endif
 
 ifdef KSU_MANAGER_PACKAGE
@@ -44,6 +44,10 @@ endif
 
 $(info -- KernelSU Manager signature size: $(KSU_EXPECTED_SIZE))
 $(info -- KernelSU Manager signature hash: $(KSU_EXPECTED_HASH))
+$(info -- Supported Unofficial Manager: ShirkNeko (GKI) (Non-GKI))
+KERNEL_VERSION := $(VERSION).$(PATCHLEVEL)
+$(info -- KERNEL_VERSION: $(KERNEL_VERSION))
+
 
 ccflags-y += -DEXPECTED_SIZE=$(KSU_EXPECTED_SIZE)
 ccflags-y += -DEXPECTED_HASH=\"$(KSU_EXPECTED_HASH)\"

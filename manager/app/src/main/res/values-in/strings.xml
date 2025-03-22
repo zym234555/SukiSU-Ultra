@@ -50,7 +50,6 @@
     <string name="home_click_to_learn_kernelsu">Pelajari cara instal KernelSU dan menggunakan modul</string>
     <string name="home_support_title">Dukung Kami</string>
     <string name="home_support_content">KernelSU akan selalu menjadi aplikasi gratis dan terbuka. Anda dapat memberikan donasi sebagai bentuk dukungan.</string>
-    <string name="about_source_code"><![CDATA[Lihat kode sumber di %1$s<br/>Gabung kanal %2$s kami]]></string>
     <string name="profile">Profil Apl</string>
     <string name="profile_default">Bawaan</string>
     <string name="profile_template">Templat</string>
@@ -75,10 +74,9 @@
     <string name="module_start_downloading">Mulai mengunduh: %s</string>
     <string name="new_version_available">Tersedia versi terbaru %s, Klik untuk membarui.</string>
     <string name="launch_app">Jalankan</string>
-    <string name="force_stop_app">Paksa berhenti</string>
+    <string name="force_stop_app" formatted="false">Paksa berhenti</string>
     <string name="restart_app">Mulai ulang</string>
     <string name="failed_to_update_sepolicy">Gagal membarui aturan SELinux pada: %s</string>
-    <string name="require_kernel_version">Versi KernelSU %d terlalu rendah agar manajer berfungsi normal. Harap membarui ke versi %d atau di atasnya!</string>
     <string name="module_changelog">Catatan Perubahan</string>
     <string name="app_profile_template_import_success">Berhasil diimpor</string>
     <string name="app_profile_export_to_clipboard">Ekspor ke papan klip</string>

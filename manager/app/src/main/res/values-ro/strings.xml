@@ -50,7 +50,6 @@
     <string name="home_click_to_learn_kernelsu">Află cum să instalezi KernelSU și să utilizezi module</string>
     <string name="home_support_title">Suport</string>
     <string name="home_support_content">KernelSU este, și va fi întotdeauna, gratuit și cu codul sursă deschis. Cu toate acestea, ne poți arăta că îți pasă făcând o donație.</string>
-    <string name="about_source_code"><![CDATA[Vezi codul sursă la %1$s<br/>Alătură-te canalului nostru %2$s]]></string>
     <string name="profile_default">Implicit</string>
     <string name="profile_template">Șablon</string>
     <string name="profile_custom">Personalizat</string>
@@ -75,9 +74,8 @@
     <string name="new_version_available">Versiune nouă: %s este disponibilă, clic pentru a actualiza</string>
     <string name="failed_to_update_sepolicy">Nu s-au reușit actualizările regulilor SELinux pentru: %s</string>
     <string name="launch_app">Lansare</string>
-    <string name="force_stop_app">Oprire forțată</string>
+    <string name="force_stop_app" formatted="false">Oprire forțată</string>
     <string name="restart_app">Repornește</string>
-    <string name="require_kernel_version">Versiunea actuală a KernelSU %d este prea mică pentru ca managerul să funcționeze corect. Actualizează la versiunea %d sau o versiune superioară!</string>
     <string name="module_changelog">Jurnalul modificărilor</string>
     <string name="app_profile_template_import_success">Importat cu succes</string>
     <string name="app_profile_export_to_clipboard">Export în clipboard</string>

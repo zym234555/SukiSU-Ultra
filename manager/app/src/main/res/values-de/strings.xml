@@ -38,7 +38,7 @@
     <string name="failed_to_update_sepolicy">Aktualisieren der SELinux-Regeln schlug fehl für: %s</string>
     <string name="launch_app">Starten</string>
     <string name="new_version_available">Neue Version %s verfügbar, tippen zum Aktualisieren.</string>
-    <string name="force_stop_app">Stopp erzwingen</string>
+    <string name="force_stop_app" formatted="false">Stopp erzwingen</string>
     <string name="restart_app">Neustarten</string>
     <string name="home_module_count">Module: %d</string>
     <string name="home_manager_version">Manager-Version</string>
@@ -62,7 +62,6 @@
     <string name="home_learn_kernelsu">KernelSU verstehen</string>
     <string name="safe_mode">Sicherer Modus</string>
     <string name="reboot_to_apply">Neustarten, damit Änderungen wirksam werden</string>
-    <string name="about_source_code"><![CDATA[Quellcode einsehen unter %1$s<br/>Unserem %2$s-Kanal beitreten]]></string>
     <string name="profile_name">Profilname</string>
     <string name="profile_namespace">Namespace einhängen</string>
     <string name="profile_groups">Gruppen</string>
@@ -77,7 +76,6 @@
     <string name="reboot_userspace">Soft-Reboot</string>
     <string name="module_uninstall_confirm">Möchtest du wirklich Modul %s deinstallieren?</string>
     <string name="module_uninstall_failed">Deinstallation fehlgeschlagen: %s</string>
-    <string name="require_kernel_version">Die aktuelle KernelSU-Version %d ist zu alt für diese Manager-Version. Bitte auf Version %d oder höher aktualisieren!</string>
     <string name="module_changelog">Änderungsprotokoll</string>
     <string name="app_profile_template_import_success">Erfolgreich importiert</string>
     <string name="app_profile_export_to_clipboard">In Zwischenablage exportieren</string>
@@ -128,7 +126,6 @@
     <string name="flash_success">Schreiben erfolgreich</string>
     <string name="flash_failed">Schreiben fehlgeschlagen</string>
     <string name="selected_lkm">Wähle LKM: %s</string>
-    <string name="shrink_sparse_image">Spärliches Bild minimieren</string>
     <string name="action">Aktion</string>
     <string name="log_saved">Protokolle gespeichert</string>
 </resources>

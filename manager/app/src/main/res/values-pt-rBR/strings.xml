@@ -50,7 +50,6 @@
     <string name="home_click_to_learn_kernelsu">Saiba como instalar o KernelSU e usar os módulos</string>
     <string name="home_support_title">Apoie-nos</string>
     <string name="home_support_content">KernelSU sempre foi e sempre será, gratuito e de código aberto. No entanto, você pode nos ajudar enviando uma pequena doação.</string>
-    <string name="about_source_code"><![CDATA[Veja o código-fonte no %1$s<br/>Junte-se ao nosso canal do %2$s]]></string>
     <string name="profile" translatable="false">Perfil do Aplicativo</string>
     <string name="profile_default">Padrão</string>
     <string name="profile_template">Modelo</string>
@@ -75,10 +74,9 @@
     <string name="module_start_downloading">Começando a baixar %s</string>
     <string name="new_version_available">Nova versão %s está disponível, clique para atualizar.</string>
     <string name="launch_app">Iniciar</string>
-    <string name="force_stop_app">Forçar parada</string>
+    <string name="force_stop_app" formatted="false">Forçar parada</string>
     <string name="restart_app">Reiniciar</string>
     <string name="failed_to_update_sepolicy">Falha ao atualizar as regras do SELinux para %s</string>
-    <string name="require_kernel_version">A versão atual do KernelSU %d é muito baixa para o gerenciador funcionar corretamente. Por favor, atualize para a versão %d ou superior!</string>
     <string name="module_changelog">Registro de alterações</string>
     <string name="app_profile_template_import_success">Importado com sucesso</string>
     <string name="app_profile_export_to_clipboard">Exportar para a área de transferência</string>
@@ -133,6 +131,4 @@
     <string name="log_saved">Registros salvos</string>
     <string name="module_sort_action_first">Ordenar (Ação primeiro)</string>
     <string name="module_sort_enabled_first">Ordenar (Ativado primeiro)</string>
-    <string name="settings_disable_su_summary">Desative temporariamente a capacidade de qualquer app obter privilégios root por meio do comando ⁠su (processos root existentes não serão afetados).</string>
-    <string name="settings_disable_su">Desativar compatibilidade su</string>
 </resources>

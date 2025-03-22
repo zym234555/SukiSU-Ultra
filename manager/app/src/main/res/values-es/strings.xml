@@ -51,7 +51,6 @@
     <string name="home_click_to_learn_kernelsu">Aprende a instalar KernelSU y a utilizar módulos</string>
     <string name="home_support_title">Apóyanos</string>
     <string name="home_support_content">KernelSU es, y siempre será, gratuito y de código abierto. Sin embargo, puedes demostrarnos que te importamos haciendo una donación.</string>
-    <string name="about_source_code">Ver código fuente en %1$s<br/>Únete a nuestro canal %2$s</string>
     <string name="profile_default">Predeterminado</string>
     <string name="profile_template">Plantilla</string>
     <string name="profile_custom">Personalizado</string>
@@ -75,10 +74,9 @@
     <string name="module_start_downloading">Iniciar descarga: %s</string>
     <string name="new_version_available">La nueva versión %s está disponible, haga clic para actualizar.</string>
     <string name="launch_app">Iniciar</string>
-    <string name="force_stop_app">Forzar detención</string>
+    <string name="force_stop_app" formatted="false">Forzar detención</string>
     <string name="restart_app">Reiniciar</string>
     <string name="failed_to_update_sepolicy">Error al actualizar las reglas SELinux para: %s</string>
-    <string name="require_kernel_version">La versión %d actual de KernelSU es demasiado baja para que el gestor funcione correctamente. Por favor, ¡actualice a la versión %d o superior!</string>
     <string name="module_changelog">Registro de cambios</string>
     <string name="app_profile_template_import_success">Importado con éxito</string>
     <string name="app_profile_export_to_clipboard">Exportar al portapapeles</string>

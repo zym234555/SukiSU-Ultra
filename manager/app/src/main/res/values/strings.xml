@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name" translatable="false">KernelSU</string>
+    <string name="app_name" translatable="false">SukiSU</string>
     <string name="home">Home</string>
     <string name="home_not_installed">Not installed</string>
     <string name="home_click_to_install">Click to install</string>
@@ -9,8 +9,11 @@
     <string name="home_superuser_count">Superusers: %d</string>
     <string name="home_module_count">Modules: %d</string>
     <string name="home_unsupported">Unsupported</string>
-    <string name="home_unsupported_reason">KernelSU only supports GKI kernels now</string>
+    <string name="home_unsupported_reason">No KernelSU driver detected on your kernel, wrong kernel?.</string>
     <string name="home_kernel">Kernel</string>
+    <string name="home_susfs">SuSFS: %s</string>
+    <string name="home_susfs_version">Version de SuSFS</string>
+    <string name="home_susfs_sus_su">SuS SU</string>
     <string name="home_manager_version">Manager version</string>
     <string name="home_fingerprint">Fingerprint</string>
     <string name="home_selinux_status">SELinux status</string>
@@ -23,10 +26,8 @@
     <string name="module_failed_to_disable">Failed to disable module: %s</string>
     <string name="module_empty">No module installed</string>
     <string name="module">Module</string>
-    <string name="module_install_prompt_with_name">The following modules will be installed: %1$s</string>
     <string name="module_sort_action_first">Sort (Action first)</string>
     <string name="module_sort_enabled_first">Sort (Enabled first)</string>
-    <string name="confirm">Confirm</string>
     <string name="uninstall">Uninstall</string>
     <string name="restore">Restore</string>
     <string name="module_install">Install</string>
@@ -71,9 +72,11 @@
     <string name="profile_selinux_context">SELinux context</string>
     <string name="profile_umount_modules">Umount modules</string>
     <string name="failed_to_update_app_profile">Failed to update App Profile for %s</string>
-    <string name="require_kernel_version">The current KernelSU version %d is too low for the manager to work properly. Please upgrade to version %d or higher!</string>
+    <string name="require_kernel_version" formatted="false">The current KernelSU version %d is too low for the manager to work properly. Please upgrade to version %d or higher!</string>
     <string name="settings_umount_modules_default">Umount modules by default</string>
     <string name="settings_umount_modules_default_summary">The global default value for \"Umount modules\" in App Profile. If enabled, it will remove all module modifications to the system for apps that don\'t have a profile set.</string>
+    <string name="settings_susfs_toggle">Cacher les hooks kprobe</string>
+    <string name="settings_susfs_toggle_summary">Désactive les hooks kprobe créés par KSU et, à la place, active les hooks non-kprobe intégrés, implémentant les mêmes fonctionnalités qui seraient appliquées à un kernel non-GKI, qui ne supportent krpobe.</string>
     <string name="profile_umount_modules_summary">Enabling this option will allow KernelSU to restore any modified files by the modules for this app.</string>
     <string name="profile_selinux_domain">Domain</string>
     <string name="profile_selinux_rules">Rules</string>
@@ -82,10 +85,9 @@
     <string name="module_start_downloading">Start downloading: %s</string>
     <string name="new_version_available">New version %s is available, click to upgrade.</string>
     <string name="launch_app">Launch</string>
-    <string name="force_stop_app">Force stop</string>
+    <string name="force_stop_app" formatted="false">Force stop</string>
     <string name="restart_app">Restart</string>
     <string name="failed_to_update_sepolicy">Failed to update SELinux rules for %s</string>
-    <string name="su_not_allowed">Granting superuser to %s is not allowed</string>
     <string name="module_changelog">Changelog</string>
     <string name="settings_profile_template">App Profile Template</string>
     <string name="settings_profile_template_summary">Manage local and online template of App Profile</string>
@@ -136,6 +138,82 @@
     <string name="selected_lkm">Selected LKM: %s</string>
     <string name="save_log">Save logs</string>
     <string name="log_saved">Logs saved</string>
+    <string name="status_supported">Supported</string>
+    <string name="status_not_supported">Not Supported</string>
+    <string name="status_unknown">Unknown</string>
+    <string name="sus_su_mode">SuS SU mode:</string>
+    <!-- Module related -->
+    <string name="module_install_confirm">confirm install module %1$s？</string>
+    <string name="unknown_module">unknown module</string>
+    <!-- Restore related -->
+    <string name="restore_confirm_title">Confirm Module Restoration</string>
+    <string name="restore_confirm_message">This operation will overwrite all existing modules. Continue?</string>
+    <string name="confirm">Confirm</string>
+    <string name="cancel">Cancel</string>
+    <!-- Backup related -->
+    <string name="backup_success">Backup successful (tar.gz)</string>
+    <string name="backup_failed">Backup failed: %1$s</string>
+    <string name="backup_modules">backup modules</string>
+    <string name="restore_modules">restore modules</string>
+    <!-- Restore related messages -->
+    <string name="restore_success">Modules restored successfully, restart required</string>
+    <string name="restore_failed">Restore failed: %1$s</string>
+    <string name="restart_now">Restart Now</string>
+    <string name="unknown_error">Unknown error</string>
+    <!-- Command related -->
+    <string name="command_execution_failed">Command execution failed: %1$s</string>
+    <!-- Allowlist related -->
+    <string name="allowlist_backup_success">Allowlist backup successful</string>
+    <string name="allowlist_backup_failed">Allowlist backup failed: %1$s</string>
+    <string name="allowlist_restore_confirm_title">Confirm Allowlist Restoration</string>
+    <string name="allowlist_restore_confirm_message">This operation will overwrite the current allowlist. Continue?</string>
+    <string name="allowlist_restore_success">Allowlist restored successfully</string>
+    <string name="allowlist_restore_failed">Allowlist restore failed: %1$s</string>
+    <string name="backup_allowlist">Backup Allowlist</string>
+    <string name="restore_allowlist">Restore Allowlist</string>
+    <string name="settings_custom_background">settings custom background</string>
+    <string name="settings_custom_background_summary">settings custom background summary</string>
+    <string name="settings_card_manage">card manage</string>
+    <string name="settings_card_alpha">card alpha</string>
+    <string name="settings_restore_default">restore default</string>
+    <string name="home_android_version">Android version</string>
+    <string name="home_device_model">device model</string>
+    <string name="su_not_allowed">Granting superuser to %s is not allowed</string>
     <string name="settings_disable_su">Disable su compatibility</string>
-    <string name="settings_disable_su_summary">Temporarily disable the ability of any app to gain root privileges via the ⁠su command (existing root processes won\'t be affected).</string>
+    <string name="settings_disable_su_summary">Temporarily disable any applications from obtaining root privileges via the ⁠su command (existing root processes will not be affected).</string>
+    <string name="using_mksu_manager">You are using the MKSU third-party manager</string>
+    <string name="module_install_multiple_confirm">Are you sure you want to install the selected %d modules?</string>
+    <string name="module_install_multiple_confirm_with_names">Sure you want to install the following %1$d modules? \n\n%2$s</string>
+    <string name="more_settings">more settings</string>
+    <string name="selinux">SELinux</string>
+    <string name="selinux_enabled">Enabled</string>
+    <string name="selinux_disabled">Disabled</string>
+    <string name="simple_mode">simplicity mode</string>
+    <string name="simple_mode_summary">Hides unnecessary cards when turned on</string>
+    <string name="theme_mode">Theme Mode</string>
+    <string name="theme_follow_system">follow-up system</string>
+    <string name="theme_light">light color</string>
+    <string name="theme_dark">dark colored</string>
+    <string name="manual_hook">Manual Hook</string>
+    <string name="dynamic_color_title">Dynamic colours</string>
+    <string name="dynamic_color_summary">Dynamic colours using system themes</string>
+    <string name="choose_theme_color">Choose a theme colour</string>
+    <string name="color_default">yellow</string>
+    <string name="color_blue">blue</string>
+    <string name="color_green">green</string>
+    <string name="color_purple">purple</string>
+    <string name="color_orange">orange</string>
+    <string name="color_pink">pink</string>
+    <string name="color_gray">gray</string>
+    <string name="color_ivory">ivory</string>
+    <string name="flash_option">Brush Options</string>
+    <string name="flash_option_tip">Select the file to be flashed</string>
+    <string name="horizon_kernel">Anykernel3 Flush</string>
+    <string name="root_required">Requires root privileges</string>
+    <string name="copy_failed">File Copy Failure</string>
+    <string name="reboot_complete_title">Scrubbing complete</string>
+    <string name="reboot_complete_msg">Whether to reboot immediately？</string>
+    <string name="yes">yes</string>
+    <string name="no">no</string>
+    <string name="failed_reboot">Reboot Failed</string>
 </resources>
