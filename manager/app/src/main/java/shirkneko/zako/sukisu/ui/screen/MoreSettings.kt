@@ -443,9 +443,9 @@ private fun getSliderColors(cardAlpha: Float, useCustomColors: Boolean = false):
         // 使用自定义主题色时
         useCustomColors -> {
             SliderDefaults.colors(
-                activeTrackColor = Color.White,
+                activeTrackColor = theme.getCustomSliderActiveColor(),
                 inactiveTrackColor = theme.getCustomSliderInactiveColor(),
-                thumbColor = Color.White
+                thumbColor = theme.Primary
             )
         }
         else -> {
