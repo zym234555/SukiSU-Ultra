@@ -356,6 +356,9 @@ fun MoreSettingsScreen(navigator: DestinationsNavigator) {
                                 cardAlpha = 0.65f
                                 themeMode = 0
                                 context.saveThemeMode(null)
+                                CardConfig.isUserDarkModeEnabled = false
+                                CardConfig.isUserLightModeEnabled = false
+                                CardConfig.save(context)
                             }
                         }
                     )
@@ -424,6 +427,26 @@ fun MoreSettingsScreen(navigator: DestinationsNavigator) {
                                                         else -> null
                                                     }
                                                     context.saveThemeMode(newThemeMode)
+                                                    when (index) {
+                                                        2 -> {
+                                                            ThemeConfig.forceDarkMode = true
+                                                            CardConfig.isUserLightModeEnabled = false
+                                                            CardConfig.isUserDarkModeEnabled = true
+                                                            CardConfig.save(context)
+                                                        }
+                                                        1 -> {
+                                                            ThemeConfig.forceDarkMode = false
+                                                            CardConfig.isUserLightModeEnabled = true
+                                                            CardConfig.isUserDarkModeEnabled = false
+                                                            CardConfig.save(context)
+                                                        }
+                                                        0 -> {
+                                                            ThemeConfig.forceDarkMode = null
+                                                            CardConfig.isUserLightModeEnabled = false
+                                                            CardConfig.isUserDarkModeEnabled = false
+                                                            CardConfig.save(context)
+                                                        }
+                                                    }
                                                     showThemeModeDialog = false
                                                 }
                                                 .padding(vertical = 12.dp),

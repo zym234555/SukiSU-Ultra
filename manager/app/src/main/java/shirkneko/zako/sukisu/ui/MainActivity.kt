@@ -148,7 +148,6 @@ private fun BottomBar(navController: NavHostController) {
                 label = { Text(stringResource(destination.label)) },
                 alwaysShowLabel = false,
                 colors = androidx.compose.material3.NavigationBarItemDefaults.colors(
-                    selectedTextColor = Color.Black,
                     unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             )
