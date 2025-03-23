@@ -62,6 +62,7 @@ import kotlinx.coroutines.launch
 import shirkneko.zako.sukisu.R
 import shirkneko.zako.sukisu.ui.viewmodel.TemplateViewModel
 import androidx.lifecycle.compose.dropUnlessResumed
+import shirkneko.zako.sukisu.ui.theme.CardConfig
 
 /**
  * @author weishu
@@ -78,6 +79,7 @@ fun AppProfileTemplateScreen(
     val viewModel = viewModel<TemplateViewModel>()
     val scope = rememberCoroutineScope()
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
+    val cardColor = MaterialTheme.colorScheme.secondaryContainer
 
     LaunchedEffect(Unit) {
         if (viewModel.templateList.isEmpty()) {
@@ -149,12 +151,8 @@ fun AppProfileTemplateScreen(
                 },
                 icon = { Icon(Icons.Filled.Add, null) },
                 text = { Text(stringResource(id = R.string.app_profile_template_create)) },
-                elevation = FloatingActionButtonDefaults.elevation(
-                    defaultElevation = 0.dp,
-                    pressedElevation = 0.dp,
-                    focusedElevation = 0.dp,
-                    hoveredElevation = 0.dp
-                )
+                containerColor = cardColor.copy(alpha = 1f),
+                contentColor = MaterialTheme.colorScheme.onSecondaryContainer
             )
         },
         contentWindowInsets = WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)

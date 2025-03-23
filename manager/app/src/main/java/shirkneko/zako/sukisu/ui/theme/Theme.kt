@@ -26,6 +26,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.zIndex
 import coil.compose.rememberAsyncImagePainter
 import androidx.compose.foundation.background
+import androidx.compose.ui.graphics.luminance
 import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStream
@@ -125,21 +126,34 @@ fun KernelSUTheme(
 
     val colorScheme = when {
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            if (darkTheme) dynamicDarkColorScheme(context).copy(
-                background = Color.Transparent,
-                surface = Color.Transparent,
-                onBackground = Color.White,
-                onSurface = Color.White,
-                onPrimary = Color.White,
-                onSecondary = Color.White,
-                onTertiary = Color.White,
-                onPrimaryContainer = Color.White,
-                onSecondaryContainer = Color.White,
-                onTertiaryContainer = Color.White
-            ) else dynamicLightColorScheme(context).copy(
-                background = Color.Transparent,
-                surface = Color.Transparent
-            )
+            if (darkTheme) {
+                val originalScheme = dynamicDarkColorScheme(context)
+                originalScheme.copy(
+                    // 调整按钮相关颜色
+                    primary = adjustColor(originalScheme.primary),
+                    onPrimary = adjustColor(originalScheme.onPrimary),
+                    primaryContainer = adjustColor(originalScheme.primaryContainer),
+                    onPrimaryContainer = adjustColor(originalScheme.onPrimaryContainer),
+                    background = Color.Transparent,
+                    surface = Color.Transparent,
+                    onBackground = Color.White,
+                    onSurface = Color.White,
+                    onSecondary = Color.White,
+                    onTertiary = Color.White,
+                    onSecondaryContainer = Color.White,
+                    onTertiaryContainer = Color.White
+                )
+            } else {
+                val originalScheme = dynamicLightColorScheme(context)
+                originalScheme.copy(
+                    primary = adjustColor(originalScheme.primary),
+                    onPrimary = adjustColor(originalScheme.onPrimary),
+                    primaryContainer = adjustColor(originalScheme.primaryContainer),
+                    onPrimaryContainer = adjustColor(originalScheme.onPrimaryContainer),
+                    background = Color.Transparent,
+                    surface = Color.Transparent
+                )
+            }
         }
         darkTheme -> getDarkColorScheme()
         else -> getLightColorScheme()
@@ -307,4 +321,16 @@ fun Context.loadDynamicColorState() {
     val enabled = getSharedPreferences("theme_prefs", Context.MODE_PRIVATE)
         .getBoolean("use_dynamic_color", true)
     ThemeConfig.useDynamicColor = enabled
+}
+
+private fun adjustColor(color: Color): Color {
+    val minLuminance = 0.75f
+    val maxLuminance = 1f
+    var luminance = color.luminance()
+    if (luminance < minLuminance) {
+        luminance = minLuminance
+    } else if (luminance > maxLuminance) {
+        luminance = maxLuminance
+    }
+    return color.copy(luminance)
 }
