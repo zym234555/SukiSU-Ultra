@@ -216,4 +216,7 @@
     <string name="yes">yes</string>
     <string name="no">no</string>
     <string name="failed_reboot">Reboot Failed</string>
+    <string name="batch_authorization">bulk license</string>
+    <string name="batch_cancel_authorization">Batch cancel authorization</string>
+    <string name="backup">Backup</string>
 </resources>

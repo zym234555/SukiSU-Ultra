@@ -106,7 +106,6 @@ fun SuperUserScreen(navigator: DestinationsNavigator) {
                                 viewModel.showSystemApps = !viewModel.showSystemApps
                                 showDropdown = false
                             })
-                            // 批量操作菜单项已移除
                             DropdownMenuItem(text = {
                                 Text(stringResource(R.string.backup_allowlist))
                             }, onClick = {
@@ -144,7 +143,7 @@ fun SuperUserScreen(navigator: DestinationsNavigator) {
                             }
                         }
                     ) {
-                        Text("批量授权")
+                        Text(stringResource(R.string.batch_authorization))
                     }
 
                     Button(
@@ -154,7 +153,7 @@ fun SuperUserScreen(navigator: DestinationsNavigator) {
                             }
                         }
                     ) {
-                        Text("批量取消授权")
+                        Text(stringResource(R.string.batch_cancel_authorization))
                     }
                 }
             }
@@ -180,9 +179,6 @@ fun SuperUserScreen(navigator: DestinationsNavigator) {
 
                 // 显示ROOT权限应用组
                 if (rootApps.isNotEmpty()) {
-                    item {
-                        GroupHeader(title = "ROOT 权限应用")
-                    }
                     items(rootApps, key = { "root_" + it.packageName + it.uid }) { app ->
                         AppItem(
                             app = app,
@@ -218,9 +214,6 @@ fun SuperUserScreen(navigator: DestinationsNavigator) {
 
                 // 显示自定义配置应用组
                 if (customApps.isNotEmpty()) {
-                    item {
-                        GroupHeader(title = "自定义配置应用")
-                    }
                     items(customApps, key = { "custom_" + it.packageName + it.uid }) { app ->
                         AppItem(
                             app = app,
@@ -256,9 +249,6 @@ fun SuperUserScreen(navigator: DestinationsNavigator) {
 
                 // 显示其他应用组
                 if (otherApps.isNotEmpty()) {
-                    item {
-                        GroupHeader(title = "其他应用")
-                    }
                     items(otherApps, key = { "other_" + it.packageName + it.uid }) { app ->
                         AppItem(
                             app = app,

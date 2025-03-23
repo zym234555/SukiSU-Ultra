@@ -313,7 +313,7 @@ fun ModuleScreen(navigator: DestinationsNavigator) {
                                 leadingIcon = {
                                     Icon(
                                         imageVector = Icons.Outlined.Download,
-                                        contentDescription = "备份"
+                                        contentDescription = stringResource(R.string.backup)
                                     )
                                 },
                                 onClick = {
@@ -326,7 +326,7 @@ fun ModuleScreen(navigator: DestinationsNavigator) {
                                 leadingIcon = {
                                     Icon(
                                         imageVector = Icons.Outlined.Refresh,
-                                        contentDescription = "还原"
+                                        contentDescription = stringResource(R.string.restore)
                                     )
                                 },
                                 onClick = {
