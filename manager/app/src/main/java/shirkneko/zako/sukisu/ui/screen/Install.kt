@@ -28,6 +28,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.DialogProperties
 import androidx.documentfile.provider.DocumentFile
 import com.maxkeppeker.sheets.core.models.base.Header
 import com.maxkeppeker.sheets.core.models.base.rememberUseCaseState
@@ -515,18 +516,32 @@ fun rememberSelectKmiDialog(onSelected: (String?) -> Unit): DialogHandle {
         }
 
         var selection by remember { mutableStateOf<String?>(null) }
-        ListDialog(state = rememberUseCaseState(visible = true, onFinishedRequest = {
-            onSelected(selection)
-        }, onCloseRequest = {
-            dismiss()
-        }), header = Header.Default(
-            title = stringResource(R.string.select_kmi),
-        ), selection = ListSelection.Single(
-            showRadioButtons = true,
-            options = options,
-        ) { _, option ->
-            selection = option.titleText
-        })
+        Surface(
+            color = MaterialTheme.colorScheme.secondaryContainer,
+            contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+            shape = MaterialTheme.shapes.medium
+        ) {
+            ListDialog(
+                state = rememberUseCaseState(
+                    visible = true,
+                    onFinishedRequest = {
+                        onSelected(selection)
+                    },
+                    onCloseRequest = {
+                        dismiss()
+                    }
+                ),
+                header = Header.Default(
+                    title = stringResource(R.string.select_kmi),
+                ),
+                selection = ListSelection.Single(
+                    showRadioButtons = true,
+                    options = options,
+                ) { _, option ->
+                    selection = option.titleText
+                }
+            )
+        }
     }
 }
 

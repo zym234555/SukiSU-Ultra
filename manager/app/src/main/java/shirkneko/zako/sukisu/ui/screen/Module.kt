@@ -111,9 +111,7 @@ import shirkneko.zako.sukisu.ui.viewmodel.ModuleViewModel
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.util.zip.ZipInputStream
-import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.ui.graphics.Color
-import shirkneko.zako.sukisu.ui.theme.CardConfig
 
 
 @OptIn(ExperimentalMaterial3Api::class)

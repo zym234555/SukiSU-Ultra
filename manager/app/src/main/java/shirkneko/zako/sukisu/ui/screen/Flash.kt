@@ -122,6 +122,7 @@ fun FlashScreen(navigator: DestinationsNavigator, flashIt: FlashIt) {
         },
         floatingActionButton = {
             if (showFloatAction) {
+                val cardColor = MaterialTheme.colorScheme.secondaryContainer
                 val reboot = stringResource(id = R.string.reboot)
                 ExtendedFloatingActionButton(
                     onClick = {
@@ -133,6 +134,8 @@ fun FlashScreen(navigator: DestinationsNavigator, flashIt: FlashIt) {
                     },
                     icon = { Icon(Icons.Filled.Refresh, reboot) },
                     text = { Text(text = reboot) },
+                    containerColor = cardColor.copy(alpha = 1f),
+                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer
                 )
             }
         },
