@@ -52,6 +52,7 @@ curl -LSs "https://raw.githubusercontent.com/ShirkNeko/KernelSU/main/kernel/setu
 
 
 ## 使用方法
+
 ### GKI
 1. 适用于如小米红米三星等的 GKI 2.0 的设备（不包含魔改内核的厂商如魅族、一加、真我和 oppo）
 2. 找到更多链接里的 GKI 构建的项目找到设备内核版本直接下载用TWRP或者内核刷写工具刷入带 AnyKernel3 后缀的压缩包即可
