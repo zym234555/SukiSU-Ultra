@@ -197,7 +197,7 @@
     <string name="dynamic_color_title">动态颜色</string>
     <string name="dynamic_color_summary">使用系统主题的动态颜色</string>
     <string name="choose_theme_color">选择主题色</string>
-    <string name="color_default">黄色</string>
+    <string name="color_default">白色</string>
     <string name="color_blue">蓝色</string>
     <string name="color_green">绿色</string>
     <string name="color_purple">紫色</string>
@@ -217,4 +217,5 @@
     <string name="failed_reboot">重启失败</string>
     <string name="batch_authorization">批量授权</string>
     <string name="batch_cancel_authorization">批量取消授权</string>
+    <string name="color_yellow">黄色</string>
 </resources>

@@ -30,6 +30,8 @@ import androidx.compose.ui.graphics.luminance
 import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStream
+import androidx.core.content.edit
+import androidx.core.net.toUri
 
 object ThemeConfig {
     var customBackgroundUri by mutableStateOf<Uri?>(null)
@@ -243,27 +245,29 @@ fun KernelSUTheme(
 fun Context.saveCustomBackground(uri: Uri?) {
     val newUri = uri?.let { copyImageToInternalStorage(it) }
     getSharedPreferences("theme_prefs", Context.MODE_PRIVATE)
-        .edit()
-        .putString("custom_background", newUri?.toString())
-        .apply()
+        .edit {
+            putString("custom_background", newUri?.toString())
+        }
     ThemeConfig.customBackgroundUri = newUri
 }
 
 fun Context.loadCustomBackground() {
     val uriString = getSharedPreferences("theme_prefs", Context.MODE_PRIVATE)
         .getString("custom_background", null)
-    ThemeConfig.customBackgroundUri = uriString?.let { Uri.parse(it) }
+    ThemeConfig.customBackgroundUri = uriString?.toUri()
 }
 
 fun Context.saveThemeMode(forceDark: Boolean?) {
     getSharedPreferences("theme_prefs", Context.MODE_PRIVATE)
-        .edit()
-        .putString("theme_mode", when(forceDark) {
-            true -> "dark"
-            false -> "light"
-            null -> "system"
-        })
-        .apply()
+        .edit {
+            putString(
+                "theme_mode", when (forceDark) {
+                    true -> "dark"
+                    false -> "light"
+                    null -> "system"
+                }
+            )
+        }
     ThemeConfig.forceDarkMode = forceDark
 }
 
@@ -279,9 +283,9 @@ fun Context.loadThemeMode() {
 
 fun Context.saveThemeColors(themeName: String) {
     getSharedPreferences("theme_prefs", Context.MODE_PRIVATE)
-        .edit()
-        .putString("theme_colors", themeName)
-        .apply()
+        .edit {
+            putString("theme_colors", themeName)
+        }
 
     ThemeConfig.currentTheme = when(themeName) {
         "blue" -> ThemeColors.Blue
@@ -290,6 +294,7 @@ fun Context.saveThemeColors(themeName: String) {
         "orange" -> ThemeColors.Orange
         "pink" -> ThemeColors.Pink
         "gray" -> ThemeColors.Gray
+        "yellow" -> ThemeColors.Yellow
         else -> ThemeColors.Default
     }
 }
@@ -305,15 +310,16 @@ fun Context.loadThemeColors() {
         "orange" -> ThemeColors.Orange
         "pink" -> ThemeColors.Pink
         "gray" -> ThemeColors.Gray
+        "yellow" -> ThemeColors.Yellow
         else -> ThemeColors.Default
     }
 }
 
 fun Context.saveDynamicColorState(enabled: Boolean) {
     getSharedPreferences("theme_prefs", Context.MODE_PRIVATE)
-        .edit()
-        .putBoolean("use_dynamic_color", enabled)
-        .apply()
+        .edit {
+            putBoolean("use_dynamic_color", enabled)
+        }
     ThemeConfig.useDynamicColor = enabled
 }
 

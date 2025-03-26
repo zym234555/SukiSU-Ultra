@@ -49,8 +49,7 @@ import shirkneko.zako.sukisu.ui.util.getSuSFSFeatures
 import shirkneko.zako.sukisu.ui.util.susfsSUS_SU_0
 import shirkneko.zako.sukisu.ui.util.susfsSUS_SU_2
 import shirkneko.zako.sukisu.ui.util.susfsSUS_SU_Mode
-import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.ui.input.pointer.pointerInput
+import androidx.core.content.edit
 
 
 fun saveCardConfig(context: Context) {
@@ -72,7 +71,7 @@ fun MoreSettingsScreen(navigator: DestinationsNavigator) {
     val prefs = remember { context.getSharedPreferences("settings", Context.MODE_PRIVATE) }
     // 主题模式选择
     var themeMode by remember {
-        mutableStateOf(
+        mutableIntStateOf(
             when(ThemeConfig.forceDarkMode) {
                 true -> 2 // 深色
                 false -> 1 // 浅色
@@ -101,7 +100,7 @@ fun MoreSettingsScreen(navigator: DestinationsNavigator) {
 
     // 更新简洁模块开关状态
     val onSimpleModeChange = { newValue: Boolean ->
-        prefs.edit().putBoolean("is_simple_mode", newValue).apply()
+        prefs.edit { putBoolean("is_simple_mode", newValue) }
         isSimpleMode = newValue
     }
 
@@ -111,7 +110,7 @@ fun MoreSettingsScreen(navigator: DestinationsNavigator) {
     }
 
     // 卡片配置状态
-    var cardAlpha by rememberSaveable { mutableStateOf(CardConfig.cardAlpha) }
+    var cardAlpha by rememberSaveable { mutableFloatStateOf(CardConfig.cardAlpha) }
     var showCardSettings by remember { mutableStateOf(false) }
     var isCustomBackgroundEnabled by rememberSaveable {
         mutableStateOf(ThemeConfig.customBackgroundUri != null)
@@ -122,7 +121,7 @@ fun MoreSettingsScreen(navigator: DestinationsNavigator) {
     LaunchedEffect(Unit) {
         CardConfig.apply {
             cardAlpha = prefs.getFloat("card_alpha", 0.65f)
-            cardElevation = if (prefs.getBoolean("custom_background_enabled", false)) 0.dp else CardConfig.defaultElevation
+            cardElevation = if (prefs.getBoolean("custom_background_enabled", false)) 0.dp else defaultElevation
             isCustomAlphaSet = prefs.getBoolean("is_custom_alpha_set", false)
 
             // 如果没有手动设置透明度，且是深色模式，则使用默认值
@@ -149,6 +148,7 @@ fun MoreSettingsScreen(navigator: DestinationsNavigator) {
         stringResource(R.string.color_orange) to ThemeColors.Orange,
         stringResource(R.string.color_pink) to ThemeColors.Pink,
         stringResource(R.string.color_gray) to ThemeColors.Gray,
+        stringResource(R.string.color_yellow) to ThemeColors.Yellow
     )
 
     var showThemeColorDialog by remember { mutableStateOf(false) }
@@ -226,7 +226,7 @@ fun MoreSettingsScreen(navigator: DestinationsNavigator) {
                         val wasManuallyDisabled = prefs.getBoolean("enable_sus_su", true)
                         if (currentMode != "2" && wasManuallyDisabled) {
                             susfsSUS_SU_2() // 强制切换到模式2
-                            prefs.edit().putBoolean("enable_sus_su", true).apply()
+                            prefs.edit { putBoolean("enable_sus_su", true) }
                         }
                         isEnabled = currentMode == "2"
                     }
@@ -240,11 +240,11 @@ fun MoreSettingsScreen(navigator: DestinationsNavigator) {
                         if (it) {
                             // 手动启用
                             susfsSUS_SU_2()
-                            prefs.edit().putBoolean("enable_sus_su", true).apply()
+                            prefs.edit { putBoolean("enable_sus_su", true) }
                         } else {
                             // 手动关闭
                             susfsSUS_SU_0()
-                            prefs.edit().putBoolean("enable_sus_su", false).apply()
+                            prefs.edit { putBoolean("enable_sus_su", false) }
                         }
                         isEnabled = it
                     }
@@ -277,6 +277,7 @@ fun MoreSettingsScreen(navigator: DestinationsNavigator) {
                             is ThemeColors.Orange -> stringResource(R.string.color_orange)
                             is ThemeColors.Pink -> stringResource(R.string.color_pink)
                             is ThemeColors.Gray -> stringResource(R.string.color_gray)
+                            is ThemeColors.Yellow -> stringResource(R.string.color_yellow)
                             else -> stringResource(R.string.color_default)
                         }
                         Text(currentThemeName)
@@ -303,6 +304,7 @@ fun MoreSettingsScreen(navigator: DestinationsNavigator) {
                                                     ThemeColors.Orange -> "orange"
                                                     ThemeColors.Pink -> "pink"
                                                     ThemeColors.Gray -> "gray"
+                                                    ThemeColors.Yellow -> "yellow"
                                                     else -> "default"
                                                 })
                                                 showThemeColorDialog = false
@@ -377,8 +379,8 @@ fun MoreSettingsScreen(navigator: DestinationsNavigator) {
                                 cardAlpha = newValue
                                 CardConfig.cardAlpha = newValue
                                 CardConfig.isCustomAlphaSet = true
-                                prefs.edit().putBoolean("is_custom_alpha_set", true).apply()
-                                prefs.edit().putFloat("card_alpha", newValue).apply()
+                                prefs.edit { putBoolean("is_custom_alpha_set", true) }
+                                prefs.edit { putFloat("card_alpha", newValue) }
                             },
                             onValueChangeFinished = {
                                 CoroutineScope(Dispatchers.IO).launch {
