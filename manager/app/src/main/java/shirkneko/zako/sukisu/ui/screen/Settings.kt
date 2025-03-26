@@ -82,6 +82,7 @@ import java.time.format.DateTimeFormatter
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material3.MaterialTheme
 import shirkneko.zako.sukisu.ui.theme.CardConfig
+import androidx.core.content.edit
 
 
 /**
@@ -198,7 +199,7 @@ fun SettingScreen(navigator: DestinationsNavigator) {
                 summary = stringResource(id = R.string.settings_check_update_summary),
                 checked = checkUpdate
             ) {
-                prefs.edit().putBoolean("check_update", it).apply()
+                prefs.edit {putBoolean("check_update", it) }
                 checkUpdate = it
             }
 
@@ -214,7 +215,7 @@ fun SettingScreen(navigator: DestinationsNavigator) {
                 summary = stringResource(id = R.string.enable_web_debugging_summary),
                 checked = enableWebDebugging
             ) {
-                prefs.edit().putBoolean("enable_web_debugging", it).apply()
+                prefs.edit { putBoolean("enable_web_debugging", it) }
                 enableWebDebugging = it
             }
             // endregion

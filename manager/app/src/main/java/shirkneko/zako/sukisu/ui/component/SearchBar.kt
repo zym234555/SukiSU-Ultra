@@ -65,7 +65,6 @@ fun SearchAppBar(
     // 获取卡片颜色和透明度
     val cardColor = MaterialTheme.colorScheme.secondaryContainer
     val cardAlpha = CardConfig.cardAlpha
-    val cardElevation = CardConfig.cardElevation
 
     if (onSearch) {
         LaunchedEffect(Unit) { focusRequester.requestFocus() }

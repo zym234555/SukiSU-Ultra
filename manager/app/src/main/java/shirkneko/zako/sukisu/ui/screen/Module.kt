@@ -111,7 +111,9 @@ import shirkneko.zako.sukisu.ui.viewmodel.ModuleViewModel
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.util.zip.ZipInputStream
-import androidx.compose.ui.graphics.Color
+import androidx.core.content.edit
+import androidx.core.net.toUri
+import shirkneko.zako.sukisu.ui.theme.ThemeConfig
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -152,7 +154,7 @@ fun ModuleScreen(navigator: DestinationsNavigator) {
                                     var line: String?
                                     while (reader.readLine().also { line = it } != null) {
                                         if (line?.startsWith("name=") == true) {
-                                            name = line?.substringAfter("=") ?: name
+                                            name = line.substringAfter("=")
                                             break
                                         }
                                     }
@@ -205,7 +207,7 @@ fun ModuleScreen(navigator: DestinationsNavigator) {
                                 var line: String?
                                 while (reader.readLine().also { line = it } != null) {
                                     if (line?.startsWith("name=") == true) {
-                                        name = line?.substringAfter("=") ?: name
+                                        name = line.substringAfter("=")
                                         break
                                     }
                                 }
@@ -285,9 +287,12 @@ fun ModuleScreen(navigator: DestinationsNavigator) {
                                 trailingIcon = { Checkbox(viewModel.sortActionFirst, null) },
                                 onClick = {
                                     viewModel.sortActionFirst = !viewModel.sortActionFirst
-                                    prefs.edit()
-                                        .putBoolean("module_sort_action_first", viewModel.sortActionFirst)
-                                        .apply()
+                                    prefs.edit {
+                                        putBoolean(
+                                            "module_sort_action_first",
+                                            viewModel.sortActionFirst
+                                        )
+                                    }
                                     scope.launch {
                                         viewModel.fetchModuleList()
                                     }
@@ -298,9 +303,9 @@ fun ModuleScreen(navigator: DestinationsNavigator) {
                                 trailingIcon = { Checkbox(viewModel.sortEnabledFirst, null) },
                                 onClick = {
                                     viewModel.sortEnabledFirst = !viewModel.sortEnabledFirst
-                                    prefs.edit()
-                                        .putBoolean("module_sort_enabled_first", viewModel.sortEnabledFirst)
-                                        .apply()
+                                    prefs.edit {
+                                            putBoolean("module_sort_enabled_first", viewModel.sortEnabledFirst)
+                                        }
                                     scope.launch {
                                         viewModel.fetchModuleList()
                                     }
@@ -399,7 +404,7 @@ fun ModuleScreen(navigator: DestinationsNavigator) {
                         if (hasWebUi) {
                             webUILauncher.launch(
                                 Intent(context, WebUIActivity::class.java)
-                                    .setData(Uri.parse("kernelsu://webui/$id"))
+                                    .setData("kernelsu://webui/$id".toUri())
                                     .putExtra("id", id)
                                     .putExtra("name", name)
                             )
@@ -779,8 +784,7 @@ fun ModuleItem(
                         },
                         contentPadding = ButtonDefaults.TextButtonContentPadding,
                         colors = ButtonDefaults.filledTonalButtonColors(
-                            containerColor = Color.White,
-                            contentColor =  Color.Black
+                            containerColor = ThemeConfig.currentTheme.ButtonContrast
                         )
                     ) {
                         Icon(
@@ -809,8 +813,7 @@ fun ModuleItem(
                         interactionSource = interactionSource,
                         contentPadding = ButtonDefaults.TextButtonContentPadding,
                         colors = ButtonDefaults.filledTonalButtonColors(
-                            containerColor = Color.White,
-                            contentColor = Color.Black
+                            containerColor = ThemeConfig.currentTheme.ButtonContrast
                         )
                     ) {
                         Icon(
@@ -839,8 +842,7 @@ fun ModuleItem(
                         shape = ButtonDefaults.textShape,
                         contentPadding = ButtonDefaults.TextButtonContentPadding,
                         colors = ButtonDefaults.filledTonalButtonColors(
-                            containerColor = Color.White,
-                            contentColor = Color.Black
+                            containerColor = ThemeConfig.currentTheme.ButtonContrast
                         )
                     ) {
                         Icon(
@@ -866,8 +868,7 @@ fun ModuleItem(
                     onClick = { onUninstallClicked(module) },
                     contentPadding = ButtonDefaults.TextButtonContentPadding,
                     colors = ButtonDefaults.filledTonalButtonColors(
-                        containerColor = Color.White,
-                        contentColor = Color.Black
+                        containerColor = ThemeConfig.currentTheme.ButtonContrast
                     )
                 ) {
                     if (!module.remove) {

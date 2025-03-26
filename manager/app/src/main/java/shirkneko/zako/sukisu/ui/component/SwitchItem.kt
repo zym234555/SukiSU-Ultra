@@ -1,6 +1,5 @@
 package shirkneko.zako.sukisu.ui.component
 
-import androidx.compose.foundation.clickable
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.Switch

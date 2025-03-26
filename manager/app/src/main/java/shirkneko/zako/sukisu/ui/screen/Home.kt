@@ -1,5 +1,6 @@
 package shirkneko.zako.sukisu.ui.screen
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Build
 import android.os.PowerManager
@@ -49,6 +50,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.runtime.saveable.rememberSaveable
 import shirkneko.zako.sukisu.ui.theme.CardConfig
+import androidx.core.content.edit
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Destination<RootGraph>(start = true)
@@ -116,7 +118,7 @@ fun HomeScreen(navigator: DestinationsNavigator) {
                 UpdateCard()
             }
             val prefs = remember { context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE) }
-            var clickCount by rememberSaveable { mutableStateOf(prefs.getInt("click_count", 0)) }
+            var clickCount by rememberSaveable { mutableIntStateOf(prefs.getInt("click_count", 0)) }
 
             if (!isSimpleMode && clickCount < 3) {
                 AnimatedVisibility(
@@ -132,7 +134,7 @@ fun HomeScreen(navigator: DestinationsNavigator) {
                                 .fillMaxWidth()
                                 .clickable {
                                     clickCount++
-                                    prefs.edit().putInt("click_count", clickCount).apply()
+                                    prefs.edit { putInt("click_count", clickCount) }
                                 }
                                 .padding(16.dp),
                             verticalAlignment = Alignment.CenterVertically
@@ -574,6 +576,7 @@ private fun WarningCardPreview() {
     }
 }
 
+@SuppressLint("PrivateApi")
 private fun getDeviceModel(context: Context): String {
     return try {
         val marketName = context.getSystemService(Context.APP_OPS_SERVICE)?.let { appOps ->

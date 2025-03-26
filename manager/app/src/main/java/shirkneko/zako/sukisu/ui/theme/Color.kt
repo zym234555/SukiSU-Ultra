@@ -15,11 +15,12 @@ sealed class ThemeColors {
     abstract val OnPrimaryContainer: Color
     abstract val OnSecondaryContainer: Color
     abstract val OnTertiaryContainer: Color
+    abstract val ButtonContrast: Color
 
     open fun getCustomSliderActiveColor(): Color = Primary
     open fun getCustomSliderInactiveColor(): Color = PrimaryContainer
 
-    // Default Theme (Yellow)
+    // Default Theme (white)
     object Default : ThemeColors() {
         override val Primary = Color(0xFFFFFFFF)
         override val Secondary = Color(0xFFF5F5F5)
@@ -33,6 +34,7 @@ sealed class ThemeColors {
         override val OnPrimaryContainer = Color(0xFF000000)
         override val OnSecondaryContainer = Color(0xFF000000)
         override val OnTertiaryContainer = Color(0xFF000000)
+        override val ButtonContrast = Color(0xFFFFFFFF)
     }
 
     // Blue Theme
@@ -49,6 +51,7 @@ sealed class ThemeColors {
         override val OnPrimaryContainer = Color(0xFF0A1A2E)
         override val OnSecondaryContainer = Color(0xFF0A192D)
         override val OnTertiaryContainer = Color(0xFF071B3D)
+        override val ButtonContrast = Color(0xFF00BFFF)
     }
 
     // Green Theme
@@ -65,6 +68,7 @@ sealed class ThemeColors {
         override val OnPrimaryContainer = Color(0xFF0A1F0B)
         override val OnSecondaryContainer = Color(0xFF0A1D0B)
         override val OnTertiaryContainer = Color(0xFF071F09)
+        override val ButtonContrast = Color(0xFF32CD32)
     }
 
     // Purple Theme
@@ -81,6 +85,7 @@ sealed class ThemeColors {
         override val OnPrimaryContainer = Color(0xFF1F0A23)
         override val OnSecondaryContainer = Color(0xFF1C0A21)
         override val OnTertiaryContainer = Color(0xFF12071C)
+        override val ButtonContrast = Color(0xFFDA70D6)
     }
 
     // Orange Theme
@@ -97,6 +102,7 @@ sealed class ThemeColors {
         override val OnPrimaryContainer = Color(0xFF1A1100)
         override val OnSecondaryContainer = Color(0xFF1A1000)
         override val OnTertiaryContainer = Color(0xFF1A0B00)
+        override val ButtonContrast = Color(0xFFFF6347)
     }
 
     // Pink Theme
@@ -113,6 +119,7 @@ sealed class ThemeColors {
         override val OnPrimaryContainer = Color(0xFF2E0A14)
         override val OnSecondaryContainer = Color(0xFF2B0A13)
         override val OnTertiaryContainer = Color(0xFF1C0311)
+        override val ButtonContrast = Color(0xFFFF1493)
     }
 
     // Gray Theme
@@ -129,6 +136,7 @@ sealed class ThemeColors {
         override val OnPrimaryContainer = Color(0xFF1A1A1A)
         override val OnSecondaryContainer = Color(0xFF171717)
         override val OnTertiaryContainer = Color(0xFF141414)
+        override val ButtonContrast = Color(0xFF696969)
     }
 
     object Yellow : ThemeColors() {
@@ -144,6 +152,7 @@ sealed class ThemeColors {
         override val OnPrimaryContainer = Color(0xFF1A1600)
         override val OnSecondaryContainer = Color(0xFF1A1100)
         override val OnTertiaryContainer = Color(0xFF1A1717)
+        override val ButtonContrast = Color(0xFFFFD700)
     }
 
     companion object {

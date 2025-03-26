@@ -1,7 +1,6 @@
 package shirkneko.zako.sukisu.ui.screen
 
 import android.app.Activity
-import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -28,7 +27,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.DialogProperties
 import androidx.documentfile.provider.DocumentFile
 import com.maxkeppeker.sheets.core.models.base.Header
 import com.maxkeppeker.sheets.core.models.base.rememberUseCaseState
@@ -129,7 +127,6 @@ fun InstallScreen(navigator: DestinationsNavigator) {
         } else {
             onInstall()
         }
-        Unit
     }
 
     val selectLkmLauncher = rememberLauncherForActivityResult(
