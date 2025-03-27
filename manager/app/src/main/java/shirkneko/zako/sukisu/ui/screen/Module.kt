@@ -783,9 +783,13 @@ fun ModuleItem(
                             viewModel.markNeedRefresh()
                         },
                         contentPadding = ButtonDefaults.TextButtonContentPadding,
-                        colors = ButtonDefaults.filledTonalButtonColors(
-                            containerColor = ThemeConfig.currentTheme.ButtonContrast
-                        )
+                        colors = if (!ThemeConfig.useDynamicColor) {
+                            ButtonDefaults.filledTonalButtonColors(
+                                containerColor = ThemeConfig.currentTheme.ButtonContrast
+                            )
+                        } else {
+                            ButtonDefaults.filledTonalButtonColors()
+                        }
                     ) {
                         Icon(
                             modifier = Modifier.size(20.dp),
@@ -812,9 +816,13 @@ fun ModuleItem(
                         onClick = { onClick(module) },
                         interactionSource = interactionSource,
                         contentPadding = ButtonDefaults.TextButtonContentPadding,
-                        colors = ButtonDefaults.filledTonalButtonColors(
-                            containerColor = ThemeConfig.currentTheme.ButtonContrast
-                        )
+                        colors = if (!ThemeConfig.useDynamicColor) {
+                            ButtonDefaults.filledTonalButtonColors(
+                                containerColor = ThemeConfig.currentTheme.ButtonContrast
+                            )
+                        } else {
+                            ButtonDefaults.filledTonalButtonColors()
+                        }
                     ) {
                         Icon(
                             modifier = Modifier.size(20.dp),
@@ -841,9 +849,6 @@ fun ModuleItem(
                         onClick = { onUpdate(module) },
                         shape = ButtonDefaults.textShape,
                         contentPadding = ButtonDefaults.TextButtonContentPadding,
-                        colors = ButtonDefaults.filledTonalButtonColors(
-                            containerColor = ThemeConfig.currentTheme.ButtonContrast
-                        )
                     ) {
                         Icon(
                             modifier = Modifier.size(20.dp),
@@ -867,9 +872,13 @@ fun ModuleItem(
                     modifier = Modifier.defaultMinSize(52.dp, 32.dp),
                     onClick = { onUninstallClicked(module) },
                     contentPadding = ButtonDefaults.TextButtonContentPadding,
-                    colors = ButtonDefaults.filledTonalButtonColors(
-                        containerColor = ThemeConfig.currentTheme.ButtonContrast
-                    )
+                    colors = if (!ThemeConfig.useDynamicColor) {
+                        ButtonDefaults.filledTonalButtonColors(
+                            containerColor = ThemeConfig.currentTheme.ButtonContrast
+                        )
+                    } else {
+                        ButtonDefaults.filledTonalButtonColors()
+                    }
                 ) {
                     if (!module.remove) {
                         Icon(

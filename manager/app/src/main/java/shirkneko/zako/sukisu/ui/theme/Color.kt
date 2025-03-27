@@ -34,7 +34,7 @@ sealed class ThemeColors {
         override val OnPrimaryContainer = Color(0xFF000000)
         override val OnSecondaryContainer = Color(0xFF000000)
         override val OnTertiaryContainer = Color(0xFF000000)
-        override val ButtonContrast = Color(0xFFFFFFFF)
+        override val ButtonContrast = Color(0xFF00BFFF)
     }
 
     // Blue Theme
