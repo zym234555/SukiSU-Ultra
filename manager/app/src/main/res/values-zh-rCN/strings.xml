@@ -73,8 +73,8 @@
     <string name="require_kernel_version" formatted="false">当前 KernelSU 版本 %d 过低，管理器无法正常工作，请将内核 KernelSU 版本升级至 %d 或以上！</string>
     <string name="settings_umount_modules_default">默认卸载模块</string>
     <string name="settings_umount_modules_default_summary">App Profile 中“卸载模块”的全局默认值，如果启用，将会为没有设置 Profile 的应用移除所有模块针对系统的修改。</string>
-    <string name="settings_susfs_toggle">隐藏 Kprobe 钩子</string>
-    <string name="settings_susfs_toggle_summary">禁用由 KSU 创建的 Kprobe 钩子，并使用非 Kprobe 内联钩子代替，实现方式类似于不支持 Kprobe 的非 GKI 内核。</string>
+    <string name="settings_susfs_toggle">禁用 kprobe 钩子</string>
+    <string name="settings_susfs_toggle_summary">禁用由 KernelSU 创建的 kprobe 钩子，并使用非 kprobe 内联钩子代替，实现方式类似于不支持 kprobe 的非 GKI 内核。</string>
     <string name="profile_umount_modules_summary">启用该选项后将允许 KernelSU 为本应用还原被模块修改过的文件。</string>
     <string name="profile_selinux_domain">域</string>
     <string name="profile_selinux_rules">规则</string>
@@ -180,13 +180,13 @@
     <string name="su_not_allowed">不允许授予 %s 超级用户权限</string>
     <string name="settings_disable_su">禁用 su 兼容性</string>
     <string name="settings_disable_su_summary">临时禁止任何应用程序通过 su 命令获取 Root 权限（现有的 Root 进程不受影响）</string>
-    <string name="using_mksu_manager">你正在使用的是MKSU第三方管理器</string>
+    <string name="using_mksu_manager">你正在使用的是 MKSU 第三方管理器</string>
     <string name="module_install_multiple_confirm">确定要安装选择的 %d 个模块吗？</string>
     <string name="module_install_multiple_confirm_with_names">确定要安装以下 %1$d 个模块吗？\n\n%2$s</string>
     <string name="more_settings">更多设置</string>
     <string name="selinux">SELinux</string>
     <string name="selinux_enabled">强制执行</string>
-    <string name="selinux_disabled">兼容模式</string>
+    <string name="selinux_disabled">宽容模式</string>
     <string name="simple_mode">简洁模式</string>
     <string name="simple_mode_summary">开启后将隐藏不必要的卡片</string>
     <string name="theme_mode">主题模式</string>
@@ -207,7 +207,7 @@
     <string name="color_ivory">象牙白</string>
     <string name="flash_option">刷入选项</string>
     <string name="flash_option_tip">选择要刷入的文件</string>
-    <string name="horizon_kernel">Anykernel3 刷写</string>
+    <string name="horizon_kernel">刷写 AnyKernel3 压缩包</string>
     <string name="root_required">需要 root 权限</string>
     <string name="copy_failed">文件复制失败</string>
     <string name="reboot_complete_title">刷写完成</string>
