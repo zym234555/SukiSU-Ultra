@@ -579,16 +579,21 @@ private fun WarningCardPreview() {
 @SuppressLint("PrivateApi")
 private fun getDeviceModel(context: Context): String {
     return try {
+        val systemProperties = Class.forName("android.os.SystemProperties")
+        val getMethod = systemProperties.getMethod("get", String::class.java, String::class.java)
         val marketName = context.getSystemService(Context.APP_OPS_SERVICE)?.let { appOps ->
-            val systemProperties = Class.forName("android.os.SystemProperties")
-            val getMethod = systemProperties.getMethod("get", String::class.java, String::class.java)
             getMethod.invoke(null, "ro.product.marketname", "") as String
         } ?: ""
 
         if (marketName.isNotEmpty()) {
             marketName
         } else {
-            Build.DEVICE
+            val MarketName = getMethod.invoke(null, "ro.vendor.oplus.market.name", "") as String
+            if (MarketName.isNotEmpty()) {
+                MarketName
+            } else {
+                Build.DEVICE
+            }
         }
     } catch (e: Exception) {
         Build.DEVICE
