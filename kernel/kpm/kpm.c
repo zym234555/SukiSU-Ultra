@@ -494,6 +494,7 @@ static int kpm_move_module(struct kpm_module *mod, struct kpm_load_info *info)
     unsigned long curr_offset = 0;
     Elf64_Shdr *shdr;
     void *dest;
+    const char *secname;
 
     /* 分配连续内存（按页对齐） */
     mod->size = ALIGN(mod->size, PAGE_SIZE);
@@ -535,7 +536,7 @@ static int kpm_move_module(struct kpm_module *mod, struct kpm_load_info *info)
         curr_offset += shdr->sh_size;
 
         /* 定位关键函数指针 */
-        const char *secname = info->secstrings + shdr->sh_name;
+        secname = info->secstrings + shdr->sh_name;
         if (!mod->init && !strcmp(".kpm.init", secname)) {
             mod->init = (int (*)(const char *, const char *, void *__user))dest;
             printk(KERN_DEBUG "Found .kpm.init at 0x%px\n", dest);
