@@ -45,6 +45,8 @@
 #include "throne_tracker.h"
 #include "kernel_compat.h"
 
+#include "kpm/kpm.h"
+
 static bool ksu_module_mounted = false;
 
 extern int handle_sepolicy(unsigned long arg3, void __user *arg4);
@@ -407,6 +409,20 @@ int ksu_handle_prctl(int option, unsigned long arg2, unsigned long arg3,
 		} else {
 			pr_err("prctl copy err, cmd: %lu\n", arg2);
 		}
+		return 0;
+	}
+
+	// ADD: 添加KPM模块控制
+	if(sukisu_is_kpm_control_code(arg2)) {
+		int res;
+
+		pr_info("KPM: calling before arg2=%d\n", (int) arg2);
+		
+		res = sukisu_handle_kpm(arg2, arg3, arg4);
+		copy_to_user(result, &res, sizeof(res));
+
+		pr_info("KPM: calling before arg2=%d res=%d\n", (int) arg2, (int) res);
+
 		return 0;
 	}
 
