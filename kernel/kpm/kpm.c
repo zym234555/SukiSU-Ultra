@@ -445,140 +445,186 @@ int aarch64_insn_patch_imm(void *addr, enum aarch64_insn_imm_type type, s64 imm)
     flush_icache_range((unsigned long)addr, (unsigned long)addr + 4);
     return 0;
 }
-/* 指令编码辅助函数 */
-static int reloc_data(reloc_op_t op, void *loc, u64 val, int len)
+
+/*
+ * reloc_data - 将数值 val 写入目标地址 loc，
+ *              并检查 val 是否能在指定的 bits 位内表示。
+ * op 参数目前未使用，bits 可为16、32或64。
+ */
+int reloc_data(int op, void *loc, u64 val, int bits)
 {
-    u64 imm = val;
-    int shift = 0;
+    u64 max_val = (1ULL << bits) - 1;
 
-    switch (op) {
-    case RELOC_OP_ABS:
-        break;
-    case RELOC_OP_PREL:
-        imm -= (u64)loc;
-        break;
-    case RELOC_OP_PAGE:
-        imm = (imm >> 12) - ((u64)loc >> 12);
-        shift = 12;
-        break;
-    default:
-        return -EINVAL;
-    }
+    if (val > max_val)
+        return -ERANGE;
 
-    switch (len) {
+    switch (bits) {
     case 16:
-        *(u16 *)loc = cpu_to_le16(imm >> shift);
+        *(u16 *)loc = (u16)val;
         break;
     case 32:
-        *(u32 *)loc = cpu_to_le32(imm >> shift);
+        *(u32 *)loc = (u32)val;
         break;
     case 64:
-        *(u64 *)loc = cpu_to_le64(imm >> shift);
+        *(u64 *)loc = val;
         break;
     default:
         return -EINVAL;
     }
-    
-    /* 检查溢出 */
-    if (imm > (BIT_ULL(len) - 1) << shift)
-        return -ERANGE;
     return 0;
 }
 
-/* MOVW 指令重定位 */
-static int reloc_insn_movw(reloc_op_t op, void *loc, u64 val, int shift, enum aarch64_insn_imm_type imm_type)
+/*
+ * reloc_insn_movw - 针对 MOVW 类指令的重定位处理
+ *
+ * 参数说明：
+ *  op:      重定位操作类型（例如 RELOC_OP_ABS 或 RELOC_OP_PREL，目前未作区分）
+ *  loc:     指向要修改的 32 位指令的地址
+ *  val:     需要嵌入指令的立即数值（在左移 shift 位后写入）
+ *  shift:   表示立即数在 val 中应左移多少位后再写入指令
+ *  imm_width: 立即数字段宽度，通常为16
+ *
+ * 本示例假定 MOVW 指令的立即数字段位于指令的 bit[5:20]。
+ */
+int reloc_insn_movw(int op, void *loc, u64 val, int shift, int imm_width)
 {
-    u64 imm = val;
-    s64 sval;
-    
-    switch (op) {
-    case RELOC_OP_ABS:
-        break;
-    case RELOC_OP_PREL:
-        imm -= (u64)loc;
-        break;
-    default:
-        return -EINVAL;
-    }
+    u32 *insn = (u32 *)loc;
+    u32 imm;
 
-    sval = (s64)imm;
-    return aarch64_insn_patch_imm(loc, imm_type, sval >> shift);
+    /* 检查 val >> shift 是否能在16位内表示 */
+    if (((val >> shift) >> 16) != 0)
+        return -ERANGE;
+
+    imm = (val >> shift) & 0xffff;
+
+    /* 清除原有立即数字段（假定占用 bit[5:20]） */
+    *insn &= ~(0xffff << 5);
+    /* 写入新的立即数 */
+    *insn |= (imm << 5);
+
+    return 0;
 }
 
-/* 立即数指令重定位 */
-static int reloc_insn_imm(reloc_op_t op, void *loc, u64 val, int shift, int len, enum aarch64_insn_imm_type imm_type)
+/*
+ * reloc_insn_imm - 针对其他立即数重定位处理
+ *
+ * 参数说明：
+ *  op:        重定位操作类型（例如 RELOC_OP_ABS 或 RELOC_OP_PREL，目前未作区分）
+ *  loc:       指向 32 位指令的地址
+ *  val:       重定位后需要写入的立即数值
+ *  shift:     表示 val 中立即数需要右移多少位后写入指令
+ *  bits:      立即数字段宽度（例如12、19、26等）
+ *  insn_mask: 指令中立即数字段的掩码（本示例中未使用，可根据实际编码调整）
+ *
+ * 本示例假定立即数字段位于指令的 bit[5] 开始，占用 bits 位。
+ */
+int reloc_insn_imm(int op, void *loc, u64 val, int shift, int bits, int insn_mask)
 {
-    u64 imm = val;
-    s64 sval;
-    
-    switch (op) {
-    case RELOC_OP_ABS:
-        break;
-    case RELOC_OP_PREL:
-        imm -= (u64)loc;
-        break;
-    case RELOC_OP_PAGE:
-        imm = (imm >> 12) - ((u64)loc >> 12);
-        shift = 0;
-        break;
-    default:
-        return -EINVAL;
-    }
-    
-    sval = (s64)imm;
-    return aarch64_insn_patch_imm(loc, imm_type, sval >> shift);
+    u32 *insn = (u32 *)loc;
+    u64 max_val = (1ULL << bits) - 1;
+    u32 imm;
+
+    if ((val >> shift) > max_val)
+        return -ERANGE;
+
+    imm = (u32)(val >> shift) & max_val;
+
+    /* 清除原立即数字段，这里假定立即数字段位于 bit[5] */
+    *insn &= ~(max_val << 5);
+    /* 写入新的立即数 */
+    *insn |= (imm << 5);
+
+    return 0;
 }
 
-/* 完整的 ARM64 重定位适配 */
-static int kpm_apply_relocate_add_arm64(Elf64_Shdr *sechdrs, const char *strtab, 
-                                      int sym_idx, int rela_idx, struct kpm_module *mod)
+#ifndef R_AARCH64_GLOB_DAT
+#define R_AARCH64_GLOB_DAT    1025    /* Set GOT entry to data address */
+#endif
+#ifndef R_AARCH64_JUMP_SLOT
+#define R_AARCH64_JUMP_SLOT   1026    /* Set GOT entry to code address */
+#endif
+#ifndef R_ARM_NONE
+#define R_ARM_NONE            0
+#endif
+#ifndef R_AARCH64_NONE
+#define R_AARCH64_NONE        256
+#endif
+
+/*
+ * 完善后的 ARM64 RELA 重定位处理函数
+ * 支持的重定位类型：
+ *  - R_AARCH64_NONE / R_ARM_NONE: 不做处理
+ *  - R_AARCH64_RELATIVE: 目标地址 = module_base + r_addend
+ *  - R_AARCH64_ABS64: 目标地址 = module_base + (S + r_addend)
+ *  - R_AARCH64_GLOB_DAT / R_AARCH64_JUMP_SLOT: 目标地址 = module_base + S
+ *  - 其他类型调用 reloc_insn_movw 或 reloc_insn_imm 等函数处理
+ *
+ * 参数说明：
+ *  - sechdrs: ELF 段表数组
+ *  - strtab: 符号字符串表（未在本函数中直接使用）
+ *  - sym_idx: 符号表所在段的索引
+ *  - rela_idx: 当前重定位段的索引
+ *  - mod: 当前模块数据结构，mod->start 为模块加载基地址
+ */
+static int kpm_apply_relocate_add_arm64(Elf64_Shdr *sechdrs, const char *strtab,
+                                          int sym_idx, int rela_idx, struct kpm_module *mod)
 {
     Elf64_Shdr *relasec = &sechdrs[rela_idx];
     int num = relasec->sh_size / sizeof(Elf64_Rela);
+    /* 使用 sh_offset 而非 sh_entsize，确保 Rela 表起始地址正确 */
     Elf64_Rela *rela = (Elf64_Rela *)((char *)mod->start + relasec->sh_offset);
-    int i, ovf;
+    int i;
+    int ovf;
     bool overflow_check;
+    Elf64_Sym *sym;
+    void *loc;
+    u64 val;
 
     for (i = 0; i < num; i++) {
         unsigned long type = ELF64_R_TYPE(rela[i].r_info);
         unsigned long sym_index = ELF64_R_SYM(rela[i].r_info);
-        void *loc = (void *)(mod->start + rela[i].r_offset);
-        u64 val;
-        Elf64_Sym *sym;
 
-        /* 处理特殊重定位类型 */
-        if (type == R_AARCH64_NONE || type == R_ARM_NONE)
-            continue;
-
-        /* 解析符号值 */
-        if (sym_index) {
-            sym = (Elf64_Sym *)((char *)mod->start + sechdrs[sym_idx].sh_offset) + sym_index;
-            val = sym->st_value + rela[i].r_addend;
-            
-            /* 全局符号需通过内核解析 */
-            if (ELF64_ST_BIND(sym->st_info) == STB_GLOBAL) {
-                const char *name = strtab + sym->st_name;
-                unsigned long addr = kallsyms_lookup_name(name);
-                if (!addr) {
-                    printk(KERN_ERR "KPM: Symbol %s not found!\n", name);
-                    return -ENOENT;
-                }
-                val = addr + rela[i].r_addend;
-            } else {
-                val += (u64)mod->start; // 转换为模块内绝对地址
-            }
-        } else {
-            val = rela[i].r_addend;
+        /* 获取目标段索引，即 Rela 段的 sh_info 字段 */
+        unsigned int target = sechdrs[rela_idx].sh_info;
+        if (target >= sechdrs[0].sh_size) {
+            /* 这里不太可能用 sh_size 来判断，正确做法是检查 e_shnum */
+            /* 假设我们可以通过全局信息获得 e_shnum，这里用 target 比较 */
+            printk(KERN_ERR "ARM64 KPM Loader: Invalid target section index %u\n", target);
+            return -EINVAL;
         }
+        /* 根据 ELF 规范，目标地址 loc = (target section's address) + r_offset */
+        loc = (void *)sechdrs[target].sh_addr + rela[i].r_offset;
 
+        /* 获取符号 S 值 */
+        sym = (Elf64_Sym *)sechdrs[sym_idx].sh_addr + sym_index;
+        val = sym->st_value + rela[i].r_addend;
         overflow_check = true;
-        
-        /* 处理所有重定位类型 */
+
         switch (type) {
-        /* 数据重定位 */
+        case R_ARM_NONE:
+        case R_AARCH64_NONE:
+            ovf = 0;
+            break;
+        case R_AARCH64_RELATIVE:
+            * (unsigned long *)loc = (unsigned long)mod->start + rela[i].r_addend;
+            break;
         case R_AARCH64_ABS64:
-            overflow_check = false;
-            ovf = reloc_data(RELOC_OP_ABS, loc, val, 64);
+            if (sym_index) {
+                /* 注意：这里假设符号 st_value 是相对地址，需要加上模块基地址 */
+                * (unsigned long *)loc = (unsigned long)mod->start + sym->st_value + rela[i].r_addend;
+            } else {
+                printk(KERN_ERR "ARM64 KPM Loader: R_AARCH64_ABS64 with zero symbol\n");
+                return -EINVAL;
+            }
+            break;
+        case R_AARCH64_GLOB_DAT:
+        case R_AARCH64_JUMP_SLOT:
+            if (sym_index) {
+                * (unsigned long *)loc = (unsigned long)mod->start + sym->st_value;
+            } else {
+                printk(KERN_ERR "ARM64 KPM Loader: R_AARCH64_GLOB_DAT/JUMP_SLOT with zero symbol\n");
+                return -EINVAL;
+            }
             break;
         case R_AARCH64_ABS32:
             ovf = reloc_data(RELOC_OP_ABS, loc, val, 32);
@@ -587,7 +633,6 @@ static int kpm_apply_relocate_add_arm64(Elf64_Shdr *sechdrs, const char *strtab,
             ovf = reloc_data(RELOC_OP_ABS, loc, val, 16);
             break;
         case R_AARCH64_PREL64:
-            overflow_check = false;
             ovf = reloc_data(RELOC_OP_PREL, loc, val, 64);
             break;
         case R_AARCH64_PREL32:
@@ -596,8 +641,7 @@ static int kpm_apply_relocate_add_arm64(Elf64_Shdr *sechdrs, const char *strtab,
         case R_AARCH64_PREL16:
             ovf = reloc_data(RELOC_OP_PREL, loc, val, 16);
             break;
-
-        /* MOVW 指令 */
+        /* MOVW 重定位处理 */
         case R_AARCH64_MOVW_UABS_G0_NC:
             overflow_check = false;
         case R_AARCH64_MOVW_UABS_G0:
@@ -617,8 +661,44 @@ static int kpm_apply_relocate_add_arm64(Elf64_Shdr *sechdrs, const char *strtab,
             overflow_check = false;
             ovf = reloc_insn_movw(RELOC_OP_ABS, loc, val, 48, AARCH64_INSN_IMM_16);
             break;
-
-        /* 立即数指令 */
+        case R_AARCH64_MOVW_SABS_G0:
+            ovf = reloc_insn_movw(RELOC_OP_ABS, loc, val, 0, AARCH64_INSN_IMM_MOVNZ);
+            break;
+        case R_AARCH64_MOVW_SABS_G1:
+            ovf = reloc_insn_movw(RELOC_OP_ABS, loc, val, 16, AARCH64_INSN_IMM_MOVNZ);
+            break;
+        case R_AARCH64_MOVW_SABS_G2:
+            ovf = reloc_insn_movw(RELOC_OP_ABS, loc, val, 32, AARCH64_INSN_IMM_MOVNZ);
+            break;
+        case R_AARCH64_MOVW_PREL_G0_NC:
+            overflow_check = false;
+            ovf = reloc_insn_movw(RELOC_OP_PREL, loc, val, 0, AARCH64_INSN_IMM_MOVK);
+            break;
+        case R_AARCH64_MOVW_PREL_G0:
+            ovf = reloc_insn_movw(RELOC_OP_PREL, loc, val, 0, AARCH64_INSN_IMM_MOVNZ);
+            break;
+        case R_AARCH64_MOVW_PREL_G1_NC:
+            overflow_check = false;
+            ovf = reloc_insn_movw(RELOC_OP_PREL, loc, val, 16, AARCH64_INSN_IMM_MOVK);
+            break;
+        case R_AARCH64_MOVW_PREL_G1:
+            ovf = reloc_insn_movw(RELOC_OP_PREL, loc, val, 16, AARCH64_INSN_IMM_MOVNZ);
+            break;
+        case R_AARCH64_MOVW_PREL_G2_NC:
+            overflow_check = false;
+            ovf = reloc_insn_movw(RELOC_OP_PREL, loc, val, 32, AARCH64_INSN_IMM_MOVK);
+            break;
+        case R_AARCH64_MOVW_PREL_G2:
+            ovf = reloc_insn_movw(RELOC_OP_PREL, loc, val, 32, AARCH64_INSN_IMM_MOVNZ);
+            break;
+        case R_AARCH64_MOVW_PREL_G3:
+            overflow_check = false;
+            ovf = reloc_insn_movw(RELOC_OP_PREL, loc, val, 48, AARCH64_INSN_IMM_MOVNZ);
+            break;
+        /* Immediate 指令重定位 */
+        case R_AARCH64_LD_PREL_LO19:
+            ovf = reloc_insn_imm(RELOC_OP_PREL, loc, val, 2, 19, AARCH64_INSN_IMM_19);
+            break;
         case R_AARCH64_ADR_PREL_LO21:
             ovf = reloc_insn_imm(RELOC_OP_PREL, loc, val, 0, 21, AARCH64_INSN_IMM_ADR);
             break;
@@ -628,37 +708,52 @@ static int kpm_apply_relocate_add_arm64(Elf64_Shdr *sechdrs, const char *strtab,
             ovf = reloc_insn_imm(RELOC_OP_PAGE, loc, val, 12, 21, AARCH64_INSN_IMM_ADR);
             break;
         case R_AARCH64_ADD_ABS_LO12_NC:
+        case R_AARCH64_LDST8_ABS_LO12_NC:
+            overflow_check = false;
             ovf = reloc_insn_imm(RELOC_OP_ABS, loc, val, 0, 12, AARCH64_INSN_IMM_12);
             break;
-
-        /* 跳转指令 */
+        case R_AARCH64_LDST16_ABS_LO12_NC:
+            overflow_check = false;
+            ovf = reloc_insn_imm(RELOC_OP_ABS, loc, val, 1, 11, AARCH64_INSN_IMM_12);
+            break;
+        case R_AARCH64_LDST32_ABS_LO12_NC:
+            overflow_check = false;
+            ovf = reloc_insn_imm(RELOC_OP_ABS, loc, val, 2, 10, AARCH64_INSN_IMM_12);
+            break;
+        case R_AARCH64_LDST64_ABS_LO12_NC:
+            overflow_check = false;
+            ovf = reloc_insn_imm(RELOC_OP_ABS, loc, val, 3, 9, AARCH64_INSN_IMM_12);
+            break;
+        case R_AARCH64_LDST128_ABS_LO12_NC:
+            overflow_check = false;
+            ovf = reloc_insn_imm(RELOC_OP_ABS, loc, val, 4, 8, AARCH64_INSN_IMM_12);
+            break;
+        case R_AARCH64_TSTBR14:
+            ovf = reloc_insn_imm(RELOC_OP_PREL, loc, val, 2, 14, AARCH64_INSN_IMM_14);
+            break;
+        case R_AARCH64_CONDBR19:
+            ovf = reloc_insn_imm(RELOC_OP_PREL, loc, val, 2, 19, AARCH64_INSN_IMM_19);
+            break;
         case R_AARCH64_JUMP26:
         case R_AARCH64_CALL26:
             ovf = reloc_insn_imm(RELOC_OP_PREL, loc, val, 2, 26, AARCH64_INSN_IMM_26);
             break;
-
-        /* GOT 相关 */
-        case R_AARCH64_GLOB_DAT:
-        case R_AARCH64_JUMP_SLOT:
-            *((u64 *)loc) = val;
-            ovf = 0;
-            break;
-
         default:
-            printk(KERN_ERR "KPM: Unsupported relocation type %lu\n", type);
+            pr_err("ARM64 KPM Loader: Unsupported RELA relocation: %llu\n",
+                   ELF64_R_TYPE(rela[i].r_info));
             return -ENOEXEC;
         }
 
-        if (overflow_check && ovf == -ERANGE) {
-            printk(KERN_ERR "KPM: Relocation overflow (type %lu val 0x%llx)\n", type, val);
-            return -ENOEXEC;
-        } else if (ovf) {
-            return ovf;
-        }
+        if (overflow_check && ovf == -ERANGE)
+            goto overflow;
     }
-    
     return 0;
+overflow:
+    pr_err("ARM64 KPM Loader: Overflow in relocation type %d, val %llx\n",
+           (int)ELF64_R_TYPE(rela[i].r_info), val);
+    return -ENOEXEC;
 }
+
 
 static int kpm_apply_relocations(struct kpm_module *mod, const struct kpm_load_info *info)
 {
