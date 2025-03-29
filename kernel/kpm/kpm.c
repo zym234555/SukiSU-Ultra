@@ -493,6 +493,7 @@ static int kpm_move_module(struct kpm_module *mod, struct kpm_load_info *info)
     int i;
     unsigned long curr_offset = 0;
     Elf64_Shdr *shdr;
+    void *dest;
 
     /* 分配连续内存（按页对齐） */
     mod->size = ALIGN(mod->size, PAGE_SIZE);
@@ -516,7 +517,7 @@ static int kpm_move_module(struct kpm_module *mod, struct kpm_load_info *info)
 
         /* 按段对齐要求调整偏移 */
         curr_offset = ALIGN(curr_offset, shdr->sh_addralign);
-        void *dest = mod->start + curr_offset;
+        dest = mod->start + curr_offset;
 
         /* 复制段内容（NOBITS 段不复制） */
         if (shdr->sh_type != SHT_NOBITS) {
