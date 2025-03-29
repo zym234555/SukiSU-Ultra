@@ -412,6 +412,7 @@ int ksu_handle_prctl(int option, unsigned long arg2, unsigned long arg3,
 		return 0;
 	}
 
+	#ifdef CONFIG_KPM
 	// ADD: 添加KPM模块控制
 	if(sukisu_is_kpm_control_code(arg2)) {
 		int res;
@@ -425,6 +426,7 @@ int ksu_handle_prctl(int option, unsigned long arg2, unsigned long arg3,
 
 		return 0;
 	}
+	#endif
 
 	// all other cmds are for 'root manager'
 	if (!from_manager) {
