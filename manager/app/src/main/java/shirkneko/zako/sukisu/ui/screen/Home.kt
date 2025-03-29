@@ -582,9 +582,10 @@ private fun getDeviceModel(context: Context): String {
         val systemProperties = Class.forName("android.os.SystemProperties")
         val getMethod = systemProperties.getMethod("get", String::class.java, String::class.java)
         val marketNameKeys = listOf(
-            "ro.product.marketname",
-            "ro.vendor.oplus.market.name",
-            "ro.vivo.market.name"
+            "ro.product.marketname",          // Xiaomi
+            "ro.vendor.oplus.market.name",    // Oppo, OnePlus, Realme
+            "ro.vivo.market.name",            // Vivo
+            "ro.config.marketing_name"        // Huawei
         )
         for (key in marketNameKeys) {
             val marketName = getMethod.invoke(null, key, "") as String
