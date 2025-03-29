@@ -406,15 +406,8 @@ typedef enum {
     RELOC_OP_PAGE
 } reloc_op_t;
 
-typedef enum {
-    AARCH64_INSN_IMM_16,     // 16-bit 立即数（MOVZ/MOVK）
-    AARCH64_INSN_IMM_26,     // 26-bit 跳转偏移（B/BL）
-    AARCH64_INSN_IMM_ADR,    // 21-bit 页偏移（ADR/ADRP）
-    AARCH64_INSN_IMM_19      // 19-bit 条件跳转
-} aarch64_insn_imm_type;
-
 /* 编码立即数到指令 */
-static u32 aarch64_insn_encode_immediate(u32 insn, s64 imm, int shift, int bits)
+static u32 K_aarch64_insn_encode_immediate(u32 insn, s64 imm, int shift, int bits)
 {
     u32 mask = (BIT(bits) - 1) << shift;
     return (insn & ~mask) | ((imm & (BIT(bits) - 1)) << shift);
@@ -429,19 +422,19 @@ int aarch64_insn_patch_imm(void *addr, aarch64_insn_imm_type type, s64 imm)
     switch (type) {
     case AARCH64_INSN_IMM_16:
         /* MOVZ/MOVK: imm[15:0] → shift=5, bits=16 */
-        new_insn = aarch64_insn_encode_immediate(insn, imm, 5, 16);
+        new_insn = K_aarch64_insn_encode_immediate(insn, imm, 5, 16);
         break;
     case AARCH64_INSN_IMM_26:
         /* B/BL: offset[25:0] → shift=0, bits=26 */
-        new_insn = aarch64_insn_encode_immediate(insn, imm, 0, 26);
+        new_insn = K_aarch64_insn_encode_immediate(insn, imm, 0, 26);
         break;
     case AARCH64_INSN_IMM_ADR:
         /* ADR/ADRP: imm[20:0] → shift=5, bits=21 */
-        new_insn = aarch64_insn_encode_immediate(insn, imm, 5, 21);
+        new_insn = K_aarch64_insn_encode_immediate(insn, imm, 5, 21);
         break;
     case AARCH64_INSN_IMM_19:
         /* 条件跳转: offset[18:0] → shift=5, bits=19 */
-        new_insn = aarch64_insn_encode_immediate(insn, imm, 5, 19);
+        new_insn = K_aarch64_insn_encode_immediate(insn, imm, 5, 19);
         break;
     default:
         return -EINVAL;
