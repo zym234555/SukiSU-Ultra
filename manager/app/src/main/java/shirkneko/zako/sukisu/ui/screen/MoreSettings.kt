@@ -104,6 +104,17 @@ fun MoreSettingsScreen(navigator: DestinationsNavigator) {
         isSimpleMode = newValue
     }
 
+    // 隐藏内核 KernelSU 版本号开关状态
+    var isHideVersion by remember {
+        mutableStateOf(prefs.getBoolean("is_hide_version", false))
+    }
+
+    // 隐藏内核 KernelSU 版本号模块开关状态
+    val onHideVersionChange = { newValue: Boolean ->
+        prefs.edit { putBoolean("is_hide_version", newValue) }
+        isHideVersion = newValue
+    }
+
     // SELinux 状态
     var selinuxEnabled by remember {
         mutableStateOf(Shell.cmd("getenforce").exec().out.firstOrNull() == "Enforcing")
@@ -207,6 +218,16 @@ fun MoreSettingsScreen(navigator: DestinationsNavigator) {
                 checked = isSimpleMode
             ) {
                 onSimpleModeChange(it)
+            }
+
+            // 隐藏内核部分版本号
+            SwitchItem(
+                icon = Icons.Filled.FormatPaint,
+                title = stringResource(R.string.hide_kernel_kernelsu_version),
+                summary = stringResource(R.string.hide_kernel_kernelsu_version_summary),
+                checked = isHideVersion
+            ) {
+                onHideVersionChange(it)
             }
 
             // region SUSFS 配置（仅在支持时显示）

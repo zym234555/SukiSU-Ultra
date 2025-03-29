@@ -189,6 +189,8 @@
     <string name="selinux_disabled">宽容模式</string>
     <string name="simple_mode">简洁模式</string>
     <string name="simple_mode_summary">开启后将隐藏不必要的卡片</string>
+    <string name="hide_kernel_kernelsu_version">隐藏内核版本号</string>
+    <string name="hide_kernel_kernelsu_version_summary">隐藏内核部分的 KernelSU 版本号</string>
     <string name="theme_mode">主题模式</string>
     <string name="theme_follow_system">跟随系统</string>
     <string name="theme_light">浅色</string>
