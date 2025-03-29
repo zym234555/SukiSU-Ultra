@@ -391,6 +391,9 @@ static int kpm_apply_relocate_arm64(Elf64_Shdr *sechdrs, const char *strtab, int
 #ifndef R_AARCH64_JUMP_SLOT
 #define	R_AARCH64_JUMP_SLOT	1026	/* Set GOT entry to code address */
 #endif
+#ifndef R_AARCH64_NONE
+#define R_AARCH64_NONE 0
+#endif
 
 static int kpm_apply_relocate_add_arm64(Elf64_Shdr *sechdrs, const char *strtab, int sym_idx, int rela_idx, struct kpm_module *mod)
 {
@@ -403,6 +406,10 @@ static int kpm_apply_relocate_add_arm64(Elf64_Shdr *sechdrs, const char *strtab,
         unsigned long type = ELF64_R_TYPE(rela[i].r_info);
         unsigned long sym_index = ELF64_R_SYM(rela[i].r_info);
         unsigned long *addr = (unsigned long *)(mod->start + rela[i].r_offset);
+
+        if(type == R_AARCH64_NONE) {
+            continue;
+        }
 
         switch (type) {
         case R_AARCH64_RELATIVE:
