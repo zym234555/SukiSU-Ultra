@@ -17,12 +17,12 @@
 
 使用 susfs-dev 分支（已集成susfs，带非GKI设备的支持）
 ```
-curl -LSs "https://raw.githubusercontent.com/ShirkNeko/KernelSU/main/kernel/setup.sh" | bash -s susfs-dev
+curl -LSs "https://raw.githubusercontent.com/ShirkNeko/SukiSU-Ultra/main/kernel/setup.sh" | bash -s susfs-dev
 ```
 
 使用 main 分支（不再带非GKI设备的支持）
 ```
-curl -LSs "https://raw.githubusercontent.com/ShirkNeko/KernelSU/main/kernel/setup.sh" | bash -s main
+curl -LSs "https://raw.githubusercontent.com/ShirkNeko/SukiSU-Ultra/main/kernel/setup.sh" | bash -s main
 ```
 
 ## 如何集成 susfs
