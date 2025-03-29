@@ -9,6 +9,7 @@ on:
       - 'kernel/**'
       - 'userspace/ksud/**'
       - 'userspace/zakomksd/**'
+      - 'userspace/kpmmgr/**'
   pull_request:
     branches: [ "main" ]
     paths:
@@ -95,6 +96,19 @@ jobs:
       target: ${{ matrix.target }}
       os: ${{ matrix.os }}
       
+  build-kpmmgr:
+    if: ${{ always() }}
+    needs: [ check-build-lkm, build-lkm ]
+    strategy:
+      matrix:
+        include:
+          - target: aarch64-linux-android
+            os: ubuntu-latest
+    uses: ./.github/workflows/kpmmgr.yml
+    with:
+      target: ${{ matrix.target }}
+      os: ${{ matrix.os }}
+
   build-ksud:
     if: ${{ always() }}
     needs: [ check-build-lkm, build-lkm ]
@@ -185,6 +199,13 @@ jobs:
           cp -f ../aarch64-linux-android/release/zakomk ../manager/app/src/main/jniLibs/arm64-v8a/libzakomk.so
           cp -f ../x86_64-linux-android/release/zakomk ../manager/app/src/main/jniLibs/x86_64/libzakomk.so
 
+      - name: Copy kpmmgr to app jniLibs
+        run: |
+          mkdir -p app/src/main/jniLibs/arm64-v8a
+          mkdir -p app/src/main/jniLibs/x86_64
+          cp -f ../arm64-v8a/kpmmgr ../manager/app/src/main/jniLibs/arm64-v8a/kpmmgr.so
+          cp -f ../x86_64/kpmmgr ../manager/app/src/main/jniLibs/x86_64/kpmmgr.so
+      
       - name: Copy zakomksd to app jniLibs
         run: |
           mkdir -p app/src/main/jniLibs/arm64-v8a
