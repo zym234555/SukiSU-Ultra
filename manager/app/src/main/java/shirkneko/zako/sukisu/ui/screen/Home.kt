@@ -58,11 +58,17 @@ import androidx.core.content.edit
 fun HomeScreen(navigator: DestinationsNavigator) {
     val context = LocalContext.current
     var isSimpleMode by rememberSaveable { mutableStateOf(false) }
+    var isHideVersion by rememberSaveable { mutableStateOf(false) }
 
     // 从 SharedPreferences 加载简洁模式状态
     LaunchedEffect(Unit) {
         isSimpleMode = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
             .getBoolean("is_simple_mode", false)
+    }
+    // 从 SharedPreferences 加载隐藏 KernelSU 版本号开关状态
+    LaunchedEffect(Unit) {
+        isHideVersion = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
+            .getBoolean("is_hide_version", false)
     }
     val kernelVersion = getKernelVersion()
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
@@ -299,17 +305,22 @@ private fun StatusCard(
                     val workingText =
                         "${stringResource(id = R.string.home_working)}$workingMode$safeMode"
 
+                    val isHideVersion = LocalContext.current.getSharedPreferences("settings", Context.MODE_PRIVATE)
+                        .getBoolean("is_hide_version", false)
+
                     Icon(Icons.Outlined.CheckCircle, stringResource(R.string.home_working))
                     Column(Modifier.padding(start = 20.dp)) {
                         Text(
                             text = workingText,
                             style = MaterialTheme.typography.titleMedium
                         )
-                        Spacer(Modifier.height(4.dp))
-                        Text(
-                            text = stringResource(R.string.home_working_version, ksuVersion),
-                            style = MaterialTheme.typography.bodyMedium
-                        )
+                        if (!isHideVersion) {
+                            Spacer(Modifier.height(4.dp))
+                            Text(
+                                text = stringResource(R.string.home_working_version, ksuVersion),
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
                         Spacer(Modifier.height(4.dp))
                         Text(
                             text = stringResource(
