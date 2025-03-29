@@ -598,36 +598,47 @@ static int kpm_setup_load_info(struct kpm_load_info *info)
  * KPM 模块加载主流程
  *----------------------------------------------------------*/
 /* 注意：接口名称改为 kpm_load_module，避免与内核原有 load_module 冲突 */
-long kpm_load_module(const void *data, int len, const char *args, const char *event, void *__user reserved)
+long kpm_load_module(const void *data, int len, const char *args,
+                       const char *event, void *__user reserved)
 {
     struct kpm_load_info load_info = { .hdr = data, .len = len };
     long rc = 0;
     struct kpm_module *mod;
 
+    /* 检查 ELF 头 */
     rc = kpm_elf_header_check(&load_info);
     if (rc)
         goto out;
+
     rc = kpm_setup_load_info(&load_info);
     if (rc)
         goto out;
-    if (find_sec_num(&load_info, ".kpm.init") == -1 || find_sec_num(&load_info, ".kpm.exit") == -1) {
+
+    /* 检查必须存在的模块初始化/退出段 */
+    if (find_sec_num(&load_info, ".kpm.init") == -1 ||
+        find_sec_num(&load_info, ".kpm.exit") == -1) {
         printk(KERN_ERR "ARM64 KPM Loader: Required sections missing\n");
         rc = -ENOEXEC;
         goto out;
     }
+
+    /* 检查模块是否已经加载 */
     if (find_module(load_info.info.name)) {
-        printk(KERN_ERR "ARM64 KPM Loader: Module %s already loaded\n", load_info.info.name);
+        printk(KERN_ERR "ARM64 KPM Loader: Module %s already loaded\n",
+               load_info.info.name);
         rc = -EEXIST;
         goto out;
     }
 
     mod = vmalloc(sizeof(struct kpm_module));
-    if (!mod)
-        return -ENOMEM;
+    if (!mod) {
+        rc = -ENOMEM;
+        goto out;
+    }
     memset(mod, 0, sizeof(struct kpm_module));
 
     if (args) {
-        mod->args = (typeof(mod->args)) vmalloc(strlen(args) + 1);
+        mod->args = vmalloc(strlen(args) + 1);
         if (!mod->args) {
             rc = -ENOMEM;
             goto free_mod;
@@ -648,17 +659,21 @@ long kpm_load_module(const void *data, int len, const char *args, const char *ev
     if (rc)
         goto free_mod;
 
-    flush_icache_all();
+    /* 替换 flush_icache_all() 为 flush_icache_range() */
+    flush_icache_range((unsigned long)mod->start,
+                       (unsigned long)mod->start + mod->size);
 
     rc = mod->init(mod->args, event, reserved);
     if (!rc) {
-        printk(KERN_INFO "ARM64 KPM Loader: Module [%s] loaded successfully with args [%s]\n", mod->info.name, args ? args : "");
+        printk(KERN_INFO "ARM64 KPM Loader: Module [%s] loaded successfully with args [%s]\n",
+               mod->info.name, args ? args : "");
         spin_lock(&kpm_module_lock);
         list_add_tail(&mod->list, &kpm_module_list);
         spin_unlock(&kpm_module_lock);
         goto out;
     } else {
-        printk(KERN_ERR "ARM64 KPM Loader: Module [%s] init failed with error %ld\n", mod->info.name, rc);
+        printk(KERN_ERR "ARM64 KPM Loader: Module [%s] init failed with error %ld\n",
+               mod->info.name, rc);
         mod->exit(reserved);
     }
 free_mod:
