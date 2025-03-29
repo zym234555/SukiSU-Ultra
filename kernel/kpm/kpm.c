@@ -406,33 +406,45 @@ typedef enum {
     RELOC_OP_PAGE
 } reloc_op_t;
 
-// 移植自内核 arch/arm64/kernel/insn.c
-int aarch64_insn_patch_imm(void *addr, aarch64_insn_imm_type type, s64 imm)
+/* 编码立即数到指令 */
+static u32 K_aarch64_insn_encode_immediate(u32 insn, s64 imm, int shift, int bits)
+{
+    u32 mask = (BIT(bits) - 1) << shift;
+    return (insn & ~mask) | ((imm & (BIT(bits) - 1)) << shift);
+}
+
+/* 修补指令中的立即数字段 */
+int aarch64_insn_patch_imm(void *addr, enum aarch64_insn_imm_type type, s64 imm)
 {
     u32 insn = le32_to_cpu(*(u32 *)addr);
     u32 new_insn;
 
     switch (type) {
-    case AARCH64_INSN_IMM_16:       // MOVZ/MOVK 的 16-bit 立即数
-        new_insn = aarch64_insn_encode_immediate(type, insn, imm);
+    case AARCH64_INSN_IMM_16:
+        /* MOVZ/MOVK: imm[15:0] → shift=5, bits=16 */
+        new_insn = K_aarch64_insn_encode_immediate(insn, imm, 5, 16);
         break;
-    case AARCH64_INSN_IMM_26:        // B/BL 的 26-bit 偏移
-        new_insn = aarch64_insn_encode_offset(insn, imm, 26);
+    case AARCH64_INSN_IMM_26:
+        /* B/BL: offset[25:0] → shift=0, bits=26 */
+        new_insn = K_aarch64_insn_encode_immediate(insn, imm, 0, 26);
         break;
-    case AARCH64_INSN_IMM_ADR:       // ADR 的 21-bit 页偏移
-        new_insn = aarch64_insn_encode_offset(insn, imm, 21);
+    case AARCH64_INSN_IMM_ADR:
+        /* ADR/ADRP: imm[20:0] → shift=5, bits=21 */
+        new_insn = K_aarch64_insn_encode_immediate(insn, imm, 5, 21);
         break;
-    case AARCH64_INSN_IMM_19:        // 条件跳转的 19-bit 偏移
-        new_insn = aarch64_insn_encode_offset(insn, imm, 19);
+    case AARCH64_INSN_IMM_19:
+        /* 条件跳转: offset[18:0] → shift=5, bits=19 */
+        new_insn = K_aarch64_insn_encode_immediate(insn, imm, 5, 19);
         break;
     default:
         return -EINVAL;
     }
 
+    /* 写入新指令并刷新缓存 */
     *(u32 *)addr = cpu_to_le32(new_insn);
+    flush_icache_range((unsigned long)addr, (unsigned long)addr + 4);
     return 0;
 }
-
 /* 指令编码辅助函数 */
 static int reloc_data(reloc_op_t op, void *loc, u64 val, int len)
 {
