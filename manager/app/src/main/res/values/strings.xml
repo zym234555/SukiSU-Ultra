@@ -236,4 +236,6 @@
     <string name="kpm_install_confirm">Confirm installation?</string>
     <string name="kpm_install_success">Installation of kpm module successful</string>
     <string name="kpm_install_failed">Installation of kpm module failed</string>
+    <string name="kpm_args">kpm 参数</string>
+    <string name="kpm_control">kpm 控制</string>
 </resources>
