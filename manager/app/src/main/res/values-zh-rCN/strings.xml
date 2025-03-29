@@ -218,4 +218,18 @@
     <string name="batch_authorization">批量授权</string>
     <string name="batch_cancel_authorization">批量取消授权</string>
     <string name="color_yellow">黄色</string>
+    <string name="kpm">内核模块</string>
+    <string name="kpm_title">内核模块</string>
+    <string name="kpm_empty">暂无已安装的内核模块</string>
+    <string name="kpm_version">版本</string>
+    <string name="kpm_author">作者</string>
+    <string name="kpm_execute">执行</string>
+    <string name="kpm_uninstall">卸载</string>
+    <string name="kpm_uninstall_confirm">确定要卸载内核模块 %1$s 吗？</string>
+    <string name="kpm_uninstall_success">卸载成功</string>
+    <string name="kpm_uninstall_failed">卸载失败</string>
+    <string name="kpm_install">安装kpm模块</string>
+    <string name="kpm_install_confirm">确认安装吗？</string>
+    <string name="kpm_install_success">安装kpm模块成功</string>
+    <string name="kpm_install_failed">安装kpm模块失败</string>
 </resources>
