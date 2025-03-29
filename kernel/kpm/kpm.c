@@ -414,7 +414,7 @@ static u32 K_aarch64_insn_encode_immediate(u32 insn, s64 imm, int shift, int bit
 }
 
 /* 修补指令中的立即数字段 */
-int aarch64_insn_patch_imm(void *addr, aarch64_insn_imm_type type, s64 imm)
+int aarch64_insn_patch_imm(void *addr, enum aarch64_insn_imm_type type, s64 imm)
 {
     u32 insn = le32_to_cpu(*(u32 *)addr);
     u32 new_insn;
