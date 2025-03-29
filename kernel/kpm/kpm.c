@@ -481,45 +481,81 @@ static int kpm_rewrite_section_headers(struct kpm_load_info *info)
 /*-----------------------------------------------------------
  * 将各段复制到连续内存区域中
  *----------------------------------------------------------*/
+/*-----------------------------------------------------------
+ * 将各段复制到连续内存区域（修复版）
+ * 关键修复点：
+ * 1. 段地址按对齐要求正确计算
+ * 2. 显式设置可执行内存权限
+ * 3. 刷新指令缓存保证一致性
+ *----------------------------------------------------------*/
 static int kpm_move_module(struct kpm_module *mod, struct kpm_load_info *info)
 {
     int i;
+    unsigned long curr_offset = 0;
+    Elf64_Shdr *shdr;
 
-    printk(KERN_INFO "ARM64 KPM Loader: Allocating module memory: size=0x%x\n", mod->size);
-    mod->start = kpm_malloc_exec(mod->size);
-    if (!mod->start)
+    /* 分配连续内存（按页对齐） */
+    mod->size = ALIGN(mod->size, PAGE_SIZE);
+    mod->start = module_alloc(mod->size); // 使用内核的 module_alloc 接口
+    if (!mod->start) {
+        printk(KERN_ERR "ARM64 KPM Loader: Failed to allocate module memory\n");
         return -ENOMEM;
+    }
     memset(mod->start, 0, mod->size);
 
-    printk(KERN_INFO "ARM64 KPM Loader: Final section addresses:\n");
-    for (i = 1; i < info->ehdr->e_shnum; i++) {
-        void *dest;
-        Elf64_Shdr *shdr = &info->sechdrs[i];
+    /* 设置内存可执行权限（关键修复） */
+    set_memory_x((unsigned long)mod->start, mod->size >> PAGE_SHIFT);
+
+    printk(KERN_INFO "ARM64 KPM Loader: Final section addresses (aligned base=0x%px):\n", mod->start);
+
+    /* 遍历所有段并按对齐要求布局 */
+    for (i = 0; i < info->ehdr->e_shnum; i++) {
+        shdr = &info->sechdrs[i];
         if (!(shdr->sh_flags & SHF_ALLOC))
             continue;
-        dest = mod->start + shdr->sh_entsize;
-        if (shdr->sh_type != SHT_NOBITS)
+
+        /* 按段对齐要求调整偏移 */
+        curr_offset = ALIGN(curr_offset, shdr->sh_addralign);
+        void *dest = mod->start + curr_offset;
+
+        /* 复制段内容（NOBITS 段不复制） */
+        if (shdr->sh_type != SHT_NOBITS) {
             memcpy(dest, (void *)shdr->sh_addr, shdr->sh_size);
+            
+            /* 刷新指令缓存（针对可执行段） */
+            if (shdr->sh_flags & SHF_EXECINSTR) {
+                flush_icache_range((unsigned long)dest, 
+                                 (unsigned long)dest + shdr->sh_size);
+            }
+        }
+
+        /* 更新段头中的虚拟地址 */
         shdr->sh_addr = (unsigned long)dest;
-        if (!mod->init && !strcmp(".kpm.init", info->secstrings + shdr->sh_name))
+        curr_offset += shdr->sh_size;
+
+        /* 定位关键函数指针 */
+        const char *secname = info->secstrings + shdr->sh_name;
+        if (!mod->init && !strcmp(".kpm.init", secname)) {
             mod->init = (int (*)(const char *, const char *, void *__user))dest;
-        if (!strcmp(".kpm.exit", info->secstrings + shdr->sh_name))
+            printk(KERN_DEBUG "Found .kpm.init at 0x%px\n", dest);
+        } else if (!strcmp(".kpm.exit", secname)) {
             mod->exit = (void (*)(void *__user))dest;
-        if (!strcmp(".kpm.ctl0", info->secstrings + shdr->sh_name))
-            mod->ctl0 = (int (*)(const char *, char *__user, int))dest;
-        if (!strcmp(".kpm.ctl1", info->secstrings + shdr->sh_name))
-            mod->ctl1 = (int (*)(void *, void *, void *))dest;
-        if (!mod->info.base && !strcmp(".kpm.info", info->secstrings + shdr->sh_name))
-            mod->info.base = (const char *)dest;
+        }
     }
-    mod->info.name = info->info.name - info->info.base + mod->info.base;
-    mod->info.version = info->info.version - info->info.base + mod->info.base;
-    if (info->info.license)
-        mod->info.license = info->info.license - info->info.base + mod->info.base;
-    if (info->info.author)
-        mod->info.author = info->info.author - info->info.base + mod->info.base;
-    if (info->info.description)
-        mod->info.description = info->info.description - info->info.base + mod->info.base;
+
+    /* 调整元数据指针（基于新基址） */
+    if (info->info.base) {
+        unsigned long delta = (unsigned long)mod->start - (unsigned long)info->hdr;
+        mod->info.name = (const char *)((unsigned long)info->info.name + delta);
+        mod->info.version = (const char *)((unsigned long)info->info.version + delta);
+        if (info->info.license)
+            mod->info.license = (const char *)((unsigned long)info->info.license + delta);
+        if (info->info.author)
+            mod->info.author = (const char *)((unsigned long)info->info.author + delta);
+        if (info->info.description)
+            mod->info.description = (const char *)((unsigned long)info->info.description + delta);
+    }
+
     return 0;
 }
 
