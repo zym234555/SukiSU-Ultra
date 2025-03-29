@@ -385,6 +385,13 @@ static int kpm_apply_relocate_arm64(Elf64_Shdr *sechdrs, const char *strtab, int
     return 0;
 }
 
+#ifndef R_AARCH64_GLOB_DAT
+#define	R_AARCH64_GLOB_DAT	1025	/* Set GOT entry to data address */
+#endif
+#ifndef R_AARCH64_JUMP_SLOT
+#define	R_AARCH64_JUMP_SLOT	1026	/* Set GOT entry to code address */
+#endif
+
 static int kpm_apply_relocate_add_arm64(Elf64_Shdr *sechdrs, const char *strtab, int sym_idx, int rela_idx, struct kpm_module *mod)
 {
     Elf64_Shdr *relasec = &sechdrs[rela_idx];
