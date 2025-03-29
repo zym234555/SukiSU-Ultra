@@ -180,6 +180,12 @@ jobs:
           name: zakomksd-aarch64-linux-android
           path: .
 
+      - name: Download arm64 kpmmgr
+        uses: actions/download-artifact@v4
+        with:
+          name: kpmmgr-aarch64-linux-android
+          path: .
+
       - name: Download arm64 ksud
         uses: actions/download-artifact@v4
         with:
@@ -202,9 +208,7 @@ jobs:
       - name: Copy kpmmgr to app jniLibs
         run: |
           mkdir -p app/src/main/jniLibs/arm64-v8a
-          mkdir -p app/src/main/jniLibs/x86_64
-          cp -f ../arm64-v8a/kpmmgr ../manager/app/src/main/jniLibs/arm64-v8a/kpmmgr.so
-          cp -f ../x86_64/kpmmgr ../manager/app/src/main/jniLibs/x86_64/kpmmgr.so
+          cp -f ../arm64-v8a/kpmmgr ../manager/app/src/main/jniLibs/arm64-v8a/libkpmmgr.so
       
       - name: Copy zakomksd to app jniLibs
         run: |
