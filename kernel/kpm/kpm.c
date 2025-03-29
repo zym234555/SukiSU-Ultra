@@ -406,6 +406,33 @@ typedef enum {
     RELOC_OP_PAGE
 } reloc_op_t;
 
+// 移植自内核 arch/arm64/kernel/insn.c
+int aarch64_insn_patch_imm(void *addr, aarch64_insn_imm_type type, s64 imm)
+{
+    u32 insn = le32_to_cpu(*(u32 *)addr);
+    u32 new_insn;
+
+    switch (type) {
+    case AARCH64_INSN_IMM_16:       // MOVZ/MOVK 的 16-bit 立即数
+        new_insn = aarch64_insn_encode_immediate(type, insn, imm);
+        break;
+    case AARCH64_INSN_IMM_26:        // B/BL 的 26-bit 偏移
+        new_insn = aarch64_insn_encode_offset(insn, imm, 26);
+        break;
+    case AARCH64_INSN_IMM_ADR:       // ADR 的 21-bit 页偏移
+        new_insn = aarch64_insn_encode_offset(insn, imm, 21);
+        break;
+    case AARCH64_INSN_IMM_19:        // 条件跳转的 19-bit 偏移
+        new_insn = aarch64_insn_encode_offset(insn, imm, 19);
+        break;
+    default:
+        return -EINVAL;
+    }
+
+    *(u32 *)addr = cpu_to_le32(new_insn);
+    return 0;
+}
+
 /* 指令编码辅助函数 */
 static int reloc_data(reloc_op_t op, void *loc, u64 val, int len)
 {
@@ -447,7 +474,7 @@ static int reloc_data(reloc_op_t op, void *loc, u64 val, int len)
 }
 
 /* MOVW 指令重定位 */
-static int reloc_insn_movw(reloc_op_t op, void *loc, u64 val, int shift, aarch64_insn_imm_type imm_type)
+static int reloc_insn_movw(reloc_op_t op, void *loc, u64 val, int shift, enum aarch64_insn_imm_type imm_type)
 {
     u64 imm = val;
     s64 sval;
@@ -467,7 +494,7 @@ static int reloc_insn_movw(reloc_op_t op, void *loc, u64 val, int shift, aarch64
 }
 
 /* 立即数指令重定位 */
-static int reloc_insn_imm(reloc_op_t op, void *loc, u64 val, int shift, int len, aarch64_insn_imm_type imm_type)
+static int reloc_insn_imm(reloc_op_t op, void *loc, u64 val, int shift, int len, enum aarch64_insn_imm_type imm_type)
 {
     u64 imm = val;
     s64 sval;
