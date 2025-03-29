@@ -34,6 +34,7 @@
 #include <linux/version.h>
 #include <linux/export.h>
 #include <linux/slab.h>
+#include <asm/insn.h>
 #include "kpm.h"
 #include "compact.h"
 
