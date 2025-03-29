@@ -191,7 +191,7 @@
     <string name="simple_mode">simplicity mode</string>
     <string name="simple_mode_summary">Hides unnecessary cards when turned on</string>
     <string name="hide_kernel_kernelsu_version">Hide kernel version</string>
-    <string name="hide_kernel_kernelsu_version_summary">ide kernel version</string>
+    <string name="hide_kernel_kernelsu_version_summary">Hide kernel version</string>
     <string name="theme_mode">Theme Mode</string>
     <string name="theme_follow_system">follow-up system</string>
     <string name="theme_light">light color</string>
