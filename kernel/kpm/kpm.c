@@ -479,6 +479,87 @@ static int kpm_rewrite_section_headers(struct kpm_load_info *info)
 }
 
 /*-----------------------------------------------------------
+ * 增强版重定位处理（ARM64）
+ *----------------------------------------------------------*/
+static int kpm_apply_relocations(struct kpm_module *mod, struct kpm_load_info *info)
+{
+    int i;
+    for (i = 0; i < info->ehdr->e_shnum; i++) {
+        Elf64_Shdr *shdr = &info->sechdrs[i];
+        size_t j, num;
+        Elf64_Rela *relas;
+        if (shdr->sh_type != SHT_RELA)
+            continue;
+
+        relas = (Elf64_Rela *)((char *)info->hdr + shdr->sh_offset);
+        num = shdr->sh_size / sizeof(Elf64_Rela);
+        
+
+        for (j = 0; j < num; j++) {
+            Elf64_Rela *rela = &relas[j];
+            uint32_t type = ELF64_R_TYPE(rela->r_info);
+            uint32_t sym_idx = ELF64_R_SYM(rela->r_info);
+            unsigned long *target = (unsigned long *)(mod->start + rela->r_offset);
+
+            /* 解析符号地址 */
+            Elf64_Sym *sym = &info->syms[sym_idx];
+            unsigned long sym_addr = 0;
+            if (ELF64_ST_BIND(sym->st_info) == STB_GLOBAL) {
+                const char *name = info->strtab + sym->st_name;
+                sym_addr = kallsyms_lookup_name_fn(name); // 使用动态解析的符号查找函数
+                if (!sym_addr) {
+                    printk(KERN_ERR "Symbol %s not found!\n", name);
+                    return -ENOENT;
+                }
+            } else {
+                sym_addr = (unsigned long)mod->start + sym->st_value;
+            }
+
+            /* 处理重定位类型 */
+            switch (type) {
+            case R_AARCH64_CALL26:
+            case R_AARCH64_JUMP26: {
+                int64_t offset = sym_addr - (unsigned long)target - 4;
+                uint32_t insn;
+                offset >>= 2; // 指令偏移单位为4字节
+
+                /* 校验偏移范围（±128MB） */
+                if (offset < -0x2000000 || offset > 0x1FFFFFF) {
+                    printk(KERN_ERR "Reloc offset 0x%llx out of range!\n", offset);
+                    return -ERANGE;
+                }
+
+                insn = le32_to_cpu(*(uint32_t*)target);
+                insn = (insn & ~0x03FFFFFF) | (offset & 0x03FFFFFF);
+                *(uint32_t*)target = cpu_to_le32(insn);
+                break;
+            }
+            case R_AARCH64_ADR_PREL_PG_HI21: {
+                /* 页对齐计算 */
+                unsigned long base_page = (sym_addr >> 12) << 12;
+                unsigned long target_page = ((unsigned long)target >> 12) << 12;
+                int64_t page_offset = (base_page - target_page) >> 12;
+
+                /* 编码到指令高21位 */
+                uint32_t insn = le32_to_cpu(*(uint32_t*)target);
+                insn &= ~0x1FFFFF;
+                insn |= (page_offset & 0x1FFFFF) << 3;
+                *(uint32_t*)target = cpu_to_le32(insn);
+                break;
+            }
+            case R_AARCH64_ABS64:
+                *target = sym_addr + rela->r_addend;
+                break;
+            default:
+                printk(KERN_ERR "Unsupported relocation type: 0x%x\n", type);
+                return -EINVAL;
+            }
+        }
+    }
+    return 0;
+}
+
+/*-----------------------------------------------------------
  * 将各段复制到连续内存区域中
  *----------------------------------------------------------*/
 /*-----------------------------------------------------------
@@ -493,38 +574,44 @@ static int kpm_move_module(struct kpm_module *mod, struct kpm_load_info *info)
     int i;
     unsigned long curr_offset = 0;
     Elf64_Shdr *shdr;
-    void *dest;
-    const char *secname;
 
-    /* 分配连续内存（按页对齐） */
-    mod->size = ALIGN(mod->size, PAGE_SIZE);
-    mod->start = module_alloc(mod->size); // 使用内核的 module_alloc 接口
+    /* 步骤1：计算总内存需求（按最大对齐） */
+    size_t total_size = 0;
+    for (i = 0; i < info->ehdr->e_shnum; i++) {
+        shdr = &info->sechdrs[i];
+        if (!(shdr->sh_flags & SHF_ALLOC)) continue;
+        
+        total_size = ALIGN(total_size, shdr->sh_addralign);
+        total_size += shdr->sh_size;
+    }
+    mod->size = ALIGN(total_size, PAGE_SIZE);
+
+    /* 步骤2：分配对齐内存并设置权限 */
+    mod->start = module_alloc(mod->size);
     if (!mod->start) {
-        printk(KERN_ERR "ARM64 KPM Loader: Failed to allocate module memory\n");
+        printk(KERN_ERR "ARM64 KPM Loader: Failed to allocate 0x%zx bytes\n", mod->size);
         return -ENOMEM;
     }
     memset(mod->start, 0, mod->size);
-
-    /* 设置内存可执行权限（关键修复） */
     set_memory_x((unsigned long)mod->start, mod->size >> PAGE_SHIFT);
 
-    printk(KERN_INFO "ARM64 KPM Loader: Final section addresses (aligned base=0x%px):\n", mod->start);
-
-    /* 遍历所有段并按对齐要求布局 */
+    /* 步骤3：复制段数据并处理对齐 */
     for (i = 0; i < info->ehdr->e_shnum; i++) {
-        shdr = &info->sechdrs[i];
-        if (!(shdr->sh_flags & SHF_ALLOC))
-            continue;
+        void *dest;
+        const char *secname;
 
-        /* 按段对齐要求调整偏移 */
+        shdr = &info->sechdrs[i];
+        if (!(shdr->sh_flags & SHF_ALLOC)) continue;
+
+        /* 动态对齐偏移 */
         curr_offset = ALIGN(curr_offset, shdr->sh_addralign);
         dest = mod->start + curr_offset;
 
-        /* 复制段内容（NOBITS 段不复制） */
+        /* 复制段内容 */
         if (shdr->sh_type != SHT_NOBITS) {
             memcpy(dest, (void *)shdr->sh_addr, shdr->sh_size);
             
-            /* 刷新指令缓存（针对可执行段） */
+            /* 刷新指令缓存（关键！） */
             if (shdr->sh_flags & SHF_EXECINSTR) {
                 flush_icache_range((unsigned long)dest, 
                                  (unsigned long)dest + shdr->sh_size);
@@ -535,17 +622,17 @@ static int kpm_move_module(struct kpm_module *mod, struct kpm_load_info *info)
         shdr->sh_addr = (unsigned long)dest;
         curr_offset += shdr->sh_size;
 
-        /* 定位关键函数指针 */
+        /* 定位关键函数（init/exit） */
         secname = info->secstrings + shdr->sh_name;
-        if (!mod->init && !strcmp(".kpm.init", secname)) {
+        if (!strcmp(".kpm.init", secname)) {
             mod->init = (int (*)(const char *, const char *, void *__user))dest;
-            printk(KERN_DEBUG "Found .kpm.init at 0x%px\n", dest);
+            printk(KERN_DEBUG "Located .kpm.init at 0x%px\n", dest);
         } else if (!strcmp(".kpm.exit", secname)) {
             mod->exit = (void (*)(void *__user))dest;
         }
     }
 
-    /* 调整元数据指针（基于新基址） */
+    /* 步骤4：调整元数据指针 */
     if (info->info.base) {
         unsigned long delta = (unsigned long)mod->start - (unsigned long)info->hdr;
         mod->info.name = (const char *)((unsigned long)info->info.name + delta);
@@ -553,7 +640,7 @@ static int kpm_move_module(struct kpm_module *mod, struct kpm_load_info *info)
         if (info->info.license)
             mod->info.license = (const char *)((unsigned long)info->info.license + delta);
         if (info->info.author)
-            mod->info.author = (const char *)((unsigned long)info->info.author + delta);
+            mod->info.author = (const char *)((unsigned long)info->info.author + delta;
         if (info->info.description)
             mod->info.description = (const char *)((unsigned long)info->info.description + delta);
     }
