@@ -391,54 +391,232 @@ static int kpm_apply_relocate_arm64(Elf64_Shdr *sechdrs, const char *strtab, int
 #ifndef R_AARCH64_JUMP_SLOT
 #define	R_AARCH64_JUMP_SLOT	1026	/* Set GOT entry to code address */
 #endif
+#ifndef R_ARM_NONE
+#define R_ARM_NONE 0
+#endif
 #ifndef R_AARCH64_NONE
-#define R_AARCH64_NONE 0
+#define R_AARCH64_NONE 256
 #endif
 
-static int kpm_apply_relocate_add_arm64(Elf64_Shdr *sechdrs, const char *strtab, int sym_idx, int rela_idx, struct kpm_module *mod)
+/* 重定位操作类型 */
+typedef enum {
+    RELOC_OP_ABS,
+    RELOC_OP_PREL,
+    RELOC_OP_PAGE
+} reloc_op_t;
+
+/* 指令编码辅助函数 */
+static int reloc_data(reloc_op_t op, void *loc, u64 val, int len)
+{
+    u64 imm = val;
+    int shift = 0;
+
+    switch (op) {
+    case RELOC_OP_ABS:
+        break;
+    case RELOC_OP_PREL:
+        imm -= (u64)loc;
+        break;
+    case RELOC_OP_PAGE:
+        imm = (imm >> 12) - ((u64)loc >> 12);
+        shift = 12;
+        break;
+    default:
+        return -EINVAL;
+    }
+
+    switch (len) {
+    case 16:
+        *(u16 *)loc = cpu_to_le16(imm >> shift);
+        break;
+    case 32:
+        *(u32 *)loc = cpu_to_le32(imm >> shift);
+        break;
+    case 64:
+        *(u64 *)loc = cpu_to_le64(imm >> shift);
+        break;
+    default:
+        return -EINVAL;
+    }
+    
+    /* 检查溢出 */
+    if (imm > (BIT_ULL(len) - 1) << shift)
+        return -ERANGE;
+    return 0;
+}
+
+/* MOVW 指令重定位 */
+static int reloc_insn_movw(reloc_op_t op, void *loc, u64 val, int shift, aarch64_insn_imm_type imm_type)
+{
+    u64 imm = val;
+    s64 sval;
+    
+    switch (op) {
+    case RELOC_OP_ABS:
+        break;
+    case RELOC_OP_PREL:
+        imm -= (u64)loc;
+        break;
+    default:
+        return -EINVAL;
+    }
+
+    sval = (s64)imm;
+    return aarch64_insn_patch_imm(loc, imm_type, sval >> shift);
+}
+
+/* 立即数指令重定位 */
+static int reloc_insn_imm(reloc_op_t op, void *loc, u64 val, int shift, int len, aarch64_insn_imm_type imm_type)
+{
+    u64 imm = val;
+    s64 sval;
+    
+    switch (op) {
+    case RELOC_OP_ABS:
+        break;
+    case RELOC_OP_PREL:
+        imm -= (u64)loc;
+        break;
+    case RELOC_OP_PAGE:
+        imm = (imm >> 12) - ((u64)loc >> 12);
+        shift = 0;
+        break;
+    default:
+        return -EINVAL;
+    }
+    
+    sval = (s64)imm;
+    return aarch64_insn_patch_imm(loc, imm_type, sval >> shift);
+}
+
+/* 完整的 ARM64 重定位适配 */
+static int kpm_apply_relocate_add_arm64(Elf64_Shdr *sechdrs, const char *strtab, 
+                                      int sym_idx, int rela_idx, struct kpm_module *mod)
 {
     Elf64_Shdr *relasec = &sechdrs[rela_idx];
     int num = relasec->sh_size / sizeof(Elf64_Rela);
-    Elf64_Rela *rela = (Elf64_Rela *)((char *)mod->start + relasec->sh_offset);  // 修正为 sh_offset
-    int i;
+    Elf64_Rela *rela = (Elf64_Rela *)((char *)mod->start + relasec->sh_offset);
+    int i, ovf;
+    bool overflow_check;
 
     for (i = 0; i < num; i++) {
         unsigned long type = ELF64_R_TYPE(rela[i].r_info);
         unsigned long sym_index = ELF64_R_SYM(rela[i].r_info);
-        unsigned long *addr = (unsigned long *)(mod->start + rela[i].r_offset);
+        void *loc = (void *)(mod->start + rela[i].r_offset);
+        u64 val;
+        Elf64_Sym *sym;
 
-        if(type == R_AARCH64_NONE) {
+        /* 处理特殊重定位类型 */
+        if (type == R_AARCH64_NONE || type == R_ARM_NONE)
             continue;
+
+        /* 解析符号值 */
+        if (sym_index) {
+            sym = (Elf64_Sym *)((char *)mod->start + sechdrs[sym_idx].sh_offset) + sym_index;
+            val = sym->st_value + rela[i].r_addend;
+            
+            /* 全局符号需通过内核解析 */
+            if (ELF64_ST_BIND(sym->st_info) == STB_GLOBAL) {
+                const char *name = strtab + sym->st_name;
+                unsigned long addr = kallsyms_lookup_name(name);
+                if (!addr) {
+                    printk(KERN_ERR "KPM: Symbol %s not found!\n", name);
+                    return -ENOENT;
+                }
+                val = addr + rela[i].r_addend;
+            } else {
+                val += (u64)mod->start; // 转换为模块内绝对地址
+            }
+        } else {
+            val = rela[i].r_addend;
         }
 
+        overflow_check = true;
+        
+        /* 处理所有重定位类型 */
         switch (type) {
-        case R_AARCH64_RELATIVE:
-            *addr = (unsigned long)mod->start + rela[i].r_addend;
-            break;
+        /* 数据重定位 */
         case R_AARCH64_ABS64:
-            if (sym_index) {
-                Elf64_Sym *sym = (Elf64_Sym *)((char *)mod->start + sechdrs[sym_idx].sh_offset) + sym_index;
-                *addr = (unsigned long)mod->start + sym->st_value + rela[i].r_addend;  // 修正：确保 st_value 是绝对地址
-            } else {
-                printk(KERN_ERR "ARM64 KPM Loader: R_AARCH64_ABS64 with zero symbol\n");
-                return -EINVAL;
-            }
+            overflow_check = false;
+            ovf = reloc_data(RELOC_OP_ABS, loc, val, 64);
             break;
+        case R_AARCH64_ABS32:
+            ovf = reloc_data(RELOC_OP_ABS, loc, val, 32);
+            break;
+        case R_AARCH64_ABS16:
+            ovf = reloc_data(RELOC_OP_ABS, loc, val, 16);
+            break;
+        case R_AARCH64_PREL64:
+            overflow_check = false;
+            ovf = reloc_data(RELOC_OP_PREL, loc, val, 64);
+            break;
+        case R_AARCH64_PREL32:
+            ovf = reloc_data(RELOC_OP_PREL, loc, val, 32);
+            break;
+        case R_AARCH64_PREL16:
+            ovf = reloc_data(RELOC_OP_PREL, loc, val, 16);
+            break;
+
+        /* MOVW 指令 */
+        case R_AARCH64_MOVW_UABS_G0_NC:
+            overflow_check = false;
+        case R_AARCH64_MOVW_UABS_G0:
+            ovf = reloc_insn_movw(RELOC_OP_ABS, loc, val, 0, AARCH64_INSN_IMM_16);
+            break;
+        case R_AARCH64_MOVW_UABS_G1_NC:
+            overflow_check = false;
+        case R_AARCH64_MOVW_UABS_G1:
+            ovf = reloc_insn_movw(RELOC_OP_ABS, loc, val, 16, AARCH64_INSN_IMM_16);
+            break;
+        case R_AARCH64_MOVW_UABS_G2_NC:
+            overflow_check = false;
+        case R_AARCH64_MOVW_UABS_G2:
+            ovf = reloc_insn_movw(RELOC_OP_ABS, loc, val, 32, AARCH64_INSN_IMM_16);
+            break;
+        case R_AARCH64_MOVW_UABS_G3:
+            overflow_check = false;
+            ovf = reloc_insn_movw(RELOC_OP_ABS, loc, val, 48, AARCH64_INSN_IMM_16);
+            break;
+
+        /* 立即数指令 */
+        case R_AARCH64_ADR_PREL_LO21:
+            ovf = reloc_insn_imm(RELOC_OP_PREL, loc, val, 0, 21, AARCH64_INSN_IMM_ADR);
+            break;
+        case R_AARCH64_ADR_PREL_PG_HI21_NC:
+            overflow_check = false;
+        case R_AARCH64_ADR_PREL_PG_HI21:
+            ovf = reloc_insn_imm(RELOC_OP_PAGE, loc, val, 12, 21, AARCH64_INSN_IMM_ADR);
+            break;
+        case R_AARCH64_ADD_ABS_LO12_NC:
+            ovf = reloc_insn_imm(RELOC_OP_ABS, loc, val, 0, 12, AARCH64_INSN_IMM_12);
+            break;
+
+        /* 跳转指令 */
+        case R_AARCH64_JUMP26:
+        case R_AARCH64_CALL26:
+            ovf = reloc_insn_imm(RELOC_OP_PREL, loc, val, 2, 26, AARCH64_INSN_IMM_26);
+            break;
+
+        /* GOT 相关 */
         case R_AARCH64_GLOB_DAT:
         case R_AARCH64_JUMP_SLOT:
-            if (sym_index) {
-                Elf64_Sym *sym = (Elf64_Sym *)((char *)mod->start + sechdrs[sym_idx].sh_offset) + sym_index;
-                *addr = (unsigned long)mod->start + sym->st_value;
-            } else {
-                printk(KERN_ERR "ARM64 KPM Loader: R_AARCH64_GLOB_DAT/JUMP_SLOT with zero symbol\n");
-                return -EINVAL;
-            }
+            *((u64 *)loc) = val;
+            ovf = 0;
             break;
+
         default:
-            printk(KERN_ERR "ARM64 KPM Loader: Unsupported RELA relocation type %lu\n", type);
-            return -EINVAL;
+            printk(KERN_ERR "KPM: Unsupported relocation type %lu\n", type);
+            return -ENOEXEC;
+        }
+
+        if (overflow_check && ovf == -ERANGE) {
+            printk(KERN_ERR "KPM: Relocation overflow (type %lu val 0x%llx)\n", type, val);
+            return -ENOEXEC;
+        } else if (ovf) {
+            return ovf;
         }
     }
+    
     return 0;
 }
 
