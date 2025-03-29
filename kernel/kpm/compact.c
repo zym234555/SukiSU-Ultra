@@ -31,7 +31,7 @@ unsigned long sukisu_compact_find_symbol(const char* name);
 
 // ======================================================================
 
-const char* kver = "0.10";
+const char* kpver = "0.10";
 
 struct CompactAddressSymbol {
     const char* symbol_name;
@@ -45,18 +45,18 @@ struct CompactAliasSymbol {
 
 struct CompactAddressSymbol address_symbol [] = {
     { "kallsyms_lookup_name", &kallsyms_lookup_name },
-    { "compact_find_symbol", &sukisu_compact_find_symbol },
-    { "compact_copy_to_user", &copy_to_user },
-    { "compact_strncpy_from_user", &strncpy_from_user },
-    { "kver", &kver },
+    { "compat_find_symbol", &sukisu_compact_find_symbol },
+    { "compat_copy_to_user", &copy_to_user },
+    { "compat_strncpy_from_user", &strncpy_from_user },
+    { "kpver", &kpver },
     { "is_run_in_sukisu_ultra", (void*)1 }
 };
 
 struct CompactAliasSymbol alias_symbol[] = {
-    {"kf__strncat", "strncat"},
-    {"kf__strlen", "strlen" },
-    {"kf__strcpy", "strcpy"},
-    {"compact_copy_to_user", "__arch_copy_to_user"}
+    {"kf_strncat", "strncat"},
+    {"kf_strlen", "strlen" },
+    {"kf_strcpy", "strcpy"},
+    {"compat_copy_to_user", "__arch_copy_to_user"}
 };
 
 unsigned long sukisu_compact_find_symbol(const char* name) {
