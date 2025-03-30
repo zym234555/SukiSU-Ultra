@@ -811,18 +811,22 @@ static void kpm_layout_symtab(struct kpm_module *mod, struct kpm_load_info *info
     unsigned int strtab_size = 1;
 
     symsect->sh_flags |= SHF_ALLOC;
-    symsect->sh_entsize = kpm_get_offset(mod, &mod->size, symsect);
+    symsect->sh_entsize = kpm_get_offset2(mod, &mod->size, symsect, info->index.sym);
+    
     src = (Elf64_Sym *)((char *)info->hdr + symsect->sh_offset);
     nsrc = symsect->sh_size / sizeof(Elf64_Sym);
+
     for (ndst = i = 0; i < nsrc; i++) {
         if (i == 0 || kpm_is_core_symbol(src + i, info->sechdrs, info->ehdr->e_shnum)) {
             strtab_size += strlen(info->strtab + src[i].st_name) + 1;
             ndst++;
         }
     }
+    
     info->symoffs = ALIGN(mod->size, symsect->sh_addralign ? symsect->sh_addralign : 1);
     info->stroffs = mod->size = info->symoffs + ndst * sizeof(Elf64_Sym);
     mod->size += strtab_size;
+
     strsect->sh_flags |= SHF_ALLOC;
     strsect->sh_entsize = kpm_get_offset(mod, &mod->size, strsect);
 }
