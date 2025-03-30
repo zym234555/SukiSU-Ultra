@@ -828,7 +828,7 @@ static void kpm_layout_symtab(struct kpm_module *mod, struct kpm_load_info *info
     mod->size += strtab_size;
 
     strsect->sh_flags |= SHF_ALLOC;
-    strsect->sh_entsize = kpm_get_offset(mod, &mod->size, strsect);
+    strsect->sh_entsize = kpm_get_offset2(mod, &mod->size, strsect, info->index.str);
 }
 
 /*-----------------------------------------------------------
