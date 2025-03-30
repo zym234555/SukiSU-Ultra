@@ -145,6 +145,11 @@ struct kpm_header {
 #define KPM_MAGIC   0x4B504D
 #define KPM_VERSION 1
 
+typedef long (*mod_initcall_t)(const char *args, const char *event, void *reserved);
+typedef long (*mod_ctl0call_t)(const char *ctl_args, char *__user out_msg, int outlen);
+typedef long (*mod_ctl1call_t)(void *a1, void *a2, void *a3);
+typedef long (*mod_exitcall_t)(void *reserved);
+
 /* 加载信息结构体，避免与内核已有 load_info 冲突 */
 struct kpm_load_info {
     const void *hdr;           /* ELF 数据 */
@@ -179,10 +184,12 @@ struct kpm_module {
     unsigned int size;           /* 总大小 */
     unsigned int text_size;
     unsigned int ro_size;
-    int (*init)(const char *args, const char *event, void *__user reserved);
-    void (*exit)(void *__user reserved);
-    int (*ctl0)(const char *ctl_args, char *__user out_msg, int outlen);
-    int (*ctl1)(void *a1, void *a2, void *a3);
+    
+    mod_initcall_t *init;
+    mod_ctl0call_t *ctl0;
+    mod_ctl1call_t *ctl1;
+    mod_exitcall_t *exit;
+
     struct {
         const char *base;
         const char *name;
@@ -908,10 +915,10 @@ static int kpm_move_module(struct kpm_module *mod, struct kpm_load_info *info)
         /* 定位关键函数指针 */
         secname = info->secstrings + shdr->sh_name;
         if (!mod->init && !strcmp(".kpm.init", secname)) {
-            mod->init = (int (*)(const char *, const char *, void *__user))dest;
+            mod->init = (typeof(mod->init))dest;
             printk(KERN_DEBUG "Found .kpm.init at 0x%px\n", dest);
         } else if (!strcmp(".kpm.exit", secname)) {
-            mod->exit = (void (*)(void *__user))dest;
+            mod->exit = (typeof(mod->exit))dest;
         }
     }
 
@@ -1075,7 +1082,7 @@ long kpm_load_module(const void *data, int len, const char *args,
                        (unsigned long)mod->start + mod->size);
     flush_icache_all();
 
-    rc = mod->init(mod->args, event, reserved);
+    rc = (*mod->init)(mod->args, event, reserved);
     if (!rc) {
         printk(KERN_INFO "ARM64 KPM Loader: Module [%s] loaded successfully with args [%s]\n",
                mod->info.name, args ? args : "");
@@ -1086,7 +1093,7 @@ long kpm_load_module(const void *data, int len, const char *args,
     } else {
         printk(KERN_ERR "ARM64 KPM Loader: Module [%s] init failed with error %ld\n",
                mod->info.name, rc);
-        mod->exit(reserved);
+        (*mod->exit)(reserved);
     }
 free_mod:
     if (mod->args)
@@ -1120,7 +1127,7 @@ long sukisu_kpm_unload_module(const char *name, void *__user reserved)
     list_del(&mod->list);
     spin_unlock(&kpm_module_lock);
     // rc = mod->exit(reserved);
-    mod->exit(reserved);
+    (*mod->exit)(reserved);
     if (mod->args)
         vfree(mod->args);
     if (mod->ctl_args)
