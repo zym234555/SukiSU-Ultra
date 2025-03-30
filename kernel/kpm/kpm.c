@@ -292,12 +292,12 @@ static char *kpm_get_modinfo(const struct kpm_load_info *info, const char *tag)
 /*-----------------------------------------------------------
  * 内存布局与段复制
  *----------------------------------------------------------*/
-static long kpm_get_offset(struct kpm_module *mod, unsigned int *size, Elf64_Shdr *sechdr)
+/*static long kpm_get_offset(struct kpm_module *mod, unsigned int *size, Elf64_Shdr *sechdr)
 {
     long ret = ALIGN(*size, sechdr->sh_addralign ? sechdr->sh_addralign : 1);
     *size = ret + sechdr->sh_size;
     return ret;
-}
+}*/
 
 static long kpm_get_offset2(struct kpm_module *mod, unsigned int *size, Elf_Shdr *sechdr, unsigned int section)
 {
