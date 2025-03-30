@@ -329,7 +329,7 @@ static long kpm_get_offset2(struct kpm_module *mod, unsigned int *size, Elf_Shdr
 #ifndef align
 #define KP_ALIGN_MASK(x, mask) (((x) + (mask)) & ~(mask))
 #define KP_ALIGN(x, a) KP_ALIGN_MASK(x, (typeof(x))(a)-1)
-#define kp_align(X) KP_ALIGN(X, page_size)
+#define kp_align(X) KP_ALIGN(X, 4096)
 #endif
 
 static void kpm_layout_sections(struct kpm_module *mod, struct kpm_load_info *info)
@@ -357,17 +357,17 @@ static void kpm_layout_sections(struct kpm_module *mod, struct kpm_load_info *in
         }
         switch (m) {
         case 0: /* executable */
-            mod->size = (unsigned int) (unsigned long) kp_align(mod->size);
+            mod->size = (unsigned int) kp_align(mod->size);
             mod->text_size = mod->size;
             break;
         case 1: /* RO: text and ro-data */
-            mod->size = (unsigned int) (unsigned long) kp_align(mod->size);
+            mod->size = (unsigned int) kp_align(mod->size);
             mod->ro_size = mod->size;
             break;
         case 2:
             break;
         case 3: /* whole */
-            mod->size = (unsigned int) (unsigned long) kp_align(mod->size);
+            mod->size = (unsigned int) kp_align(mod->size);
             break;
         }
     }
