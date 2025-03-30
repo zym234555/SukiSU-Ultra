@@ -817,23 +817,29 @@ static void kpm_layout_symtab(struct kpm_module *mod, struct kpm_load_info *info
     unsigned int i, nsrc, ndst;
     unsigned int strtab_size = 1;
 
+    /* Put symbol section at end of module. */
     symsect->sh_flags |= SHF_ALLOC;
     symsect->sh_entsize = kpm_get_offset2(mod, &mod->size, symsect, info->index.sym);
-    
-    src = (Elf64_Sym *)((char *)info->hdr + symsect->sh_offset);
-    nsrc = symsect->sh_size / sizeof(Elf64_Sym);
 
+    src = (void *)info->hdr + symsect->sh_offset;
+    nsrc = symsect->sh_size / sizeof(*src);
+
+    /* strtab always starts with a nul, so offset 0 is the empty string. */
+    strtab_size = 1;
+    /* Compute total space required for the core symbols' strtab. */
     for (ndst = i = 0; i < nsrc; i++) {
-        if (i == 0 || kpm_is_core_symbol(src + i, info->sechdrs, info->ehdr->e_shnum)) {
-            strtab_size += strlen(info->strtab + src[i].st_name) + 1;
+        if (i == 0 || is_core_symbol(src + i, info->sechdrs, info->hdr->e_shnum)) {
+            strtab_size += strlen(&info->strtab[src[i].st_name]) + 1;
             ndst++;
         }
     }
-    
-    info->symoffs = ALIGN(mod->size, symsect->sh_addralign ? symsect->sh_addralign : 1);
+
+    /* Append room for core symbols at end. */
+    info->symoffs = ALIGN(mod->size, symsect->sh_addralign ?: 1);
     info->stroffs = mod->size = info->symoffs + ndst * sizeof(Elf64_Sym);
     mod->size += strtab_size;
 
+    /* Put string table section at end of module. */
     strsect->sh_flags |= SHF_ALLOC;
     strsect->sh_entsize = kpm_get_offset2(mod, &mod->size, strsect, info->index.str);
 }
@@ -1065,6 +1071,8 @@ long kpm_load_module(const void *data, int len, const char *args,
     flush_icache_range((unsigned long)mod->start,
                        (unsigned long)mod->start + mod->size);
     flush_icache_all();
+
+    printk(KERN_INFO "ARM64 KPM Loader: Module all load action finish, prepare call init.");
 
     rc = (*mod->init)(mod->args, event, reserved);
     if (!rc) {
