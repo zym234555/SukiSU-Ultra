@@ -38,6 +38,9 @@
 #include <linux/kprobes.h>
 #include <linux/stacktrace.h>
 #include <linux/kallsyms.h>
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5,0,0) && defined(CONFIG_MODULES)
+#include <linux/moduleloader.h> // 需要启用 CONFIG_MODULES
+#endif
 #include "kpm.h"
 #include "compact.h"
 
@@ -56,8 +59,8 @@ static inline void flush_icache_all(void)
     asm volatile("isb" : : : "memory");
 }
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(5,0,0) && defined(CONFIG_MODULES)
-#include <linux/moduleloader.h> // 需要启用 CONFIG_MODULES
+#ifndef align
+#define align(X) ALIGN(X, page_size)
 #endif
 
 /**
@@ -300,18 +303,61 @@ static long kpm_get_offset(struct kpm_module *mod, unsigned int *size, Elf64_Shd
     return ret;
 }
 
-static void kpm_layout_sections(struct kpm_module *mod, struct kpm_load_info *info)
+/*static void kpm_layout_sections(struct kpm_module *mod, struct kpm_load_info *info)
 {
     int i;
     for (i = 0; i < info->ehdr->e_shnum; i++)
         info->sechdrs[i].sh_entsize = ~0UL;
+    
     for (i = 0; i < info->ehdr->e_shnum; i++) {
         Elf64_Shdr *s = &info->sechdrs[i];
         if (!(s->sh_flags & SHF_ALLOC))
             continue;
         s->sh_entsize = kpm_get_offset(mod, &mod->size, s);
     }
+
     mod->size = ALIGN(mod->size, 8);
+}*/
+
+static void kpm_layout_sections(struct kpm_module *mod, struct kpm_load_info *info)
+{
+    static unsigned long const masks[][2] = {
+        /* NOTE: all executable code must be the first section in this array; otherwise modify the text_size finder in the two loops below */
+        { SHF_EXECINSTR | SHF_ALLOC, ARCH_SHF_SMALL },
+        { SHF_ALLOC, SHF_WRITE | ARCH_SHF_SMALL },
+        { SHF_WRITE | SHF_ALLOC, ARCH_SHF_SMALL },
+        { ARCH_SHF_SMALL | SHF_ALLOC, 0 }
+    };
+    int i, m;
+
+    for (i = 0; i < info->ehdr->e_shnum; i++)
+        info->sechdrs[i].sh_entsize = ~0UL;
+
+    // todo: tslf alloc all rwx and not page aligned
+    for (m = 0; m < sizeof(masks) / sizeof(masks[0]); ++m) {
+        for (i = 0; i < info->ehdr->e_shnum; ++i) {
+            Elf_Shdr *s = &info->sechdrs[i];
+            if ((s->sh_flags & masks[m][0]) != masks[m][0] || (s->sh_flags & masks[m][1]) || s->sh_entsize != ~0UL)
+                continue;
+            s->sh_entsize = get_offset(mod, &mod->size, s, i);
+            // const char *sname = info->secstrings + s->sh_name;
+        }
+        switch (m) {
+        case 0: /* executable */
+            mod->size = align(mod->size);
+            mod->text_size = mod->size;
+            break;
+        case 1: /* RO: text and ro-data */
+            mod->size = align(mod->size);
+            mod->ro_size = mod->size;
+            break;
+        case 2:
+            break;
+        case 3: /* whole */
+            mod->size = align(mod->size);
+            break;
+        }
+    }
 }
 
 /*-----------------------------------------------------------
@@ -838,8 +884,6 @@ static int kpm_move_module(struct kpm_module *mod, struct kpm_load_info *info)
             }
         }
 
-        flush_icache_all();
-
         /* 更新段头中的虚拟地址 */
         shdr->sh_addr = (unsigned long)dest;
         curr_offset += shdr->sh_size;
@@ -866,6 +910,8 @@ static int kpm_move_module(struct kpm_module *mod, struct kpm_load_info *info)
         if (info->info.description)
             mod->info.description = (const char *)((unsigned long)info->info.description + delta);
     }
+
+    flush_icache_all();
 
     return 0;
 }
