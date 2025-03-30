@@ -176,9 +176,9 @@ struct kpm_module {
     char *args;
     char *ctl_args;
     void *start;                 /* 分配的连续内存区域 */
-    unsigned int size;           /* 总大小 */
-    unsigned int text_size;
-    unsigned int ro_size;
+    unsigned long size;           /* 总大小 */
+    unsigned long text_size;
+    unsigned long ro_size;
     int (*init)(const char *args, const char *event, void *__user reserved);
     void (*exit)(void *__user reserved);
     int (*ctl0)(const char *ctl_args, char *__user out_msg, int outlen);
