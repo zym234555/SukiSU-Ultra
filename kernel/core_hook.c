@@ -688,7 +688,7 @@ __maybe_unused int ksu_kprobe_init(void)
 
 	#ifdef CONFIG_KPM
 	kpm_cfi_bypass_init();
-	kpm_stack_init();
+	// kpm_stack_init();
 	#endif
 
 	return rc;
@@ -700,7 +700,7 @@ __maybe_unused int ksu_kprobe_exit(void)
 	unregister_kprobe(&renameat_kp);
 	#ifdef CONFIG_KPM
 	kpm_cfi_bypass_exit();
-	kpm_stack_exit();
+	// kpm_stack_exit();
 	#endif
 	return 0;
 }
