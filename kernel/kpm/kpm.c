@@ -357,17 +357,17 @@ static void kpm_layout_sections(struct kpm_module *mod, struct kpm_load_info *in
         }
         switch (m) {
         case 0: /* executable */
-            mod->size = kp_align(mod->size);
+            mod->size = (unsigned int) (unsigned long) kp_align(mod->size);
             mod->text_size = mod->size;
             break;
         case 1: /* RO: text and ro-data */
-            mod->size = kp_align(mod->size);
+            mod->size = (unsigned int) (unsigned long) kp_align(mod->size);
             mod->ro_size = mod->size;
             break;
         case 2:
             break;
         case 3: /* whole */
-            mod->size = kp_align(mod->size);
+            mod->size = (unsigned int) (unsigned long) kp_align(mod->size);
             break;
         }
     }
