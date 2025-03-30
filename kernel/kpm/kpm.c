@@ -362,30 +362,6 @@ static int kpm_simplify_symbols(struct kpm_module *mod, const struct kpm_load_in
     return ret;
 }
 
-/* ARM64 重定位处理：支持 R_AARCH64_RELATIVE、R_AARCH64_ABS64、R_AARCH64_GLOB_DAT、R_AARCH64_JUMP_SLOT */
-static int kpm_apply_relocate_arm64(Elf64_Shdr *sechdrs, const char *strtab, int sym_idx, int rel_idx, struct kpm_module *mod)
-{
-    Elf64_Shdr *relsec = &sechdrs[rel_idx];
-    int num = relsec->sh_size / sizeof(Elf64_Rel);
-    Elf64_Rel *rel = (Elf64_Rel *)((char *)mod->start + relsec->sh_offset);  // 修正为 sh_offset
-    int i;
-
-    for (i = 0; i < num; i++) {
-        unsigned long type = ELF64_R_TYPE(rel[i].r_info);
-        unsigned long *addr = (unsigned long *)(mod->start + rel[i].r_offset);
-
-        switch (type) {
-        case R_AARCH64_RELATIVE:
-            *addr = (unsigned long)mod->start + *(unsigned long *)addr;
-            break;
-        default:
-            printk(KERN_ERR "ARM64 KPM Loader: Unsupported REL relocation type %lu\n", type);
-            return -EINVAL;
-        }
-    }
-    return 0;
-}
-
 #ifndef R_AARCH64_GLOB_DAT
 #define	R_AARCH64_GLOB_DAT	1025	/* Set GOT entry to data address */
 #endif
@@ -406,137 +382,6 @@ typedef enum {
     RELOC_OP_PAGE
 } reloc_op_t;
 
-/* 编码立即数到指令 */
-static u32 K_aarch64_insn_encode_immediate(u32 insn, s64 imm, int shift, int bits)
-{
-    u32 mask = (BIT(bits) - 1) << shift;
-    return (insn & ~mask) | ((imm & (BIT(bits) - 1)) << shift);
-}
-
-/* 修补指令中的立即数字段 */
-int aarch64_insn_patch_imm(void *addr, enum aarch64_insn_imm_type type, s64 imm)
-{
-    u32 insn = le32_to_cpu(*(u32 *)addr);
-    u32 new_insn;
-
-    switch (type) {
-    case AARCH64_INSN_IMM_16:
-        /* MOVZ/MOVK: imm[15:0] → shift=5, bits=16 */
-        new_insn = K_aarch64_insn_encode_immediate(insn, imm, 5, 16);
-        break;
-    case AARCH64_INSN_IMM_26:
-        /* B/BL: offset[25:0] → shift=0, bits=26 */
-        new_insn = K_aarch64_insn_encode_immediate(insn, imm, 0, 26);
-        break;
-    case AARCH64_INSN_IMM_ADR:
-        /* ADR/ADRP: imm[20:0] → shift=5, bits=21 */
-        new_insn = K_aarch64_insn_encode_immediate(insn, imm, 5, 21);
-        break;
-    case AARCH64_INSN_IMM_19:
-        /* 条件跳转: offset[18:0] → shift=5, bits=19 */
-        new_insn = K_aarch64_insn_encode_immediate(insn, imm, 5, 19);
-        break;
-    default:
-        return -EINVAL;
-    }
-
-    /* 写入新指令并刷新缓存 */
-    *(u32 *)addr = cpu_to_le32(new_insn);
-    flush_icache_range((unsigned long)addr, (unsigned long)addr + 4);
-    return 0;
-}
-
-/*
- * reloc_data - 将数值 val 写入目标地址 loc，
- *              并检查 val 是否能在指定的 bits 位内表示。
- * op 参数目前未使用，bits 可为16、32或64。
- */
-int reloc_data(int op, void *loc, u64 val, int bits)
-{
-    u64 max_val = (1ULL << bits) - 1;
-
-    if (val > max_val)
-        return -ERANGE;
-
-    switch (bits) {
-    case 16:
-        *(u16 *)loc = (u16)val;
-        break;
-    case 32:
-        *(u32 *)loc = (u32)val;
-        break;
-    case 64:
-        *(u64 *)loc = val;
-        break;
-    default:
-        return -EINVAL;
-    }
-    return 0;
-}
-
-/*
- * reloc_insn_movw - 针对 MOVW 类指令的重定位处理
- *
- * 参数说明：
- *  op:      重定位操作类型（例如 RELOC_OP_ABS 或 RELOC_OP_PREL，目前未作区分）
- *  loc:     指向要修改的 32 位指令的地址
- *  val:     需要嵌入指令的立即数值（在左移 shift 位后写入）
- *  shift:   表示立即数在 val 中应左移多少位后再写入指令
- *  imm_width: 立即数字段宽度，通常为16
- *
- * 本示例假定 MOVW 指令的立即数字段位于指令的 bit[5:20]。
- */
-int reloc_insn_movw(int op, void *loc, u64 val, int shift, int imm_width)
-{
-    u32 *insn = (u32 *)loc;
-    u32 imm;
-
-    /* 检查 val >> shift 是否能在16位内表示 */
-    if (((val >> shift) >> 16) != 0)
-        return -ERANGE;
-
-    imm = (val >> shift) & 0xffff;
-
-    /* 清除原有立即数字段（假定占用 bit[5:20]） */
-    *insn &= ~(0xffff << 5);
-    /* 写入新的立即数 */
-    *insn |= (imm << 5);
-
-    return 0;
-}
-
-/*
- * reloc_insn_imm - 针对其他立即数重定位处理
- *
- * 参数说明：
- *  op:        重定位操作类型（例如 RELOC_OP_ABS 或 RELOC_OP_PREL，目前未作区分）
- *  loc:       指向 32 位指令的地址
- *  val:       重定位后需要写入的立即数值
- *  shift:     表示 val 中立即数需要右移多少位后写入指令
- *  bits:      立即数字段宽度（例如12、19、26等）
- *  insn_mask: 指令中立即数字段的掩码（本示例中未使用，可根据实际编码调整）
- *
- * 本示例假定立即数字段位于指令的 bit[5] 开始，占用 bits 位。
- */
-int reloc_insn_imm(int op, void *loc, u64 val, int shift, int bits, int insn_mask)
-{
-    u32 *insn = (u32 *)loc;
-    u64 max_val = (1ULL << bits) - 1;
-    u32 imm;
-
-    if ((val >> shift) > max_val)
-        return -ERANGE;
-
-    imm = (u32)(val >> shift) & max_val;
-
-    /* 清除原立即数字段，这里假定立即数字段位于 bit[5] */
-    *insn &= ~(max_val << 5);
-    /* 写入新的立即数 */
-    *insn |= (imm << 5);
-
-    return 0;
-}
-
 #ifndef R_AARCH64_GLOB_DAT
 #define R_AARCH64_GLOB_DAT    1025    /* Set GOT entry to data address */
 #endif
@@ -549,82 +394,203 @@ int reloc_insn_imm(int op, void *loc, u64 val, int shift, int bits, int insn_mas
 #ifndef R_AARCH64_NONE
 #define R_AARCH64_NONE        256
 #endif
+#ifndef AARCH64_INSN_IMM_MOVNZ
+#define AARCH64_INSN_IMM_MOVNZ AARCH64_INSN_IMM_MAX
+#endif
+#ifndef AARCH64_INSN_IMM_MOVK
+#define AARCH64_INSN_IMM_MOVK AARCH64_INSN_IMM_16
+#endif
+#ifndef le32_to_cpu
+#define le32_to_cpu(x) (x)
+#endif
+#ifndef cpu_to_le32
+#define cpu_to_le32(x) (x)
+#endif
 
-/*
- * 完善后的 ARM64 RELA 重定位处理函数
- * 支持的重定位类型：
- *  - R_AARCH64_NONE / R_ARM_NONE: 不做处理
- *  - R_AARCH64_RELATIVE: 目标地址 = module_base + r_addend
- *  - R_AARCH64_ABS64: 目标地址 = module_base + (S + r_addend)
- *  - R_AARCH64_GLOB_DAT / R_AARCH64_JUMP_SLOT: 目标地址 = module_base + S
- *  - 其他类型调用 reloc_insn_movw 或 reloc_insn_imm 等函数处理
- *
- * 参数说明：
- *  - sechdrs: ELF 段表数组
- *  - strtab: 符号字符串表（未在本函数中直接使用）
- *  - sym_idx: 符号表所在段的索引
- *  - rela_idx: 当前重定位段的索引
- *  - mod: 当前模块数据结构，mod->start 为模块加载基地址
- */
-static int kpm_apply_relocate_add_arm64(Elf64_Shdr *sechdrs, const char *strtab,
-                                          int sym_idx, int rela_idx, struct kpm_module *mod)
+enum aarch64_reloc_op
 {
-    Elf64_Shdr *relasec = &sechdrs[rela_idx];
-    int num = relasec->sh_size / sizeof(Elf64_Rela);
-    /* 使用 sh_offset 而非 sh_entsize，确保 Rela 表起始地址正确 */
-    Elf64_Rela *rela = (Elf64_Rela *)((char *)mod->start + relasec->sh_offset);
-    int i;
+    RELOC_OP_NONE,
+    RELOC_OP_ABS,
+    RELOC_OP_PREL,
+    RELOC_OP_PAGE,
+};
+
+static u64 do_reloc(enum aarch64_reloc_op reloc_op, void *place, u64 val)
+{
+    switch (reloc_op) {
+    case RELOC_OP_ABS:
+        return val;
+    case RELOC_OP_PREL:
+        return val - (u64)place;
+    case RELOC_OP_PAGE:
+        return (val & ~0xfff) - ((u64)place & ~0xfff);
+    case RELOC_OP_NONE:
+        return 0;
+    }
+
+    printk(KERN_ERR "do_reloc: unknown relocation operation %d\n", reloc_op);
+    return 0;
+}
+
+static int reloc_data(enum aarch64_reloc_op op, void *place, u64 val, int len)
+{
+    u64 imm_mask = (1 << len) - 1;
+    s64 sval = do_reloc(op, place, val);
+
+    switch (len) {
+    case 16:
+        *(s16 *)place = sval;
+        break;
+    case 32:
+        *(s32 *)place = sval;
+        break;
+    case 64:
+        *(s64 *)place = sval;
+        break;
+    default:
+        printk(KERN_ERR "Invalid length (%d) for data relocation\n", len);
+        return 0;
+    }
+    /*
+	 * Extract the upper value bits (including the sign bit) and
+	 * shift them to bit 0.
+	 */
+    sval = (s64)(sval & ~(imm_mask >> 1)) >> (len - 1);
+
+    /*
+	 * Overflow has occurred if the value is not representable in
+	 * len bits (i.e the bottom len bits are not sign-extended and
+	 * the top bits are not all zero).
+	 */
+    if ((u64)(sval + 1) > 2) return -ERANGE;
+
+    return 0;
+}
+
+static int reloc_insn_movw(enum aarch64_reloc_op op, void *place, u64 val, int lsb, enum aarch64_insn_imm_type imm_type)
+{
+    u64 imm, limit = 0;
+    s64 sval;
+    u32 insn = le32_to_cpu(*(u32 *)place);
+
+    sval = do_reloc(op, place, val);
+    sval >>= lsb;
+    imm = sval & 0xffff;
+
+    if (imm_type == AARCH64_INSN_IMM_MOVNZ) {
+        /*
+		 * For signed MOVW relocations, we have to manipulate the
+		 * instruction encoding depending on whether or not the
+		 * immediate is less than zero.
+		 */
+        insn &= ~(3 << 29);
+        if ((s64)imm >= 0) {
+            /* >=0: Set the instruction to MOVZ (opcode 10b). */
+            insn |= 2 << 29;
+        } else {
+            /*
+			 * <0: Set the instruction to MOVN (opcode 00b).
+			 *     Since we've masked the opcode already, we
+			 *     don't need to do anything other than
+			 *     inverting the new immediate field.
+			 */
+            imm = ~imm;
+        }
+        imm_type = AARCH64_INSN_IMM_MOVK;
+    }
+
+    /* Update the instruction with the new encoding. */
+    insn = aarch64_insn_encode_immediate(imm_type, insn, imm);
+    *(u32 *)place = cpu_to_le32(insn);
+
+    /* Shift out the immediate field. */
+    sval >>= 16;
+
+    /*
+	 * For unsigned immediates, the overflow check is straightforward.
+	 * For signed immediates, the sign bit is actually the bit past the
+	 * most significant bit of the field.
+	 * The AARCH64_INSN_IMM_16 immediate type is unsigned.
+	 */
+    if (imm_type != AARCH64_INSN_IMM_16) {
+        sval++;
+        limit++;
+    }
+
+    /* Check the upper bits depending on the sign of the immediate. */
+    if ((u64)sval > limit) return -ERANGE;
+
+    return 0;
+}
+
+static int reloc_insn_imm(enum aarch64_reloc_op op, void *place, u64 val, int lsb, int len,
+                          enum aarch64_insn_imm_type imm_type)
+{
+    u64 imm, imm_mask;
+    s64 sval;
+    u32 insn = le32_to_cpu(*(u32 *)place);
+
+    /* Calculate the relocation value. */
+    sval = do_reloc(op, place, val);
+    sval >>= lsb;
+    /* Extract the value bits and shift them to bit 0. */
+    imm_mask = (BIT(lsb + len) - 1) >> lsb;
+    imm = sval & imm_mask;
+    /* Update the instruction's immediate field. */
+    insn = aarch64_insn_encode_immediate(imm_type, insn, imm);
+    *(u32 *)place = cpu_to_le32(insn);
+    /*
+	 * Extract the upper value bits (including the sign bit) and
+	 * shift them to bit 0.
+	 */
+    sval = (s64)(sval & ~(imm_mask >> 1)) >> (len - 1);
+    /*
+	 * Overflow has occurred if the upper bits are not all equal to
+	 * the sign bit of the value.
+	 */
+    if ((u64)(sval + 1) >= 2) return -ERANGE;
+
+    return 0;
+}
+
+int apply_relocate(Elf64_Shdr *sechdrs, const char *strtab, unsigned int symindex, unsigned int relsec,
+                   struct module *me)
+{
+    return 0;
+};
+
+int apply_relocate_add(Elf64_Shdr *sechdrs, const char *strtab, unsigned int symindex, unsigned int relsec,
+                       struct module *me)
+{
+    unsigned int i;
     int ovf;
     bool overflow_check;
     Elf64_Sym *sym;
     void *loc;
     u64 val;
+    Elf64_Rela *rel = (void *)sechdrs[relsec].sh_addr;
 
-    for (i = 0; i < num; i++) {
-        unsigned long type = ELF64_R_TYPE(rela[i].r_info);
-        unsigned long sym_index = ELF64_R_SYM(rela[i].r_info);
+    for (i = 0; i < sechdrs[relsec].sh_size / sizeof(*rel); i++) {
+        /* loc corresponds to P in the AArch64 ELF document. */
+        loc = (void *)sechdrs[sechdrs[relsec].sh_info].sh_addr + rel[i].r_offset;
+        /* sym is the ELF symbol we're referring to. */
+        sym = (Elf64_Sym *)sechdrs[symindex].sh_addr + ELF64_R_SYM(rel[i].r_info);
+        /* val corresponds to (S + A) in the AArch64 ELF document. */
+        val = sym->st_value + rel[i].r_addend;
 
-        /* 获取目标段索引，即 Rela 段的 sh_info 字段 */
-        unsigned int target = sechdrs[rela_idx].sh_info;
-        if (target >= sechdrs[0].sh_size) {
-            /* 这里不太可能用 sh_size 来判断，正确做法是检查 e_shnum */
-            /* 假设我们可以通过全局信息获得 e_shnum，这里用 target 比较 */
-            printk(KERN_ERR "ARM64 KPM Loader: Invalid target section index %u\n", target);
-            return -EINVAL;
-        }
-        /* 根据 ELF 规范，目标地址 loc = (target section's address) + r_offset */
-        loc = (void *)sechdrs[target].sh_addr + rela[i].r_offset;
-
-        /* 获取符号 S 值 */
-        sym = (Elf64_Sym *)sechdrs[sym_idx].sh_addr + sym_index;
-        val = sym->st_value + rela[i].r_addend;
         overflow_check = true;
 
-        switch (type) {
+        /* Perform the static relocation. */
+        switch (ELF64_R_TYPE(rel[i].r_info)) {
+        /* Null relocations. */
         case R_ARM_NONE:
         case R_AARCH64_NONE:
             ovf = 0;
             break;
-        case R_AARCH64_RELATIVE:
-            * (unsigned long *)loc = (unsigned long)mod->start + rela[i].r_addend;
-            break;
+        /* Data relocations. */
         case R_AARCH64_ABS64:
-            if (sym_index) {
-                /* 注意：这里假设符号 st_value 是相对地址，需要加上模块基地址 */
-                * (unsigned long *)loc = (unsigned long)mod->start + sym->st_value + rela[i].r_addend;
-            } else {
-                printk(KERN_ERR "ARM64 KPM Loader: R_AARCH64_ABS64 with zero symbol\n");
-                return -EINVAL;
-            }
-            break;
-        case R_AARCH64_GLOB_DAT:
-        case R_AARCH64_JUMP_SLOT:
-            if (sym_index) {
-                * (unsigned long *)loc = (unsigned long)mod->start + sym->st_value;
-            } else {
-                printk(KERN_ERR "ARM64 KPM Loader: R_AARCH64_GLOB_DAT/JUMP_SLOT with zero symbol\n");
-                return -EINVAL;
-            }
+            overflow_check = false;
+            ovf = reloc_data(RELOC_OP_ABS, loc, val, 64);
             break;
         case R_AARCH64_ABS32:
             ovf = reloc_data(RELOC_OP_ABS, loc, val, 32);
@@ -633,6 +599,7 @@ static int kpm_apply_relocate_add_arm64(Elf64_Shdr *sechdrs, const char *strtab,
             ovf = reloc_data(RELOC_OP_ABS, loc, val, 16);
             break;
         case R_AARCH64_PREL64:
+            overflow_check = false;
             ovf = reloc_data(RELOC_OP_PREL, loc, val, 64);
             break;
         case R_AARCH64_PREL32:
@@ -641,7 +608,8 @@ static int kpm_apply_relocate_add_arm64(Elf64_Shdr *sechdrs, const char *strtab,
         case R_AARCH64_PREL16:
             ovf = reloc_data(RELOC_OP_PREL, loc, val, 16);
             break;
-        /* MOVW 重定位处理 */
+
+        /* MOVW instruction relocations. */
         case R_AARCH64_MOVW_UABS_G0_NC:
             overflow_check = false;
         case R_AARCH64_MOVW_UABS_G0:
@@ -658,6 +626,7 @@ static int kpm_apply_relocate_add_arm64(Elf64_Shdr *sechdrs, const char *strtab,
             ovf = reloc_insn_movw(RELOC_OP_ABS, loc, val, 32, AARCH64_INSN_IMM_16);
             break;
         case R_AARCH64_MOVW_UABS_G3:
+            /* We're using the top bits so we can't overflow. */
             overflow_check = false;
             ovf = reloc_insn_movw(RELOC_OP_ABS, loc, val, 48, AARCH64_INSN_IMM_16);
             break;
@@ -692,10 +661,11 @@ static int kpm_apply_relocate_add_arm64(Elf64_Shdr *sechdrs, const char *strtab,
             ovf = reloc_insn_movw(RELOC_OP_PREL, loc, val, 32, AARCH64_INSN_IMM_MOVNZ);
             break;
         case R_AARCH64_MOVW_PREL_G3:
+            /* We're using the top bits so we can't overflow. */
             overflow_check = false;
             ovf = reloc_insn_movw(RELOC_OP_PREL, loc, val, 48, AARCH64_INSN_IMM_MOVNZ);
             break;
-        /* Immediate 指令重定位 */
+        /* Immediate instruction relocations. */
         case R_AARCH64_LD_PREL_LO19:
             ovf = reloc_insn_imm(RELOC_OP_PREL, loc, val, 2, 19, AARCH64_INSN_IMM_19);
             break;
@@ -739,18 +709,15 @@ static int kpm_apply_relocate_add_arm64(Elf64_Shdr *sechdrs, const char *strtab,
             ovf = reloc_insn_imm(RELOC_OP_PREL, loc, val, 2, 26, AARCH64_INSN_IMM_26);
             break;
         default:
-            pr_err("ARM64 KPM Loader: Unsupported RELA relocation: %llu\n",
-                   ELF64_R_TYPE(rela[i].r_info));
+            printk(KERN_ERR "unsupported RELA relocation: %llu\n", ELF64_R_TYPE(rel[i].r_info));
             return -ENOEXEC;
         }
 
-        if (overflow_check && ovf == -ERANGE)
-            goto overflow;
+        if (overflow_check && ovf == -ERANGE) goto overflow;
     }
     return 0;
 overflow:
-    pr_err("ARM64 KPM Loader: Overflow in relocation type %d, val %llx\n",
-           (int)ELF64_R_TYPE(rela[i].r_info), val);
+    printk(KERN_ERR "overflow in relocation type %d val %llx\n", (int)ELF64_R_TYPE(rel[i].r_info), val);
     return -ENOEXEC;
 }
 
@@ -760,29 +727,16 @@ static int kpm_apply_relocations(struct kpm_module *mod, const struct kpm_load_i
     int rc = 0;
     int i;
 
-    for (i = 1; i < info->ehdr->e_shnum; i++) {
-        unsigned int target = info->sechdrs[i].sh_info;
-
-        if (target >= info->ehdr->e_shnum) {
-            printk(KERN_ERR "ARM64 KPM Loader: Invalid target section index %u\n", target);
-            return -EINVAL;
-        }
-
-        if (!(info->sechdrs[target].sh_flags & SHF_ALLOC)) {
-            printk(KERN_INFO "ARM64 KPM Loader: Skipping non-allocated section %d\n", i);
-            continue;
-        }
-
+    for (i = 1; i < info->hdr->e_shnum; i++) {
+        unsigned int infosec = info->sechdrs[i].sh_info;
+        if (infosec >= info->hdr->e_shnum) continue;
+        if (!(info->sechdrs[infosec].sh_flags & SHF_ALLOC)) continue;
         if (info->sechdrs[i].sh_type == SHT_REL) {
-            rc = kpm_apply_relocate_arm64(info->sechdrs, info->strtab, info->index.sym, i, mod);
+            rc = apply_relocate(info->sechdrs, info->strtab, info->index.sym, i, mod);
         } else if (info->sechdrs[i].sh_type == SHT_RELA) {
-            rc = kpm_apply_relocate_add_arm64(info->sechdrs, info->strtab, info->index.sym, i, mod);
+            rc = apply_relocate_add(info->sechdrs, info->strtab, info->index.sym, i, mod);
         }
-
-        if (rc < 0) {
-            printk(KERN_ERR "ARM64 KPM Loader: Relocation failed at section %d, error %d\n", i, rc);
-            break;
-        }
+        if (rc < 0) break;
     }
 
     return rc;
@@ -1250,14 +1204,14 @@ void sukisu_kpm_print_list(void)
     /* 打开当前进程的 stdout */
     stdout_file = filp_open("/proc/self/fd/1", O_WRONLY, 0);
     if (IS_ERR(stdout_file)) {
-        pr_err("sukisu_kpm_print_list: Failed to open stdout.\n");
+        printk(KERN_ERR "sukisu_kpm_print_list: Failed to open stdout.\n");
         return;
     }
 
     /* 分配内核缓冲区 */
     buffer = kmalloc(256, GFP_KERNEL);
     if (!buffer) {
-        pr_err("sukisu_kpm_print_list: Failed to allocate buffer.\n");
+        printk(KERN_ERR "sukisu_kpm_print_list: Failed to allocate buffer.\n");
         filp_close(stdout_file, NULL);
         return;
     }
