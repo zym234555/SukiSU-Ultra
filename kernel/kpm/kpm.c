@@ -106,6 +106,8 @@ void *kpm_malloc_exec(size_t size)
 #endif
 #endif
 
+    flush_icache_all();
+
     return addr;
 }
 
@@ -802,7 +804,7 @@ static int kpm_move_module(struct kpm_module *mod, struct kpm_load_info *info)
 
     /* 分配连续内存（按页对齐） */
     mod->size = ALIGN(mod->size, PAGE_SIZE);
-    mod->start = module_alloc(mod->size); // 使用内核的 module_alloc 接口
+    mod->start = kpm_malloc_exec(mod->size);
     if (!mod->start) {
         printk(KERN_ERR "ARM64 KPM Loader: Failed to allocate module memory\n");
         return -ENOMEM;
@@ -811,6 +813,7 @@ static int kpm_move_module(struct kpm_module *mod, struct kpm_load_info *info)
 
     /* 设置内存可执行权限（关键修复） */
     set_memory_x((unsigned long)mod->start, mod->size >> PAGE_SHIFT);
+    flush_icache_all();
 
     printk(KERN_INFO "ARM64 KPM Loader: Final section addresses (aligned base=0x%px):\n", mod->start);
 
@@ -834,6 +837,8 @@ static int kpm_move_module(struct kpm_module *mod, struct kpm_load_info *info)
                                  (unsigned long)dest + shdr->sh_size);
             }
         }
+
+        flush_icache_all();
 
         /* 更新段头中的虚拟地址 */
         shdr->sh_addr = (unsigned long)dest;
@@ -1005,6 +1010,7 @@ long kpm_load_module(const void *data, int len, const char *args,
     /* 替换 flush_icache_all() 为 flush_icache_range() */
     flush_icache_range((unsigned long)mod->start,
                        (unsigned long)mod->start + mod->size);
+    flush_icache_all();
 
     rc = mod->init(mod->args, event, reserved);
     if (!rc) {
