@@ -887,39 +887,27 @@ static int kpm_move_module(struct kpm_module *mod, struct kpm_load_info *info)
 
     printk(KERN_INFO "ARM64 KPM Loader: Final section addresses (aligned base=0x%px):\n", mod->start);
 
-    /* 遍历所有段并按对齐要求布局 */
-    for (i = 0; i < info->ehdr->e_shnum; i++) {
-        shdr = &info->sechdrs[i];
-        if (!(shdr->sh_flags & SHF_ALLOC))
-            continue;
+    for (int i = 1; i < info->ehdr->e_shnum; i++) {
+        void *dest;
+        const char *sname;
+        Elf_Shdr *shdr = &info->sechdrs[i];
+        if (!(shdr->sh_flags & SHF_ALLOC)) continue;
 
-        /* 按段对齐要求调整偏移 */
-        curr_offset = ALIGN(curr_offset, shdr->sh_addralign);
-        dest = mod->start + curr_offset;
+        dest = mod->start + shdr->sh_entsize;
+        sname = info->secstrings + shdr->sh_name;
 
-        /* 复制段内容（NOBITS 段不复制） */
-        if (shdr->sh_type != SHT_NOBITS) {
-            memcpy(dest, (void *)shdr->sh_addr, shdr->sh_size);
-            
-            /* 刷新指令缓存（针对可执行段） */
-            if (shdr->sh_flags & SHF_EXECINSTR) {
-                flush_icache_range((unsigned long)dest, 
-                                 (unsigned long)dest + shdr->sh_size);
-            }
-        }
+        if (shdr->sh_type != SHT_NOBITS) memcpy(dest, (void *)shdr->sh_addr, shdr->sh_size);
 
-        /* 更新段头中的虚拟地址 */
         shdr->sh_addr = (unsigned long)dest;
-        curr_offset += shdr->sh_size;
 
-        /* 定位关键函数指针 */
-        secname = info->secstrings + shdr->sh_name;
-        if (!mod->init && !strcmp(".kpm.init", secname)) {
-            mod->init = (typeof(mod->init))dest;
-            printk(KERN_DEBUG "Found .kpm.init at 0x%px\n", dest);
-        } else if (!strcmp(".kpm.exit", secname)) {
-            mod->exit = (typeof(mod->exit))dest;
-        }
+        if (!mod->init && !strcmp(".kpm.init", sname)) mod->init = (mod_initcall_t *)dest;
+
+        if (!strcmp(".kpm.ctl0", sname)) mod->ctl0 = (mod_ctl0call_t *)dest;
+        if (!strcmp(".kpm.ctl1", sname)) mod->ctl1 = (mod_ctl1call_t *)dest;
+
+        if (!mod->exit && !strcmp(".kpm.exit", sname)) mod->exit = (mod_exitcall_t *)dest;
+
+        if (!mod->info.base && !strcmp(".kpm.info", sname)) mod->info.base = (const char *)dest;
     }
 
     /* 调整元数据指针（基于新基址） */
