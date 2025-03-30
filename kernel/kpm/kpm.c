@@ -1118,7 +1118,7 @@ bool kpm_is_allow_address(unsigned long addr)
         unsigned long end_address = start_address + pos->size;
 
         /* 规则1：地址在KPM允许范围内 */
-        if (addr >= allow_start && addr <= allow_end) {
+        if (addr >= start_address && addr <= end_address) {
             allow = true;
             break;
         }
