@@ -75,10 +75,12 @@ static unsigned long sukisu_find_proxy_symbol(const char* name) {
         struct CompactProxySymbol* symbol = &proxy_symbol[i];
         if(strcmp(name, symbol->symbol_name) == 0) {
             if(symbol->cached_address == NULL) {
-                symbol->cached_address = (void*) kallsyms_lookup_name(name);
+                symbol->cached_address = (void*) kallsyms_lookup_name(symbol->compact_symbol_name);
             }
             if(symbol->cached_address != NULL) {
                 return (unsigned long) &symbol->cached_address;
+            } else {
+                return 0;
             }
         }
     }
@@ -98,8 +100,8 @@ unsigned long sukisu_compact_find_symbol(const char* name) {
         }
     }
 
-    /* 如果符号名以 "kf__" 开头，尝试解析去掉前缀的部分 */
-    if (strncmp(name, "kf__", 4) == 0) {
+    /* 如果符号名以 "kf_" 开头，尝试解析去掉前缀的部分 */
+    if (strncmp(name, "kf_", 3) == 0) {
         addr = sukisu_find_proxy_symbol(name);
         isFoundedProxy = 1;
         if(addr != 0) {
