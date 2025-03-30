@@ -374,14 +374,6 @@ static int kpm_simplify_symbols(struct kpm_module *mod, const struct kpm_load_in
 #ifndef R_AARCH64_NONE
 #define R_AARCH64_NONE 256
 #endif
-
-/* 重定位操作类型 */
-typedef enum {
-    RELOC_OP_ABS,
-    RELOC_OP_PREL,
-    RELOC_OP_PAGE
-} reloc_op_t;
-
 #ifndef R_AARCH64_GLOB_DAT
 #define R_AARCH64_GLOB_DAT    1025    /* Set GOT entry to data address */
 #endif
@@ -553,13 +545,13 @@ static int reloc_insn_imm(enum aarch64_reloc_op op, void *place, u64 val, int ls
     return 0;
 }
 
-int apply_relocate(Elf64_Shdr *sechdrs, const char *strtab, unsigned int symindex, unsigned int relsec,
+int kpm_apply_relocate(Elf64_Shdr *sechdrs, const char *strtab, unsigned int symindex, unsigned int relsec,
                    struct module *me)
 {
     return 0;
 };
 
-int apply_relocate_add(Elf64_Shdr *sechdrs, const char *strtab, unsigned int symindex, unsigned int relsec,
+int kpm_apply_relocate_add(Elf64_Shdr *sechdrs, const char *strtab, unsigned int symindex, unsigned int relsec,
                        struct module *me)
 {
     unsigned int i;
@@ -732,9 +724,9 @@ static int kpm_apply_relocations(struct kpm_module *mod, const struct kpm_load_i
         if (infosec >= info->hdr->e_shnum) continue;
         if (!(info->sechdrs[infosec].sh_flags & SHF_ALLOC)) continue;
         if (info->sechdrs[i].sh_type == SHT_REL) {
-            rc = apply_relocate(info->sechdrs, info->strtab, info->index.sym, i, mod);
+            rc = kpm_apply_relocate(info->sechdrs, info->strtab, info->index.sym, i, mod);
         } else if (info->sechdrs[i].sh_type == SHT_RELA) {
-            rc = apply_relocate_add(info->sechdrs, info->strtab, info->index.sym, i, mod);
+            rc = kpm_apply_relocate_add(info->sechdrs, info->strtab, info->index.sym, i, mod);
         }
         if (rc < 0) break;
     }
