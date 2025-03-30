@@ -828,7 +828,7 @@ static void kpm_layout_symtab(struct kpm_module *mod, struct kpm_load_info *info
     strtab_size = 1;
     /* Compute total space required for the core symbols' strtab. */
     for (ndst = i = 0; i < nsrc; i++) {
-        if (i == 0 || is_core_symbol(src + i, info->sechdrs, info->hdr->e_shnum)) {
+        if (i == 0 || kpm_is_core_symbol(src + i, info->sechdrs, info->ehdr->e_shnum)) {
             strtab_size += strlen(&info->strtab[src[i].st_name]) + 1;
             ndst++;
         }
