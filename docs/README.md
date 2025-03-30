@@ -85,6 +85,7 @@ curl -LSs "https://raw.githubusercontent.com/ShirkNeko/KernelSU/main/kernel/setu
 - [Ktouls](https://github.com/Ktouls) 非常感谢你给我带来的支持
 - [zaoqi123](https://github.com/zaoqi123) 请我喝奶茶也不错
 - [wswzgdg](https://github.com/wswzgdg) 非常感谢对此项目的支持
+- [yspbwx2010](https://github.com/yspbwx2010) 非常感谢
 
 
 
