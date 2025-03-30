@@ -70,11 +70,12 @@ struct CompactProxySymbol proxy_symbol[] = {
 
 static unsigned long sukisu_find_proxy_symbol(const char* name) {
     // 查不到就查查兼容的符号
+    int i;
     for(i = 0; i < (sizeof(proxy_symbol) / sizeof(struct CompactProxySymbol)); i++) {
         struct CompactProxySymbol* symbol = &alias_symbol[i];
         if(strcmp(name, symbol->symbol_name) == 0) {
             if(symbol->cached_address == NULL) {
-                symbol->cached_address = kallsyms_lookup_name(name);
+                symbol->cached_address = (void*) kallsyms_lookup_name(name);
             }
             if(symbol->cached_address != NULL) {
                 return (unsigned long) &symbol->cached_address;

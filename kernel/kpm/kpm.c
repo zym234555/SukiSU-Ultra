@@ -1271,6 +1271,14 @@ bool kpm_is_allow_address(unsigned long addr)
     return allow;
 }
 
+#ifndef CONFIG_ARCH_STACKWALK
+struct stack_trace {
+	unsigned int nr_entries, max_entries;
+	unsigned long *entries;
+	unsigned int skip;	/* input argument: How many entries to skip */
+};
+#endif
+
 static struct kprobe dump_stack_kp = {
     .symbol_name = "dump_stack",
 };
