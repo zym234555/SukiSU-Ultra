@@ -24,11 +24,12 @@ config KSU_HOOK
 	  override the kernel version check and enable the hook functionality.
 
 config KPM
-	bool "Enable KernelSU KPM"
+	bool "Enable SukiSU KPM"
 	default n
 	help
-	  This option enables the KernelSU KPM feature. If enabled, it will
-	  override the kernel version check and enable the hook functionality.
+	  Enabling this option will activate the KPM feature of SukiSU.
+	  This option is suitable for scenarios where you need to force KPM to be enabled.
+	  but it may affect system stability.
 
 
 endmenu
