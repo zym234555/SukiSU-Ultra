@@ -151,7 +151,7 @@ struct kpm_load_info {
     Elf64_Ehdr *ehdr;          /* ELF 头 */
     Elf64_Shdr *sechdrs;       /* 段表 */
     const char *secstrings;    /* 段名字符串表 */
-    size_t len;                /* 文件长度 */
+    unsigned long len;                /* 文件长度 */
     struct {
         const char *base;
         const char *name;
@@ -159,7 +159,7 @@ struct kpm_load_info {
         const char *license;
         const char *author;
         const char *description;
-        size_t size;
+        unsigned long size;
     } info;
     struct {
         int info;
@@ -176,9 +176,9 @@ struct kpm_module {
     char *args;
     char *ctl_args;
     void *start;                 /* 分配的连续内存区域 */
-    unsigned long size;           /* 总大小 */
-    unsigned long text_size;
-    unsigned long ro_size;
+    unsigned int size;           /* 总大小 */
+    unsigned int text_size;
+    unsigned int ro_size;
     int (*init)(const char *args, const char *event, void *__user reserved);
     void (*exit)(void *__user reserved);
     int (*ctl0)(const char *ctl_args, char *__user out_msg, int outlen);
@@ -299,7 +299,7 @@ static long kpm_get_offset(struct kpm_module *mod, unsigned int *size, Elf64_Shd
     return ret;
 }
 
-static long kpm_get_offset2(struct module *mod, unsigned int *size, Elf_Shdr *sechdr, unsigned int section)
+static long kpm_get_offset2(struct kpm_module *mod, unsigned int *size, Elf_Shdr *sechdr, unsigned int section)
 {
     long ret = ALIGN(*size, sechdr->sh_addralign ?: 1);
     *size = ret + sechdr->sh_size;
