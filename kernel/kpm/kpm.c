@@ -546,13 +546,13 @@ static int reloc_insn_imm(enum aarch64_reloc_op op, void *place, u64 val, int ls
 }
 
 int kpm_apply_relocate(Elf64_Shdr *sechdrs, const char *strtab, unsigned int symindex, unsigned int relsec,
-                   struct module *me)
+                   struct kpm_module *me)
 {
     return 0;
 };
 
 int kpm_apply_relocate_add(Elf64_Shdr *sechdrs, const char *strtab, unsigned int symindex, unsigned int relsec,
-                       struct module *me)
+                       struct kpm_module *me)
 {
     unsigned int i;
     int ovf;
@@ -719,9 +719,9 @@ static int kpm_apply_relocations(struct kpm_module *mod, const struct kpm_load_i
     int rc = 0;
     int i;
 
-    for (i = 1; i < info->hdr->e_shnum; i++) {
+    for (i = 1; i < info->ehdr->e_shnum; i++) {
         unsigned int infosec = info->sechdrs[i].sh_info;
-        if (infosec >= info->hdr->e_shnum) continue;
+        if (infosec >= info->ehdr->e_shnum) continue;
         if (!(info->sechdrs[infosec].sh_flags & SHF_ALLOC)) continue;
         if (info->sechdrs[i].sh_type == SHT_REL) {
             rc = kpm_apply_relocate(info->sechdrs, info->strtab, info->index.sym, i, mod);
