@@ -299,6 +299,13 @@ static long kpm_get_offset(struct kpm_module *mod, unsigned int *size, Elf64_Shd
     return ret;
 }
 
+static long kpm_get_offset2(struct module *mod, unsigned int *size, Elf_Shdr *sechdr, unsigned int section)
+{
+    long ret = ALIGN(*size, sechdr->sh_addralign ?: 1);
+    *size = ret + sechdr->sh_size;
+    return ret;
+}
+
 /*static void kpm_layout_sections(struct kpm_module *mod, struct kpm_load_info *info)
 {
     int i;
@@ -321,7 +328,7 @@ static long kpm_get_offset(struct kpm_module *mod, unsigned int *size, Elf64_Shd
 
 #ifndef align
 #define KP_ALIGN_MASK(x, mask) (((x) + (mask)) & ~(mask))
-#define KP_ALIGN(x, a) ALIGN_MASK(x, (typeof(x))(a)-1)
+#define KP_ALIGN(x, a) KP_ALIGN_MASK(x, (typeof(x))(a)-1)
 #define kp_align(X) KP_ALIGN(X, page_size)
 #endif
 
@@ -345,7 +352,7 @@ static void kpm_layout_sections(struct kpm_module *mod, struct kpm_load_info *in
             Elf_Shdr *s = &info->sechdrs[i];
             if ((s->sh_flags & masks[m][0]) != masks[m][0] || (s->sh_flags & masks[m][1]) || s->sh_entsize != ~0UL)
                 continue;
-            s->sh_entsize = kpm_get_offset(mod, &mod->size, s, i);
+            s->sh_entsize = kpm_get_offset2(mod, &mod->size, s, i);
             // const char *sname = info->secstrings + s->sh_name;
         }
         switch (m) {
