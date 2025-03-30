@@ -867,10 +867,6 @@ static int kpm_rewrite_section_headers(struct kpm_load_info *info)
 static int kpm_move_module(struct kpm_module *mod, struct kpm_load_info *info)
 {
     int i;
-    unsigned long curr_offset = 0;
-    Elf64_Shdr *shdr;
-    void *dest;
-    const char *secname;
 
     /* 分配连续内存（按页对齐） */
     mod->size = ALIGN(mod->size, PAGE_SIZE);
