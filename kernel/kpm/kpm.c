@@ -345,7 +345,7 @@ static void kpm_layout_sections(struct kpm_module *mod, struct kpm_load_info *in
             Elf_Shdr *s = &info->sechdrs[i];
             if ((s->sh_flags & masks[m][0]) != masks[m][0] || (s->sh_flags & masks[m][1]) || s->sh_entsize != ~0UL)
                 continue;
-            s->sh_entsize = get_offset(mod, &mod->size, s, i);
+            s->sh_entsize = kpm_get_offset(mod, &mod->size, s, i);
             // const char *sname = info->secstrings + s->sh_name;
         }
         switch (m) {
