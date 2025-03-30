@@ -6,6 +6,8 @@ int sukisu_is_kpm_control_code(unsigned long arg2);
 
 int kpm_cfi_bypass_init(void);
 void kpm_cfi_bypass_exit(void);
+int kpm_stack_init(void);
+void kpm_stack_exit(void);
 
 // KPM控制代码
 #define CMD_KPM_CONTROL 28

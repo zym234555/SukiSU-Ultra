@@ -43,6 +43,12 @@ struct CompactAliasSymbol {
     const char* compact_symbol_name;
 };
 
+struct CompactProxySymbol {
+    const char* symbol_name;
+    const char* compact_symbol_name;
+    void* cached_address;
+};
+
 struct CompactAddressSymbol address_symbol [] = {
     { "kallsyms_lookup_name", &kallsyms_lookup_name },
     { "compact_find_symbol", &sukisu_compact_find_symbol },
@@ -53,11 +59,30 @@ struct CompactAddressSymbol address_symbol [] = {
 };
 
 struct CompactAliasSymbol alias_symbol[] = {
-    {"kf_strncat", "strncat"},
-    {"kf_strlen", "strlen" },
-    {"kf_strcpy", "strcpy"},
     {"compat_copy_to_user", "__arch_copy_to_user"}
 };
+
+struct CompactProxySymbol proxy_symbol[] = {
+    {"kf_strncat", "strncat", NULL },
+    {"kf_strlen", "strlen", NULL },
+    {"kf_strcpy", "strcpy", NULL },
+};
+
+static unsigned long sukisu_find_proxy_symbol(const char* name) {
+    // 查不到就查查兼容的符号
+    for(i = 0; i < (sizeof(proxy_symbol) / sizeof(struct CompactProxySymbol)); i++) {
+        struct CompactProxySymbol* symbol = &alias_symbol[i];
+        if(strcmp(name, symbol->symbol_name) == 0) {
+            if(symbol->cached_address == NULL) {
+                symbol->cached_address = kallsyms_lookup_name(name);
+            }
+            if(symbol->cached_address != NULL) {
+                return (unsigned long) &symbol->cached_address;
+            }
+        }
+    }
+    return 0;
+}
 
 unsigned long sukisu_compact_find_symbol(const char* name) {
     int i;
@@ -73,9 +98,8 @@ unsigned long sukisu_compact_find_symbol(const char* name) {
 
     /* 如果符号名以 "kf__" 开头，尝试解析去掉前缀的部分 */
     if (strncmp(name, "kf__", 4) == 0) {
-        const char *real_name = name + 4;  // 去掉 "kf__"
-        addr = (unsigned long)kallsyms_lookup_name(real_name);
-        if (addr) {
+        addr = sukisu_find_proxy_symbol(name);
+        if(addr != 0) {
             return addr;
         }
     }

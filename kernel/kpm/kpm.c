@@ -35,6 +35,9 @@
 #include <linux/export.h>
 #include <linux/slab.h>
 #include <asm/insn.h>
+#include <linux/kprobes.h>
+#include <linux/stacktrace.h>
+#include <linux/kallsyms.h>
 #include "kpm.h"
 #include "compact.h"
 
@@ -1100,36 +1103,6 @@ free_data:
     return rc;
 }
 
-/*--------------------- 地址过滤逻辑 ---------------------*/
-/**
- * is_allow_address - 自定义地址放行规则
- * @addr: 目标函数地址
- * 
- * 返回值: true 放行 | false 拦截
- */
-bool kpm_is_allow_address(unsigned long addr)
-{
-    struct kpm_module *pos;
-    bool allow = false;
-
-    spin_lock(&kpm_module_lock);
-    list_for_each_entry(pos, &kpm_module_list, list) {
-        unsigned long start_address = (unsigned long) pos->start;
-        unsigned long end_address = start_address + pos->size;
-
-        /* 规则1：地址在KPM允许范围内 */
-        if (addr >= start_address && addr <= end_address) {
-            allow = true;
-            break;
-        }
-    }
-    spin_unlock(&kpm_module_lock);
-
-    // TODO: 增加Hook跳板放行机制
-
-    return allow;
-}
-
 /*-----------------------------------------------------------
  * 模块管理查询接口
  *----------------------------------------------------------*/
@@ -1265,6 +1238,95 @@ void sukisu_kpm_print_list(void)
 EXPORT_SYMBOL(sukisu_kpm_load_module_path);
 EXPORT_SYMBOL(sukisu_kpm_unload_module);
 EXPORT_SYMBOL(sukisu_kpm_find_module);
+
+// ===========================================================================================
+
+/*--------------------- 地址过滤逻辑 ---------------------*/
+/**
+ * is_allow_address - 自定义地址放行规则
+ * @addr: 目标函数地址
+ * 
+ * 返回值: true 放行 | false 拦截
+ */
+bool kpm_is_allow_address(unsigned long addr)
+{
+    struct kpm_module *pos;
+    bool allow = false;
+
+    spin_lock(&kpm_module_lock);
+    list_for_each_entry(pos, &kpm_module_list, list) {
+        unsigned long start_address = (unsigned long) pos->start;
+        unsigned long end_address = start_address + pos->size;
+
+        /* 规则1：地址在KPM允许范围内 */
+        if (addr >= start_address && addr <= end_address) {
+            allow = true;
+            break;
+        }
+    }
+    spin_unlock(&kpm_module_lock);
+
+    // TODO: 增加Hook跳板放行机制
+
+    return allow;
+}
+
+static struct kprobe dump_stack_kp = {
+    .symbol_name = "dump_stack",
+};
+
+static int handler_dump_stack_pre(struct kprobe *p, struct pt_regs *regs)
+{
+    struct stack_trace trace = { 
+        .nr_entries = 0, 
+        .max_entries = 32, 
+        .entries = (unsigned long *)kmalloc(32*sizeof(unsigned long), GFP_ATOMIC),
+    };
+    int i;
+
+    /* 捕获当前调用栈 */
+    save_stack_trace(&trace);
+
+    /* 遍历栈地址并匹配 KPM 模块 */
+    printk(KERN_EMERG "KPM Stack Trace:\n");
+    for (i = 0; i < trace.nr_entries; i++) {
+        struct kpm_module *pos;
+        unsigned long addr = trace.entries[i];
+
+        list_for_each_entry(pos, &kpm_module_list, list) {
+            unsigned long start_address = (unsigned long) pos->start;
+            unsigned long end_address = start_address + pos->size;
+
+            /* 规则1：地址在KPM允许范围内 */
+            if (addr >= start_address && addr <= end_address) {
+                printk(KERN_EMERG "[KPM: <%px>] %s+%px\n",
+                      (void *)addr, pos->info.name, addr - ((unsigned long)pos->start));
+                break;
+            }
+        }
+    }
+    
+    kfree(trace.entries);
+    return 0; // 继续执行原始 dump_stack
+}
+
+/* 模块初始化 */
+int kpm_stack_init(void)
+{
+    int ret;
+    if ((ret = register_kprobe(&dump_stack_kp)) < 0) {
+        printk(KERN_ERR "Failed to hook dump_stack: %d\n", ret);
+        return ret;
+    }
+    dump_stack_kp.pre_handler = handler_dump_stack_pre;
+    return 0;
+}
+
+/* 模块卸载 */
+void kpm_stack_exit(void)
+{
+    unregister_kprobe(&dump_stack_kp);
+}
 
 // ============================================================================================
 
