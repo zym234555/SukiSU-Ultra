@@ -425,7 +425,7 @@ static int kpm_simplify_symbols(struct kpm_module *mod, const struct kpm_load_in
             sym[i].st_value = addr;
             break;
         default:
-            secbase = info->sechdrs[sym[i].st_shndx].sh_addr;
+            secbase = (unsigned long)mod->start + info->sechdrs[sym[i].st_shndx].sh_offset;
             sym[i].st_value += secbase;
             break;
         }
@@ -895,7 +895,7 @@ static int kpm_move_module(struct kpm_module *mod, struct kpm_load_info *info)
         Elf_Shdr *shdr = &info->sechdrs[i];
         if (!(shdr->sh_flags & SHF_ALLOC)) continue;
 
-        dest = mod->start + shdr->sh_entsize;
+        dest = mod->start + (shdr->sh_addr - info->ehdr->e_entry);
         sname = info->secstrings + shdr->sh_name;
 
         if (shdr->sh_type != SHT_NOBITS) memcpy(dest, (void *)shdr->sh_addr, shdr->sh_size);
