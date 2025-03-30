@@ -686,6 +686,12 @@ __maybe_unused int ksu_kprobe_init(void)
 	rc = register_kprobe(&renameat_kp);
 	pr_info("renameat kp: %d\n", rc);
 
+	#ifdef CONFIG_KPM
+	// KPM初始化状态
+	kpm_cfi_bypass_init();
+	// kpm_stack_init();
+	#endif
+
 	return rc;
 }
 
@@ -693,6 +699,11 @@ __maybe_unused int ksu_kprobe_exit(void)
 {
 	unregister_kprobe(&prctl_kp);
 	unregister_kprobe(&renameat_kp);
+	#ifdef CONFIG_KPM
+	// KPM取消状态
+	kpm_cfi_bypass_exit();
+	// kpm_stack_exit();
+	#endif
 	return 0;
 }
 
