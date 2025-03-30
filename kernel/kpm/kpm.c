@@ -887,7 +887,7 @@ static int kpm_move_module(struct kpm_module *mod, struct kpm_load_info *info)
 
     printk(KERN_INFO "ARM64 KPM Loader: Final section addresses (aligned base=0x%px):\n", mod->start);
 
-    for (int i = 1; i < info->ehdr->e_shnum; i++) {
+    for (i = 1; i < info->ehdr->e_shnum; i++) {
         void *dest;
         const char *sname;
         Elf_Shdr *shdr = &info->sechdrs[i];
