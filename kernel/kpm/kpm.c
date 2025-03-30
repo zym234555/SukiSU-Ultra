@@ -59,10 +59,6 @@ static inline void flush_icache_all(void)
     asm volatile("isb" : : : "memory");
 }
 
-#ifndef align
-#define align(X) ALIGN(X, page_size)
-#endif
-
 /**
  * kpm_malloc_exec - 分配可执行内存
  * @size: 需要分配的内存大小（字节）
@@ -319,6 +315,16 @@ static long kpm_get_offset(struct kpm_module *mod, unsigned int *size, Elf64_Shd
     mod->size = ALIGN(mod->size, 8);
 }*/
 
+#ifndef ARCH_SHF_SMALL
+#define ARCH_SHF_SMALL 0
+#endif
+
+#ifndef align
+#define KP_ALIGN_MASK(x, mask) (((x) + (mask)) & ~(mask))
+#define KP_ALIGN(x, a) ALIGN_MASK(x, (typeof(x))(a)-1)
+#define kp_align(X) KP_ALIGN(X, page_size)
+#endif
+
 static void kpm_layout_sections(struct kpm_module *mod, struct kpm_load_info *info)
 {
     static unsigned long const masks[][2] = {
@@ -344,17 +350,17 @@ static void kpm_layout_sections(struct kpm_module *mod, struct kpm_load_info *in
         }
         switch (m) {
         case 0: /* executable */
-            mod->size = align(mod->size);
+            mod->size = kp_align(mod->size);
             mod->text_size = mod->size;
             break;
         case 1: /* RO: text and ro-data */
-            mod->size = align(mod->size);
+            mod->size = kp_align(mod->size);
             mod->ro_size = mod->size;
             break;
         case 2:
             break;
         case 3: /* whole */
-            mod->size = align(mod->size);
+            mod->size = kp_align(mod->size);
             break;
         }
     }
