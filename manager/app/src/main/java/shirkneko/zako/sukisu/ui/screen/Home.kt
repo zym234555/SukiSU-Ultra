@@ -478,7 +478,7 @@ private fun InfoCard() {
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(start = 24.dp, top = 24.dp, end = 24.dp, bottom = 16.dp)
-        ) {
+        ) withContext@{
             val contents = StringBuilder()
             val uname = Os.uname()
 
@@ -492,7 +492,7 @@ private fun InfoCard() {
                 Text(text = content, style = MaterialTheme.typography.bodyMedium)
             }
 
-                InfoCardItem(stringResource(R.string.home_kernel), uname.release)
+            InfoCardItem(stringResource(R.string.home_kernel), uname.release)
 
             if (!isSimpleMode) {
                 Spacer(Modifier.height(16.dp))
@@ -501,23 +501,23 @@ private fun InfoCard() {
             }
 
 
-                Spacer(Modifier.height(16.dp))
-                val deviceModel = getDeviceModel(context)
-                InfoCardItem(stringResource(R.string.home_device_model), deviceModel)
+            Spacer(Modifier.height(16.dp))
+            val deviceModel = getDeviceModel(context)
+            InfoCardItem(stringResource(R.string.home_device_model), deviceModel)
 
 
 
-                Spacer(Modifier.height(16.dp))
-                val managerVersion = getManagerVersion(context)
-                InfoCardItem(
-                    stringResource(R.string.home_manager_version),
-                    "${managerVersion.first} (${managerVersion.second})"
-                )
+            Spacer(Modifier.height(16.dp))
+            val managerVersion = getManagerVersion(context)
+            InfoCardItem(
+                stringResource(R.string.home_manager_version),
+                "${managerVersion.first} (${managerVersion.second})"
+            )
 
 
 
-                Spacer(Modifier.height(16.dp))
-                InfoCardItem(stringResource(R.string.home_selinux_status), getSELinuxStatus())
+            Spacer(Modifier.height(16.dp))
+            InfoCardItem(stringResource(R.string.home_selinux_status), getSELinuxStatus())
 
 
             if (!isSimpleMode) {
@@ -525,33 +525,23 @@ private fun InfoCard() {
 
                 val suSFS = getSuSFS()
                 if (suSFS == "Supported") {
+                    val suSFSVersion = getSuSFSVersion()
+                    if (suSFSVersion.isEmpty()) return@withContext
+                    val isSUS_SU = getSuSFSFeatures() == "CONFIG_KSU_SUSFS_SUS_SU"
+                    val infoText = buildString {
+                        append(suSFSVersion)
+                        append(if (isSUS_SU) " (${getSuSFSVariant()})" else " (${stringResource(R.string.manual_hook)})")
+                        if (isSUS_SU) {
+                            val susSUMode = try { susfsSUS_SU_Mode().toString() } catch (_: Exception) { "" }
+                            if (susSUMode.isNotEmpty()) {
+                                append(" ${stringResource(R.string.sus_su_mode)} $susSUMode")
+                            }
+                        }
+                    }
                     InfoCardItem(
                         stringResource(R.string.home_susfs_version),
-                        "${getSuSFSVersion()} (${stringResource(R.string.manual_hook)})"
+                        infoText
                     )
-                } else {
-                    val susSUMode = try {
-                        susfsSUS_SU_Mode()
-                    } catch (e: Exception) {
-                        0
-                    }
-
-                    if (susSUMode == 2 || susSUMode == 0) {
-                        val isSUS_SU = getSuSFSFeatures() == "CONFIG_KSU_SUSFS_SUS_SU"
-                        val susSUModeLabel = stringResource(R.string.sus_su_mode)
-                        val susSUModeValue = susSUMode.toString()
-                        val susSUModeText = if (isSUS_SU) " $susSUModeLabel $susSUModeValue" else ""
-
-                        InfoCardItem(
-                            stringResource(R.string.home_susfs_version),
-                            "${getSuSFSVersion()} (${getSuSFSVariant()})$susSUModeText"
-                        )
-                    } else {
-                        InfoCardItem(
-                            stringResource(R.string.home_susfs_version),
-                            "${getSuSFSVersion()} (${stringResource(R.string.manual_hook)})"
-                        )
-                    }
                 }
             }
         }
