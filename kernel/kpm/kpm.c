@@ -175,10 +175,10 @@ struct kpm_module {
     unsigned int size;           /* 总大小 */
     unsigned int text_size;
     unsigned int ro_size;
-    int (*init)(const char *args, const char *event, void *__user reserved) __nocfi;
-    void (*exit)(void *__user reserved) __nocfi;
-    int (*ctl0)(const char *ctl_args, char *__user out_msg, int outlen) __nocfi;
-    int (*ctl1)(void *a1, void *a2, void *a3) __nocfi;
+    int (*init)(const char *args, const char *event, void *__user reserved);
+    void (*exit)(void *__user reserved);
+    int (*ctl0)(const char *ctl_args, char *__user out_msg, int outlen);
+    int (*ctl1)(void *a1, void *a2, void *a3);
     struct {
         const char *base;
         const char *name;
@@ -937,6 +937,7 @@ static int kpm_setup_load_info(struct kpm_load_info *info)
  * KPM 模块加载主流程
  *----------------------------------------------------------*/
 /* 注意：接口名称改为 kpm_load_module，避免与内核原有 load_module 冲突 */
+__nocfi
 long kpm_load_module(const void *data, int len, const char *args,
                        const char *event, void *__user reserved)
 {
@@ -1025,6 +1026,7 @@ out:
 }
 
 /* 卸载模块接口，改名为 sukisu_kpm_unload_module */
+__nocfi
 long sukisu_kpm_unload_module(const char *name, void *__user reserved)
 {
     long rc = 0;
@@ -1096,6 +1098,36 @@ long sukisu_kpm_load_module_path(const char *path, const char *args, void *__use
 free_data:
     vfree(data);
     return rc;
+}
+
+/*--------------------- 地址过滤逻辑 ---------------------*/
+/**
+ * is_allow_address - 自定义地址放行规则
+ * @addr: 目标函数地址
+ * 
+ * 返回值: true 放行 | false 拦截
+ */
+bool kpm_is_allow_address(unsigned long addr)
+{
+    struct kpm_module *pos;
+    bool allow = false;
+
+    spin_lock(&kpm_module_lock);
+    list_for_each_entry(pos, &kpm_module_list, list) {
+        unsigned long start_address = (unsigned long) pos->start;
+        unsigned long end_address = start_address + pos->size;
+
+        /* 规则1：地址在KPM允许范围内 */
+        if (addr >= allow_start && addr <= allow_end) {
+            allow = true;
+            break;
+        }
+    }
+    spin_unlock(&kpm_module_lock);
+
+    // TODO: 增加Hook跳板放行机制
+
+    return allow;
 }
 
 /*-----------------------------------------------------------
