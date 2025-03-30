@@ -1075,7 +1075,7 @@ long kpm_load_module(const void *data, int len, const char *args,
                        (unsigned long)mod->start + mod->size);
     flush_icache_all();
 
-    rc = mod->init(mod->args, event, reserved);
+    rc = (*mod->init)(mod->args, event, reserved);
     if (!rc) {
         printk(KERN_INFO "ARM64 KPM Loader: Module [%s] loaded successfully with args [%s]\n",
                mod->info.name, args ? args : "");
