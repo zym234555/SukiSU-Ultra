@@ -56,7 +56,7 @@ int sukisu_kpm_unload_module(const char* name, void* ptr) {
     return -1;
 }
 
-int sukisu_kpm_num() {
+int sukisu_kpm_num(void) {
     // This is a KPM module stub.
     return 0;
 }
