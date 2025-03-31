@@ -45,7 +45,6 @@ static struct CompactAddressSymbol address_symbol [] = {
 unsigned long sukisu_compact_find_symbol(const char* name) {
     int i;
     unsigned long addr;
-    char isFoundedProxy = 0;
 
     // 先自己在地址表部分查出来
     for(i = 0; i < (sizeof(address_symbol) / sizeof(struct CompactAddressSymbol)); i++) {
