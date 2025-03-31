@@ -60,6 +60,7 @@ import com.ramcosta.composedestinations.result.getOr
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import shirkneko.zako.sukisu.R
+import shirkneko.zako.sukisu.ui.theme.ThemeConfig
 import shirkneko.zako.sukisu.ui.viewmodel.TemplateViewModel
 
 /**
@@ -77,7 +78,11 @@ fun AppProfileTemplateScreen(
     val viewModel = viewModel<TemplateViewModel>()
     val scope = rememberCoroutineScope()
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
-    val cardColor = MaterialTheme.colorScheme.secondaryContainer
+    val cardColor = if (!ThemeConfig.useDynamicColor) {
+        ThemeConfig.currentTheme.ButtonContrast
+    } else {
+        MaterialTheme.colorScheme.secondaryContainer
+    }
 
     LaunchedEffect(Unit) {
         if (viewModel.templateList.isEmpty()) {

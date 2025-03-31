@@ -346,7 +346,11 @@ fun ModuleScreen(navigator: DestinationsNavigator) {
         floatingActionButton = {
             if (!hideInstallButton) {
                 val moduleInstall = stringResource(id = R.string.module_install)
-                val cardColor = MaterialTheme.colorScheme.secondaryContainer
+                val cardColor = if (!ThemeConfig.useDynamicColor) {
+                    ThemeConfig.currentTheme.ButtonContrast
+                } else {
+                    MaterialTheme.colorScheme.secondaryContainer
+                }
                 ExtendedFloatingActionButton(
                     onClick = {
                         selectZipLauncher.launch(
