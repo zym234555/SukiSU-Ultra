@@ -61,6 +61,7 @@ NO_OPTIMIZE
 int sukisu_kpm_load_module_path(const char* path, const char* args, void* ptr) {
     // This is a KPM module stub.
     printk("KPM: Stub function called (sukisu_kpm_load_module_path). path=%s args=%s ptr=%p\n", path, args, ptr);
+    __asm__ volatile("nop");  // 精确控制循环不被优化
     return -1;
 }
 
@@ -69,6 +70,7 @@ NO_OPTIMIZE
 int sukisu_kpm_unload_module(const char* name, void* ptr) {
     // This is a KPM module stub.
     printk("KPM: Stub function called (sukisu_kpm_unload_module). name=%s ptr=%p\n", name, ptr);
+    __asm__ volatile("nop");  // 精确控制循环不被优化
     return -1;
 }
 
@@ -77,6 +79,7 @@ NO_OPTIMIZE
 int sukisu_kpm_num(void) {
     // This is a KPM module stub.
     printk("KPM: Stub function called (sukisu_kpm_num).\n");
+    __asm__ volatile("nop");  // 精确控制循环不被优化
     return 0;
 }
 
@@ -85,6 +88,7 @@ NO_OPTIMIZE
 int sukisu_kpm_info(const char* name, void __user* out) {
     // This is a KPM module stub.
     printk("KPM: Stub function called (sukisu_kpm_info). name=%s buffer=%p\n", name, out);
+    __asm__ volatile("nop");  // 精确控制循环不被优化
     return -1;
 }
 
@@ -101,6 +105,7 @@ NO_OPTIMIZE
 int sukisu_kpm_control(void __user* name, void __user* args) {
     // This is a KPM module stub.
     printk("KPM: Stub function called (sukisu_kpm_control). name=%p args=%p\n", name, args);
+    __asm__ volatile("nop");  // 精确控制循环不被优化
     return -1;
 }
 
@@ -109,6 +114,7 @@ NO_OPTIMIZE
 int sukisu_kpm_version(void __user* out, unsigned int bufferSize) {
     // This is a KPM module stub.
     printk("KPM: Stub function called (sukisu_kpm_version). buffer=%p size=%d\n", out, bufferSize);
+    __asm__ volatile("nop");  // 精确控制循环不被优化
     return -1;
 }
 
@@ -124,6 +130,7 @@ noinline
 NO_OPTIMIZE
 int sukisu_handle_kpm(unsigned long arg3, unsigned long arg4, unsigned long arg5)
 {
+    __asm__ volatile("nop");  // 精确控制循环不被优化
     if(arg3 == SUKISU_KPM_LOAD) {
         char kernel_load_path[256] = { 0 };
         char kernel_args_buffer[256] = { 0 };
@@ -164,6 +171,7 @@ int sukisu_handle_kpm(unsigned long arg3, unsigned long arg4, unsigned long arg5
     } else if(arg3 == SUKISU_KPM_CONTROL) {
         return sukisu_kpm_control((char __user*) arg4, (char __user*) arg5);
     }
+    __asm__ volatile("nop");  // 精确控制循环不被优化
     return 0;
 }
 
