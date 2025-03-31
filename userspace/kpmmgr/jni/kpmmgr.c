@@ -82,14 +82,14 @@ int main(int argc, char *argv[]) {
         // 获取模块列表
         char buffer[1024] = {0};
         ret = prctl(KSU_OPTIONS, CONTROL_CODE(SUKISU_KPM_LIST), buffer, sizeof(buffer), &out);
-        if (ret >= 0) {
+        if (out >= 0) {
             printf("%s", buffer);
         }
     } else if (strcmp(argv[1], "info") == 0 && argc >= 3) {
         // 获取指定模块信息
         char buffer[256] = {0};
         ret = prctl(KSU_OPTIONS, CONTROL_CODE(SUKISU_KPM_INFO), argv[2], buffer, &out);
-        if (ret >= 0) {
+        if (out >= 0) {
             printf("%s\n", buffer);
         }
     } else if (strcmp(argv[1], "control") == 0 && argc >= 4) {
@@ -98,7 +98,7 @@ int main(int argc, char *argv[]) {
     } else if (strcmp(argv[1], "version") == 0) {
          char buffer[1024] = {0};
         ret = prctl(KSU_OPTIONS, CONTROL_CODE(SUKISU_KPM_VERSION), buffer, sizeof(buffer), &out);
-        if (ret >= 0) {
+        if (out >= 0) {
             printf("%s", buffer);
         }
     } else {
