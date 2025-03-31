@@ -528,9 +528,9 @@ fun controlKpmModule(name: String, args: String? = null): String {
     return result
 }
 
-fun printKpmModules(): String {
+fun getKpmVersion(): String {
     val shell = getRootShell()
-    val cmd = "${getKpmmgrPath()} print"
+    val cmd = "${getKpmmgrPath()} version"
     val result = ShellUtils.fastCmd(shell, cmd)
     return result
 }
