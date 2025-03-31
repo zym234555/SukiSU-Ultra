@@ -4,14 +4,9 @@
 int sukisu_handle_kpm(unsigned long arg3, unsigned long arg4, unsigned long arg5);
 int sukisu_is_kpm_control_code(unsigned long arg2);
 
-int kpm_cfi_bypass_init(void);
-void kpm_cfi_bypass_exit(void);
-int kpm_stack_init(void);
-void kpm_stack_exit(void);
-
 // KPM控制代码
 #define CMD_KPM_CONTROL 28
-#define CMD_KPM_CONTROL_MAX 34
+#define CMD_KPM_CONTROL_MAX 35
 
 // 控制代码
 
@@ -45,6 +40,8 @@ void kpm_stack_exit(void);
 // success will printf to stdout and return 0
 // error will return -1
 #define SUKISU_KPM_PRINT 34
+
+#define SUKISU_KPM_VERSION 35
 
 
 /* A64 instructions are always 32 bits. */
