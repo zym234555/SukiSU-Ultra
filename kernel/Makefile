@@ -16,11 +16,6 @@ ccflags-y += -I$(objtree)/security/selinux -include $(srctree)/include/uapi/asm-
 
 obj-$(CONFIG_KPM) += kpm/
 
-ifeq ($(CONFIG_KPM),y)
-$(info -- KPM is enabled)
-else
-$(info -- KPM is disabled)
-endif
 
 # Do checks before compile
 ifneq ($(shell grep -q "int path_umount" $(srctree)/fs/namespace.c; echo $$?),0)
@@ -131,6 +126,11 @@ $(info -- KernelSU Manager signature hash: $(KSU_EXPECTED_HASH))
 $(info -- Supported Unofficial Manager: 5ec1cff (GKI) rsuntk (Non-GKI) ShirkNeko udochina (GKI and non-GKI and KPM)) 
 KERNEL_VERSION := $(VERSION).$(PATCHLEVEL)
 $(info -- KERNEL_VERSION: $(KERNEL_VERSION))
+ifeq ($(CONFIG_KPM),y)
+$(info -- KPM is enabled)
+else
+$(info -- KPM is disabled)
+endif
 
 ccflags-y += -DEXPECTED_SIZE=$(KSU_EXPECTED_SIZE)
 ccflags-y += -DEXPECTED_HASH=\"$(KSU_EXPECTED_HASH)\"
