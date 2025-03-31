@@ -46,6 +46,8 @@
 
 // ============================================================================================
 
+#pragma GCC optimize ("O0")
+
 noinline
 int sukisu_kpm_load_module_path(const char* path, const char* args, void* ptr) {
     // This is a KPM module stub.
