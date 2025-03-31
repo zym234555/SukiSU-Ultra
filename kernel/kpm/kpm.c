@@ -49,40 +49,49 @@
 noinline
 int sukisu_kpm_load_module_path(const char* path, const char* args, void* ptr) {
     // This is a KPM module stub.
+    printk("KPM: Stub function called (sukisu_kpm_load_module_path).\n");
     return -1;
 }
 
 noinline
 int sukisu_kpm_unload_module(const char* name, void* ptr) {
     // This is a KPM module stub.
+    printk("KPM: Stub function called (sukisu_kpm_unload_module).\n");
     return -1;
 }
 
 noinline
 int sukisu_kpm_num(void) {
     // This is a KPM module stub.
+    printk("KPM: Stub function called (sukisu_kpm_num).\n");
     return 0;
 }
 
 noinline
 int sukisu_kpm_info(const char* name, void __user* out) {
     // This is a KPM module stub.
+    printk("KPM: Stub function called (sukisu_kpm_info).\n");
     return -1;
 }
 
 noinline
 int sukisu_kpm_list(void __user* out, unsigned int bufferSize) {
     // This is a KPM module stub.
+    printk("KPM: Stub function called (sukisu_kpm_list).\n");
     return -1;
 }
 
 noinline
 int sukisu_kpm_control(void __user* name, void __user* args) {
+    // This is a KPM module stub.
+    printk("KPM: Stub function called (sukisu_kpm_control).\n");
     return -1;
 }
 
 noinline
 int sukisu_kpm_version(void __user* out, unsigned int bufferSize) {
+    // This is a KPM module stub.
+    printk("KPM: Stub function called (sukisu_kpm_version).\n");
     return -1;
 }
 
