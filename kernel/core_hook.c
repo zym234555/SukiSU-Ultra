@@ -513,10 +513,7 @@ int ksu_handle_prctl(int option, unsigned long arg2, unsigned long arg3,
 
 		pr_info("KPM: calling before arg2=%d\n", (int) arg2);
 		
-		res = sukisu_handle_kpm(arg2, arg3, arg4);
-		copy_to_user(result, &res, sizeof(res));
-
-		pr_info("KPM: calling before arg2=%d res=%d\n", (int) arg2, (int) res);
+		res = sukisu_handle_kpm(arg2, arg3, arg4, arg5);
 
 		return 0;
 	}
