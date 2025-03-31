@@ -335,16 +335,18 @@ private fun StatusCard(
                         Spacer(modifier = Modifier.height(4.dp))
 
                         val suSFS = getSuSFS()
-                        val translatedStatus = when (suSFS) {
-                            "Supported" -> stringResource(R.string.status_supported)
-                            "Not Supported" -> stringResource(R.string.status_not_supported)
-                            else -> stringResource(R.string.status_unknown)
-                        }
+                        if (lkmMode != true) {
+                            val translatedStatus = when (suSFS) {
+                                "Supported" -> stringResource(R.string.status_supported)
+                                "Not Supported" -> stringResource(R.string.status_not_supported)
+                                else -> stringResource(R.string.status_unknown)
+                            }
 
-                        Text(
-                            text = stringResource(R.string.home_susfs, translatedStatus),
-                            style = MaterialTheme.typography.bodyMedium
-                        )
+                            Text(
+                                text = stringResource(R.string.home_susfs, translatedStatus),
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
                     }
                 }
 

@@ -43,23 +43,23 @@ object ThemeConfig {
 @Composable
 private fun getDarkColorScheme() = darkColorScheme(
     primary = ThemeConfig.currentTheme.Primary.copy(alpha = 0.8f),
-    onPrimary = Color.White,
+    onPrimary = mixColors(ThemeConfig.currentTheme.Primary, Color.White, 0.2f),
     primaryContainer = ThemeConfig.currentTheme.PrimaryContainer.copy(alpha = 0.15f),
-    onPrimaryContainer = Color.White,
+    onPrimaryContainer = mixColors(ThemeConfig.currentTheme.Primary, Color.White, 0.2f),
     secondary = ThemeConfig.currentTheme.Secondary.copy(alpha = 0.8f),
-    onSecondary = Color.White,
+    onSecondary = mixColors(ThemeConfig.currentTheme.Secondary, Color.White, 0.2f),
     secondaryContainer = ThemeConfig.currentTheme.SecondaryContainer.copy(alpha = 0.15f),
-    onSecondaryContainer = Color.White,
+    onSecondaryContainer = mixColors(ThemeConfig.currentTheme.Secondary, Color.White, 0.2f),
     tertiary = ThemeConfig.currentTheme.Tertiary.copy(alpha = 0.8f),
-    onTertiary = Color.White,
+    onTertiary = mixColors(ThemeConfig.currentTheme.Tertiary, Color.White, 0.2f),
     tertiaryContainer = ThemeConfig.currentTheme.TertiaryContainer.copy(alpha = 0.15f),
-    onTertiaryContainer = Color.White,
+    onTertiaryContainer = mixColors(ThemeConfig.currentTheme.Tertiary, Color.White, 0.2f),
     background = Color.Transparent,
     surface = Color.Transparent,
-    onBackground = Color.White.copy(alpha = 0.87f),
-    onSurface = Color.White.copy(alpha = 0.87f),
+    onBackground = mixColors(ThemeConfig.currentTheme.Primary, Color.White, 0.1f),
+    onSurface = mixColors(ThemeConfig.currentTheme.Primary, Color.White, 0.1f),
     surfaceVariant = Color(0xFF2F2F2F),
-    onSurfaceVariant = Color.White.copy(alpha = 0.78f),
+    onSurfaceVariant = mixColors(ThemeConfig.currentTheme.Primary, Color.White, 0.2f),
     outline = Color.White.copy(alpha = 0.12f),
     outlineVariant = Color.White.copy(alpha = 0.12f)
 )
@@ -339,4 +339,12 @@ private fun adjustColor(color: Color): Color {
         luminance = maxLuminance
     }
     return color.copy(luminance)
+}
+
+private fun mixColors(color1: Color, color2: Color, ratio: Float): Color {
+    val r = (color1.red * ratio + color2.red * (1 - ratio))
+    val g = (color1.green * ratio + color2.green * (1 - ratio))
+    val b = (color1.blue * ratio + color2.blue * (1 - ratio))
+    val a = (color1.alpha * ratio + color2.alpha * (1 - ratio))
+    return Color(r, g, b, a)
 }
