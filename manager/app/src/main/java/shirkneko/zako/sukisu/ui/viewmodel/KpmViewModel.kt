@@ -50,18 +50,13 @@ class KpmViewModel : ViewModel() {
 
                 val modules = parseModuleList(moduleInfo)
                 moduleList = modules
+
+                // 获取 KPM 版本信息
+                val kpmVersion = getKpmVersion()
+                Log.d("KsuCli", "KPM Version: $kpmVersion")
             } finally {
                 isRefreshing = false
             }
-        }
-    }
-
-    private fun getInstalledKernelPatches(): List<ModuleInfo> {
-        return try {
-            val output = printKpmModules()
-            parseModuleList(output)
-        } catch (e: Exception) {
-            emptyList()
         }
     }
 
