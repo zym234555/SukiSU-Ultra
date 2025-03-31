@@ -46,9 +46,8 @@
 
 // ============================================================================================
 
-#pragma GCC optimize ("O0")
-
 noinline
+__attribute__((optimize("O0")))
 int sukisu_kpm_load_module_path(const char* path, const char* args, void* ptr) {
     // This is a KPM module stub.
     printk("KPM: Stub function called (sukisu_kpm_load_module_path). path=%s args=%s ptr=%p\n", path, args, ptr);
@@ -56,6 +55,7 @@ int sukisu_kpm_load_module_path(const char* path, const char* args, void* ptr) {
 }
 
 noinline
+__attribute__((optimize("O0")))
 int sukisu_kpm_unload_module(const char* name, void* ptr) {
     // This is a KPM module stub.
     printk("KPM: Stub function called (sukisu_kpm_unload_module). name=%s ptr=%p\n", name, ptr);
@@ -63,6 +63,7 @@ int sukisu_kpm_unload_module(const char* name, void* ptr) {
 }
 
 noinline
+__attribute__((optimize("O0")))
 int sukisu_kpm_num(void) {
     // This is a KPM module stub.
     printk("KPM: Stub function called (sukisu_kpm_num).\n");
@@ -70,6 +71,7 @@ int sukisu_kpm_num(void) {
 }
 
 noinline
+__attribute__((optimize("O0")))
 int sukisu_kpm_info(const char* name, void __user* out) {
     // This is a KPM module stub.
     printk("KPM: Stub function called (sukisu_kpm_info). name=%s buffer=%p\n", name, out);
@@ -77,6 +79,7 @@ int sukisu_kpm_info(const char* name, void __user* out) {
 }
 
 noinline
+__attribute__((optimize("O0")))
 int sukisu_kpm_list(void __user* out, unsigned int bufferSize) {
     // This is a KPM module stub.
     printk("KPM: Stub function called (sukisu_kpm_list). buffer=%p size=%d\n", out, bufferSize);
@@ -84,6 +87,7 @@ int sukisu_kpm_list(void __user* out, unsigned int bufferSize) {
 }
 
 noinline
+__attribute__((optimize("O0")))
 int sukisu_kpm_control(void __user* name, void __user* args) {
     // This is a KPM module stub.
     printk("KPM: Stub function called (sukisu_kpm_control). name=%p args=%p\n", name, args);
@@ -91,6 +95,7 @@ int sukisu_kpm_control(void __user* name, void __user* args) {
 }
 
 noinline
+__attribute__((optimize("O0")))
 int sukisu_kpm_version(void __user* out, unsigned int bufferSize) {
     // This is a KPM module stub.
     printk("KPM: Stub function called (sukisu_kpm_version). buffer=%p size=%d\n", out, bufferSize);
@@ -106,6 +111,7 @@ EXPORT_SYMBOL(sukisu_kpm_version);
 EXPORT_SYMBOL(sukisu_kpm_control);
 
 noinline
+__attribute__((optimize("O0")))
 int sukisu_handle_kpm(unsigned long arg3, unsigned long arg4, unsigned long arg5)
 {
     if(arg3 == SUKISU_KPM_LOAD) {
