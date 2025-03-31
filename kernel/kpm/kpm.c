@@ -127,6 +127,8 @@ int sukisu_handle_kpm(unsigned long arg3, unsigned long arg4, unsigned long arg5
         return sukisu_kpm_list((char __user*) arg4, (unsigned int) arg5);
     } else if(arg3 == SUKISU_KPM_VERSION) {
         return sukisu_kpm_version((char __user*) arg4, (unsigned int) arg5);
+    } else if(arg3 == SUKISU_KPM_CONTROL) {
+        return sukisu_kpm_control((char __user*) arg4, (char __user*) arg5);
     }
     return 0;
 }
