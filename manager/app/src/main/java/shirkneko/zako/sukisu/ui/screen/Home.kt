@@ -51,7 +51,6 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.runtime.saveable.rememberSaveable
 import shirkneko.zako.sukisu.ui.theme.CardConfig
 import androidx.core.content.edit
-import shirkneko.zako.sukisu.ui.util.KernelConfigUtils.isKpmEnabled
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Destination<RootGraph>(start = true)
@@ -156,11 +155,10 @@ fun HomeScreen(navigator: DestinationsNavigator) {
             }
             InfoCard()
             if (!isSimpleMode) {
+                ContributionCard()
                 DonateCard()
                 LearnMoreCard()
-                ContributionCard()
             }
-
             Spacer(Modifier)
         }
     }
@@ -351,13 +349,11 @@ private fun StatusCard(
                         }
                         Spacer(modifier = Modifier.height(4.dp))
 
-                        if (isKpmEnabled()) {
-                            val kpmVersion = getKpmVersion()
-                            Text(
-                                text = stringResource(R.string.home_kpm_version, kpmVersion),
-                                style = MaterialTheme.typography.bodyMedium
-                            )
-                        }
+                        val kpmVersion = getKpmVersion()
+                        Text(
+                            text = stringResource(R.string.home_kpm_version, kpmVersion),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
                     }
                 }
 
