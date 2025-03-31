@@ -1,4 +1,4 @@
 obj-y += kpm.o
 obj-y += compact.o
 
-ccflags-y += -fno-lto
+ccflags-y += -flto=thin
