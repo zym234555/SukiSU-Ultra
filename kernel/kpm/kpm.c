@@ -177,7 +177,7 @@ int sukisu_handle_kpm(unsigned long arg2, unsigned long arg3, unsigned long arg4
     return 0;
 }
 
-void sukisu_is_kpm_control_code(unsigned long arg2) {
+int sukisu_is_kpm_control_code(unsigned long arg2) {
     return (arg2 >= CMD_KPM_CONTROL && arg2 <= CMD_KPM_CONTROL_MAX) ? 1 : 0;
 }
 
