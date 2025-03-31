@@ -18,12 +18,6 @@ obj-$(CONFIG_KSU) += kernelsu.o
 
 obj-$(CONFIG_KPM) += kpm/
 
-ifeq ($(CONFIG_KPM),y)
-$(info -- KPM is enabled)
-else
-$(info -- KPM is disabled)
-endif
-
 
 # .git is a text file while the module is imported by 'git submodule add'.
 ifeq ($(shell test -e $(srctree)/$(src)/../.git; echo $$?),0)
@@ -56,6 +50,11 @@ $(info -- KernelSU Manager signature hash: $(KSU_EXPECTED_HASH))
 $(info -- Supported Unofficial Manager: 5ec1cff (GKI) ShirkNeko udochina (GKI and KPM))
 KERNEL_VERSION := $(VERSION).$(PATCHLEVEL)
 $(info -- KERNEL_VERSION: $(KERNEL_VERSION))
+ifeq ($(CONFIG_KPM),y)
+$(info -- KPM is enabled)
+else
+$(info -- KPM is disabled)
+endif
 
 
 ccflags-y += -DEXPECTED_SIZE=$(KSU_EXPECTED_SIZE)
