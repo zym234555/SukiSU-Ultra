@@ -1,6 +1,7 @@
 package shirkneko.zako.sukisu.ui.screen
 
 import android.app.Activity.RESULT_OK
+import android.content.Context
 import android.content.Intent
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -35,7 +36,15 @@ import shirkneko.zako.sukisu.ui.viewmodel.KpmViewModel
 import shirkneko.zako.sukisu.ui.util.loadKpmModule
 import shirkneko.zako.sukisu.ui.util.unloadKpmModule
 import java.io.File
+import androidx.core.content.edit
+import shirkneko.zako.sukisu.ui.theme.ThemeConfig
 
+
+/**
+ * KPM 管理界面
+ * 以下内核模块功能由KernelPatch开发，经过修改后加入SukiSU Ultra的内核模块功能
+ * 开发者：Shirkneko, Liaokong
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Destination<RootGraph>
 @Composable
@@ -48,6 +57,11 @@ fun KpmScreen(
     val snackBarHost = remember { SnackbarHostState() }
     val confirmDialog = rememberConfirmDialog()
     val loadingDialog = rememberLoadingDialog()
+    val cardColor = if (!ThemeConfig.useDynamicColor) {
+        ThemeConfig.currentTheme.ButtonContrast
+    } else {
+        MaterialTheme.colorScheme.secondaryContainer
+    }
 
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
 
@@ -116,6 +130,9 @@ fun KpmScreen(
             viewModel.fetchModuleList()
         }
     }
+    // 使用 SharedPreferences 存储声明是否关闭的状态
+    val sharedPreferences = context.getSharedPreferences("app_preferences", Context.MODE_PRIVATE)
+    var isNoticeClosed by remember { mutableStateOf(sharedPreferences.getBoolean("is_notice_closed", false)) }
 
     Scaffold(
         topBar = {
@@ -151,69 +168,96 @@ fun KpmScreen(
                     )
                 },
                 text = { Text(stringResource(R.string.kpm_install)) },
-                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                containerColor = cardColor.copy(alpha = 1f),
                 contentColor = MaterialTheme.colorScheme.onSecondaryContainer
             )
         },
         snackbarHost = { SnackbarHost(snackBarHost) }
     ) { padding ->
-        PullToRefreshBox(
-            onRefresh = { viewModel.fetchModuleList() },
-            isRefreshing = viewModel.isRefreshing,
-            modifier = Modifier.padding(padding)
-        ) {
-            if (viewModel.moduleList.isEmpty()) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
+        Column(modifier = Modifier.padding(padding)) {
+            if (!isNoticeClosed) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        stringResource(R.string.kpm_empty),
+                        text = stringResource(R.string.kernel_module_notice),
+                        modifier = Modifier.weight(1f),
                         textAlign = TextAlign.Center
                     )
+                    IconButton(onClick = {
+                        isNoticeClosed = true
+                        sharedPreferences.edit() { putBoolean("is_notice_closed", true) }
+                    }) {
+                        Icon(
+                            imageVector = Icons.Outlined.Close,
+                            contentDescription = stringResource(R.string.close_notice)
+                        )
+                    }
                 }
-            } else {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    items(viewModel.moduleList) { module ->
-                        val kpmUninstallConfirm = String.format(kpmUninstallConfirmTemplate, module.name)
-                        KpmModuleItem(
-                            module = module,
-                            onUninstall = {
-                                scope.launch {
-                                    val confirmResult = confirmDialog.awaitConfirm(
-                                        title = kpmUninstall,
-                                        content = kpmUninstallConfirm,
-                                        confirm = uninstall,
-                                        dismiss = cancel
-                                    )
-                                    if (confirmResult == ConfirmResult.Confirmed) {
-                                        val success = loadingDialog.withLoading {
-                                            unloadKpmModule(module.id)
-                                        }
-                                        Log.d("KsuCli", "unloadKpmModule result: $success")
-                                        if (success == "success") {
-                                            viewModel.fetchModuleList()
-                                            snackBarHost.showSnackbar(
-                                                message = kpmUninstallSuccess,
-                                                duration = SnackbarDuration.Long
-                                            )
-                                        } else {
-                                            snackBarHost.showSnackbar(
-                                                message = kpmUninstallFailed,
-                                                duration = SnackbarDuration.Long
-                                            )
+            }
+
+            PullToRefreshBox(
+                onRefresh = { viewModel.fetchModuleList() },
+                isRefreshing = viewModel.isRefreshing,
+                modifier = Modifier
+            ) {
+                if (viewModel.moduleList.isEmpty()) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            stringResource(R.string.kpm_empty),
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                } else {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        items(viewModel.moduleList) { module ->
+                            val kpmUninstallConfirm = String.format(kpmUninstallConfirmTemplate, module.name)
+                            KpmModuleItem(
+                                module = module,
+                                onUninstall = {
+                                    scope.launch {
+                                        val confirmResult = confirmDialog.awaitConfirm(
+                                            title = kpmUninstall,
+                                            content = kpmUninstallConfirm,
+                                            confirm = uninstall,
+                                            dismiss = cancel
+                                        )
+                                        if (confirmResult == ConfirmResult.Confirmed) {
+                                            val success = loadingDialog.withLoading {
+                                                unloadKpmModule(module.id)
+                                            }
+                                            Log.d("KsuCli", "unloadKpmModule result: $success")
+                                            if (success == "success") {
+                                                viewModel.fetchModuleList()
+                                                snackBarHost.showSnackbar(
+                                                    message = kpmUninstallSuccess,
+                                                    duration = SnackbarDuration.Long
+                                                )
+                                            } else {
+                                                snackBarHost.showSnackbar(
+                                                    message = kpmUninstallFailed,
+                                                    duration = SnackbarDuration.Long
+                                                )
+                                            }
                                         }
                                     }
+                                },
+                                onControl = {
+                                    viewModel.loadModuleDetail(module.id)
                                 }
-                            },
-                            onControl = {
-                                viewModel.loadModuleDetail(module.id)
-                            }
-                        )
+                            )
+                        }
                     }
                 }
             }

@@ -51,6 +51,7 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.runtime.saveable.rememberSaveable
 import shirkneko.zako.sukisu.ui.theme.CardConfig
 import androidx.core.content.edit
+import shirkneko.zako.sukisu.ui.util.KernelConfigUtils.isKpmEnabled
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Destination<RootGraph>(start = true)
@@ -157,6 +158,7 @@ fun HomeScreen(navigator: DestinationsNavigator) {
             if (!isSimpleMode) {
                 DonateCard()
                 LearnMoreCard()
+                ContributionCard()
             }
 
             Spacer(Modifier)
@@ -347,6 +349,15 @@ private fun StatusCard(
                                 style = MaterialTheme.typography.bodyMedium
                             )
                         }
+                        Spacer(modifier = Modifier.height(4.dp))
+
+                        if (isKpmEnabled()) {
+                            val kpmVersion = getKpmVersion()
+                            Text(
+                                text = stringResource(R.string.home_kpm_version, kpmVersion),
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
                     }
                 }
 
@@ -401,6 +412,32 @@ fun WarningCard(
             Text(
                 text = message, style = MaterialTheme.typography.bodyMedium
             )
+        }
+    }
+}
+@Composable
+fun ContributionCard() {
+    ElevatedCard(
+        colors = getCardColors(MaterialTheme.colorScheme.secondaryContainer),
+        elevation = CardDefaults.cardElevation(defaultElevation = getCardElevation())
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(24.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column {
+                Text(
+                    text = stringResource(R.string.home_ContributionCard_kernelsu),
+                    style = MaterialTheme.typography.titleSmall
+                )
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    text = stringResource(R.string.home_click_to_ContributionCard_kernelsu),
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
         }
     }
 }
