@@ -71,10 +71,12 @@ int sukisu_kpm_list(void __user* out, unsigned int bufferSize) {
     return -1;
 }
 
-void sukisu_kpm_print_list(void) {
+int sukisu_kpm_control(void __user* name, void __user* args) {
+    return -1;
 }
 
-void sukisu_kpm_vesion(void) {
+int sukisu_kpm_version(void __user* out, unsigned int bufferSize) {
+    return -1;
 }
 
 EXPORT_SYMBOL(sukisu_kpm_load_module_path);
@@ -82,8 +84,8 @@ EXPORT_SYMBOL(sukisu_kpm_unload_module);
 EXPORT_SYMBOL(sukisu_kpm_num);
 EXPORT_SYMBOL(sukisu_kpm_info);
 EXPORT_SYMBOL(sukisu_kpm_list);
-EXPORT_SYMBOL(sukisu_kpm_print_list);
 EXPORT_SYMBOL(sukisu_kpm_version);
+EXPORT_SYMBOL(sukisu_kpm_control);
 
 
 int sukisu_handle_kpm(unsigned long arg3, unsigned long arg4, unsigned long arg5)
@@ -123,8 +125,8 @@ int sukisu_handle_kpm(unsigned long arg3, unsigned long arg4, unsigned long arg5
         return sukisu_kpm_info((const char*) &kernel_name_buffer, (char __user*) arg5);
     } else if(arg3 == SUKISU_KPM_LIST) {
         return sukisu_kpm_list((char __user*) arg4, (unsigned int) arg5);
-    } else if(arg3 == SUKISU_KPM_PRINT) {
-        sukisu_kpm_print_list();
+    } else if(arg3 == SUKISU_KPM_VERSION) {
+        return sukisu_kpm_version((char __user*) arg4, (unsigned int) arg5);
     }
     return 0;
 }
