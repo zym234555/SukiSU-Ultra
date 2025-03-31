@@ -140,7 +140,6 @@ fun SettingScreen(navigator: DestinationsNavigator) {
                     loadingDialog.hide()
                     snackBarHost.showSnackbar(context.getString(R.string.log_saved))
                 }
-                // endregion
             }
             // region 配置项列表
             // 配置文件模板入口
@@ -218,12 +217,12 @@ fun SettingScreen(navigator: DestinationsNavigator) {
                 prefs.edit { putBoolean("enable_web_debugging", it) }
                 enableWebDebugging = it
             }
-            // endregion
+            // 更多设置
             val newButtonTitle = stringResource(id = R.string.more_settings)
             ListItem(
                 leadingContent = {
                     Icon(
-                        Icons.Filled.ExpandMore,
+                        Icons.Filled.Settings,
                         contentDescription = newButtonTitle
                     )
                 },
