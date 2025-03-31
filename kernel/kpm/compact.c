@@ -31,66 +31,20 @@ unsigned long sukisu_compact_find_symbol(const char* name);
 
 // ======================================================================
 
-const char* kpver = "0.10";
-
 struct CompactAddressSymbol {
     const char* symbol_name;
     void* addr;
 };
 
-struct CompactAliasSymbol {
-    const char* symbol_name;
-    const char* compact_symbol_name;
-};
-
-struct CompactProxySymbol {
-    const char* symbol_name;
-    const char* compact_symbol_name;
-    void* cached_address;
-};
-
 static struct CompactAddressSymbol address_symbol [] = {
     { "kallsyms_lookup_name", &kallsyms_lookup_name },
     { "compact_find_symbol", &sukisu_compact_find_symbol },
-    { "compat_copy_to_user", &copy_to_user },
-    { "compat_strncpy_from_user", &strncpy_from_user },
-    { "kpver", &kpver },
     { "is_run_in_sukisu_ultra", (void*)1 }
 };
-
-static struct CompactAliasSymbol alias_symbol[] = {
-    {"compat_copy_to_user", "__arch_copy_to_user"}
-};
-
-static struct CompactProxySymbol proxy_symbol[] = {
-    {"kf_strncat", "strncat", NULL },
-    {"kf_strlen", "strlen", NULL },
-    {"kf_strcpy", "strcpy", NULL },
-};
-
-static unsigned long sukisu_find_proxy_symbol(const char* name) {
-    // 查找proxy符号
-    int i;
-    for(i = 0; i < (sizeof(proxy_symbol) / sizeof(struct CompactProxySymbol)); i++) {
-        struct CompactProxySymbol* symbol = &proxy_symbol[i];
-        if(strcmp(name, symbol->symbol_name) == 0) {
-            if(symbol->cached_address == NULL) {
-                symbol->cached_address = (void*) kallsyms_lookup_name(symbol->compact_symbol_name);
-            }
-            if(symbol->cached_address != NULL) {
-                return (unsigned long) &symbol->cached_address;
-            } else {
-                return 0;
-            }
-        }
-    }
-    return 0;
-}
 
 unsigned long sukisu_compact_find_symbol(const char* name) {
     int i;
     unsigned long addr;
-    char isFoundedProxy = 0;
 
     // 先自己在地址表部分查出来
     for(i = 0; i < (sizeof(address_symbol) / sizeof(struct CompactAddressSymbol)); i++) {
@@ -100,34 +54,13 @@ unsigned long sukisu_compact_find_symbol(const char* name) {
         }
     }
 
-    /* 如果符号名以 "kf_" 开头，尝试解析去掉前缀的部分 */
-    if (strncmp(name, "kf_", 3) == 0) {
-        addr = sukisu_find_proxy_symbol(name);
-        isFoundedProxy = 1;
-        if(addr != 0) {
-            return addr;
-        }
-    }
-
     // 通过内核来查
     addr = kallsyms_lookup_name(name);
     if(addr) {
         return addr;
     }
 
-    // 查不到就查查兼容的符号
-    for(i = 0; i < (sizeof(alias_symbol) / sizeof(struct CompactAliasSymbol)); i++) {
-        struct CompactAliasSymbol* symbol = &alias_symbol[i];
-        if(strcmp(name, symbol->symbol_name) == 0) {
-            addr = kallsyms_lookup_name(symbol->compact_symbol_name);
-            if(addr)
-                return addr;
-        }
-    }
-
-    if(!isFoundedProxy) {
-        return sukisu_find_proxy_symbol(name);
-    }
-
     return 0;
 }
+
+EXPORT_SYMBOL(sukisu_compact_find_symbol);

@@ -15,20 +15,30 @@
 ## 如何添加
 在内核源码的根目录下执行以下命令：
 
-使用 susfs-dev 分支（已集成susfs，带非GKI设备的支持）
+使用 susfs-stable 或者 susfs-dev 分支（已集成susfs，带非GKI设备的支持）
+```
+curl -LSs "https://raw.githubusercontent.com/ShirkNeko/KernelSU/main/kernel/setup.sh" | bash -s susfs-stable
+```
+
 ```
 curl -LSs "https://raw.githubusercontent.com/ShirkNeko/SukiSU-Ultra/main/kernel/setup.sh" | bash -s susfs-dev
 ```
 
-使用 main 分支（不再带非GKI设备的支持）
+
+使用 main 分支
 ```
 curl -LSs "https://raw.githubusercontent.com/ShirkNeko/SukiSU-Ultra/main/kernel/setup.sh" | bash -s main
 ```
 
+
+使用 dev 分支（带非GKI设备的支持）
+```
+curl -LSs "https://raw.githubusercontent.com/ShirkNeko/KernelSU/main/kernel/setup.sh" | bash -s main
+```
 ## 如何集成 susfs
 
-1. 直接使用 susfs-dev 分支，不需要再集成 susfs
-
+1. 直接使用 susfs-stable 或者 susfs-dev 分支，不需要再集成 susfs
+2. 使用支持非GKI设备的 dev 分支,手动补丁 susfs
 
 ## 钩子方法
 - 此部分引用自 [rsuntk 的钩子方法](https://github.com/rsuntk/KernelSU)
@@ -72,7 +82,7 @@ curl -LSs "https://raw.githubusercontent.com/ShirkNeko/SukiSU-Ultra/main/kernel/
 1. 基于内核的 `su` 和 root 访问管理
 2. 基于 5ec1cff 的 [Magic Mount](https://github.com/5ec1cff/KernelSU) 的模块系统
 3. [App Profile](https://kernelsu.org/guide/app-profile.html)：将 root 权限锁在笼子里
-4. 恢复对非 GKI 2.0 内核的支持（仅限susfs-dev和未进行susfs补丁的dev分支）
+4. 恢复对非 GKI 2.0 内核的支持
 5. 更多自定义功能
 
 
@@ -85,6 +95,7 @@ curl -LSs "https://raw.githubusercontent.com/ShirkNeko/SukiSU-Ultra/main/kernel/
 - [Ktouls](https://github.com/Ktouls) 非常感谢你给我带来的支持
 - [zaoqi123](https://github.com/zaoqi123) 请我喝奶茶也不错
 - [wswzgdg](https://github.com/wswzgdg) 非常感谢对此项目的支持
+- [yspbwx2010](https://github.com/yspbwx2010) 非常感谢
 
 
 
