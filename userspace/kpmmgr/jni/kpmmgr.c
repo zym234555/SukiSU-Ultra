@@ -44,7 +44,7 @@
 // error return -N
 #define SUKISU_KPM_VERSION 34
 
-#define CONTROL_CODE(n) (CMD_KPM_CONTROL + n - 1)
+#define CONTROL_CODE(n) (n)
 
 void print_usage(const char *prog) {
     printf("Usage: %s <command> [args]\n", prog);
