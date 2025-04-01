@@ -51,6 +51,7 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.runtime.saveable.rememberSaveable
 import shirkneko.zako.sukisu.ui.theme.CardConfig
 import androidx.core.content.edit
+import kotlin.random.Random
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Destination<RootGraph>(start = true)
@@ -406,6 +407,8 @@ fun WarningCard(
 }
 @Composable
 fun ContributionCard() {
+    val uriHandler = LocalUriHandler.current
+    val links = listOf("https://github.com/ShirkNeko", "https://github.com/udochina")
     ElevatedCard(
         colors = getCardColors(MaterialTheme.colorScheme.secondaryContainer),
         elevation = CardDefaults.cardElevation(defaultElevation = getCardElevation())
@@ -413,6 +416,10 @@ fun ContributionCard() {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                .clickable {
+                    val randomIndex = Random.nextInt(links.size)
+                    uriHandler.openUri(links[randomIndex])
+                }
                 .padding(24.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -548,19 +555,15 @@ private fun InfoCard() {
             InfoCardItem(stringResource(R.string.home_selinux_status), getSELinuxStatus())
 
 
-            if (!isSimpleMode) {
-                var showKpmVersion by remember { mutableStateOf(true) }
-                LaunchedEffect(Unit) {
-                    try {
-                        getKpmVersion()
-                    } catch (e: Exception) {
-                        showKpmVersion = false
-                    }
+            if (!isSimpleMode){
+                Spacer(Modifier.height(16.dp))
+                val kpmVersion = getKpmVersion()
+                val displayVersion = if (kpmVersion.isEmpty() || kpmVersion.startsWith("Error")) {
+                    stringResource(R.string.not_supported)
+                } else {
+                    kpmVersion
                 }
-                AnimatedVisibility(visible = showKpmVersion) {
-                    Spacer(Modifier.height(16.dp))
-                    InfoCardItem(stringResource(R.string.home_kpm_version), getKpmVersion())
-                }
+                InfoCardItem(stringResource(R.string.home_kpm_version), displayVersion)
             }
 
 

@@ -276,9 +276,45 @@ private fun KpmModuleItem(
     val viewModel: KpmViewModel = viewModel()
     val scope = rememberCoroutineScope()
     val snackBarHost = remember { SnackbarHostState() }
-
     val successMessage = stringResource(R.string.kpm_control_success)
     val failureMessage = stringResource(R.string.kpm_control_failed)
+
+    if (viewModel.showInputDialog && viewModel.selectedModuleId == module.id) {
+        AlertDialog(
+            onDismissRequest = { viewModel.hideInputDialog() },
+            title = { Text(stringResource(R.string.kpm_control)) },
+            text = {
+                OutlinedTextField(
+                    value = viewModel.inputArgs,
+                    onValueChange = { viewModel.updateInputArgs(it) },
+                    label = { Text(stringResource(R.string.kpm_args)) },
+                    placeholder = { Text(module.args) }
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        scope.launch {
+                            val result = viewModel.executeControl()
+                            val message = when (result) {
+                                0 -> successMessage
+                                else -> failureMessage
+                            }
+                            snackBarHost.showSnackbar(message)
+                            onControl()
+                        }
+                    }
+                ) {
+                    Text(stringResource(R.string.confirm))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { viewModel.hideInputDialog() }) {
+                    Text(stringResource(R.string.cancel))
+                }
+            }
+        )
+    }
 
     ElevatedCard(
         colors = getCardColors(MaterialTheme.colorScheme.secondaryContainer),
@@ -326,17 +362,7 @@ private fun KpmModuleItem(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 FilledTonalButton(
-                    onClick = {
-                        scope.launch {
-                            val result = viewModel.controlModule(module.id, module.args)
-                            val message = when (result) {
-                                0 -> successMessage
-                                else -> failureMessage
-                            }
-                            snackBarHost.showSnackbar(message)
-                            onControl()
-                        }
-                    },
+                    onClick = { viewModel.showInputDialog(module.id) },
                     enabled = module.hasAction
                 ) {
                     Icon(

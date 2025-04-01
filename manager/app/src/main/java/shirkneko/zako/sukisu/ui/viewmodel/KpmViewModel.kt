@@ -111,6 +111,38 @@ class KpmViewModel : ViewModel() {
             }
         }
     }
+
+    var showInputDialog by mutableStateOf(false)
+        private set
+
+    var selectedModuleId by mutableStateOf<String?>(null)
+        private set
+
+    var inputArgs by mutableStateOf("")
+        private set
+
+    fun showInputDialog(moduleId: String) {
+        selectedModuleId = moduleId
+        showInputDialog = true
+    }
+
+    fun hideInputDialog() {
+        showInputDialog = false
+        selectedModuleId = null
+        inputArgs = ""
+    }
+
+    fun updateInputArgs(args: String) {
+        inputArgs = args
+    }
+
+    fun executeControl(): Int {
+        val moduleId = selectedModuleId ?: return -1
+        val result = controlKpmModule(moduleId, inputArgs)
+        hideInputDialog()
+        return result
+    }
+
     fun controlModule(moduleId: String, args: String? = null): Int {
         return try {
             val result = controlKpmModule(moduleId, args)
