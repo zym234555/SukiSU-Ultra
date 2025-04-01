@@ -334,6 +334,12 @@ private fun StatusCard(
                             style = MaterialTheme.typography.bodyMedium
                         )
                         Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = stringResource(R.string.home_kpm_module_count, getKpmModuleCount()),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+
+                        Spacer(modifier = Modifier.height(4.dp))
 
                         val suSFS = getSuSFS()
                         if (lkmMode != true) {
@@ -556,7 +562,6 @@ private fun InfoCard() {
 
 
             if (!isSimpleMode){
-                Spacer(Modifier.height(16.dp))
                 val kpmVersion = getKpmVersion()
                 val displayVersion = if (kpmVersion.isEmpty() || kpmVersion.startsWith("Error")) {
                     stringResource(R.string.not_supported)

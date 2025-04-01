@@ -245,4 +245,5 @@
     <string name="kpm_control_failed">failed</string>
     <string name="home_click_to_ContributionCard_kernelsu">SukiSU Ultra will be a relatively independent branch of KSU in the future, but thanks to the official KernelSU and MKSU etc. for their contributions!</string>
     <string name="not_supported">unsupported</string>
+    <string name="home_kpm_module_count">Number of kpm modules：</string>
 </resources>

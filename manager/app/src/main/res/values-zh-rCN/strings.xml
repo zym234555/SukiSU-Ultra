@@ -239,6 +239,7 @@
     <string name="kpm_control_success">成功</string>
     <string name="kpm_control_failed">错误</string>
     <string name="not_supported">不支持</string>
+    <string name="home_kpm_module_count">kpm模块数：</string>
     <string name="kernel_module_notice">以下内核模块功能由KernelPatch开发，经过修改后加入SukiSU Ultra的内核模块功能</string>
     <string name="home_ContributionCard_kernelsu">SukiSU Ultra展望</string>
     <string name="home_click_to_ContributionCard_kernelsu">SukiSU Ultra未来将会成为一个相对独立的KSU分支，但是依然感谢官方KernelSU和MKSU等做出的贡献</string>
