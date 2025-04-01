@@ -4,8 +4,6 @@ import android.content.Intent
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.SpringSpec
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -92,6 +90,15 @@ fun KpmScreen(
                 }
             }
 
+            if (!tempFile.name.endsWith(".kpm")) {
+                snackBarHost.showSnackbar(
+                    message = "文件类型不正确，请选择 .kpm 文件",
+                    duration = SnackbarDuration.Short
+                )
+                tempFile.delete()
+                return@launch
+            }
+
             val confirmResult = confirmDialog.awaitConfirm(
                 title = kpmInstall,
                 content = kpmInstallConfirm,
@@ -102,10 +109,15 @@ fun KpmScreen(
             if (confirmResult == ConfirmResult.Confirmed) {
                 val success = loadingDialog.withLoading {
                     try {
-                        loadKpmModule(tempFile.absolutePath)
-                        true
+                        val loadResult = loadKpmModule(tempFile.absolutePath)
+                        if (true && loadResult.startsWith("Error")) {
+                            Log.e("KsuCli", "Failed to load KPM module: $loadResult")
+                            false
+                        } else {
+                            true
+                        }
                     } catch (e: Exception) {
-                        Log.e("KsuCli", "Failed to load KPM module: ${e.message}")
+                        Log.e("KsuCli", "Failed to load KPM module: ${e.message}", e)
                         false
                     }
                 }
@@ -234,13 +246,19 @@ fun KpmScreen(
                                     if (confirmResult == ConfirmResult.Confirmed) {
                                         val success = loadingDialog.withLoading {
                                             try {
-                                                unloadKpmModule(module.id)
-                                                true
+                                                val unloadResult = unloadKpmModule(module.id)
+                                                if (true && unloadResult.startsWith("Error")) {
+                                                    Log.e("KsuCli", "Failed to unload KPM module: $unloadResult")
+                                                    false
+                                                } else {
+                                                    true
+                                                }
                                             } catch (e: Exception) {
-                                                Log.e("KsuCli", "Failed to unload KPM module: ${e.message}")
+                                                Log.e("KsuCli", "Failed to unload KPM module: ${e.message}", e)
                                                 false
                                             }
                                         }
+
                                         if (success) {
                                             viewModel.fetchModuleList()
                                             snackBarHost.showSnackbar(

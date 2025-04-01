@@ -486,18 +486,16 @@ private fun getKpmmgrPath(): String {
 }
 
 
-fun loadKpmModule(path: String, args: String? = null): Boolean {
+fun loadKpmModule(path: String, args: String? = null): String {
     val shell = getRootShell()
     val cmd = "${getKpmmgrPath()} load $path ${args ?: ""}"
-    val result = ShellUtils.fastCmd(shell, cmd)
-    return result.contains("Success", ignoreCase = true)
+    return ShellUtils.fastCmd(shell, cmd)
 }
 
-fun unloadKpmModule(name: String): Boolean {
+fun unloadKpmModule(name: String): String {
     val shell = getRootShell()
     val cmd = "${getKpmmgrPath()} unload $name"
-    val result = ShellUtils.fastCmd(shell, cmd)
-    return result.trim().isEmpty() || result.trim() == "0"
+    return ShellUtils.fastCmd(shell, cmd)
 }
 
 fun getKpmModuleCount(): Int {

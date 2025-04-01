@@ -49,6 +49,7 @@ import shirkneko.zako.sukisu.ui.theme.KernelSUTheme
 import shirkneko.zako.sukisu.ui.theme.loadCustomBackground
 import shirkneko.zako.sukisu.ui.theme.loadThemeMode
 import shirkneko.zako.sukisu.ui.util.LocalSnackbarHost
+import shirkneko.zako.sukisu.ui.util.getKpmVersion
 import shirkneko.zako.sukisu.ui.util.rootAvailable
 import shirkneko.zako.sukisu.ui.util.install
 
@@ -107,6 +108,7 @@ private fun BottomBar(navController: NavHostController) {
     val navigator = navController.rememberDestinationsNavigator()
     val isManager = Natives.becomeManager(ksuApp.packageName)
     val fullFeatured = isManager && !Natives.requireNewKernel() && rootAvailable()
+    val kpmVersion = getKpmVersion()
 
     // 获取卡片颜色和透明度
     val cardColor = MaterialTheme.colorScheme.secondaryContainer
@@ -122,35 +124,69 @@ private fun BottomBar(navController: NavHostController) {
         )
     ) {
         BottomBarDestination.entries.forEach { destination ->
-            if (!fullFeatured && destination.rootRequired) return@forEach
-            val isCurrentDestOnBackStack by navController.isRouteOnBackStackAsState(destination.direction)
-            NavigationBarItem(
-                selected = isCurrentDestOnBackStack,
-                onClick = {
-                    if (isCurrentDestOnBackStack) {
-                        navigator.popBackStack(destination.direction, false)
-                    }
-                    navigator.navigate(destination.direction) {
-                        popUpTo(NavGraphs.root) {
-                            saveState = true
+            if (destination == BottomBarDestination.Kpm) {
+                if (kpmVersion.isNotEmpty() && !kpmVersion.startsWith("Error")) {
+                    if (!fullFeatured && destination.rootRequired) return@forEach
+                    val isCurrentDestOnBackStack by navController.isRouteOnBackStackAsState(destination.direction)
+                    NavigationBarItem(
+                        selected = isCurrentDestOnBackStack,
+                        onClick = {
+                            if (isCurrentDestOnBackStack) {
+                                navigator.popBackStack(destination.direction, false)
+                            }
+                            navigator.navigate(destination.direction) {
+                                popUpTo(NavGraphs.root) {
+                                    saveState = true
+                                }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        },
+                        icon = {
+                            if (isCurrentDestOnBackStack) {
+                                Icon(destination.iconSelected, stringResource(destination.label))
+                            } else {
+                                Icon(destination.iconNotSelected, stringResource(destination.label))
+                            }
+                        },
+                        label = { Text(stringResource(destination.label)) },
+                        alwaysShowLabel = false,
+                        colors = androidx.compose.material3.NavigationBarItemDefaults.colors(
+                            unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    )
+                }
+            } else {
+                if (!fullFeatured && destination.rootRequired) return@forEach
+                val isCurrentDestOnBackStack by navController.isRouteOnBackStackAsState(destination.direction)
+                NavigationBarItem(
+                    selected = isCurrentDestOnBackStack,
+                    onClick = {
+                        if (isCurrentDestOnBackStack) {
+                            navigator.popBackStack(destination.direction, false)
                         }
-                        launchSingleTop = true
-                        restoreState = true
-                    }
-                },
-                icon = {
-                    if (isCurrentDestOnBackStack) {
-                        Icon(destination.iconSelected, stringResource(destination.label))
-                    } else {
-                        Icon(destination.iconNotSelected, stringResource(destination.label))
-                    }
-                },
-                label = { Text(stringResource(destination.label)) },
-                alwaysShowLabel = false,
-                colors = androidx.compose.material3.NavigationBarItemDefaults.colors(
-                    unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
+                        navigator.navigate(destination.direction) {
+                            popUpTo(NavGraphs.root) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
+                    icon = {
+                        if (isCurrentDestOnBackStack) {
+                            Icon(destination.iconSelected, stringResource(destination.label))
+                        } else {
+                            Icon(destination.iconNotSelected, stringResource(destination.label))
+                        }
+                    },
+                    label = { Text(stringResource(destination.label)) },
+                    alwaysShowLabel = false,
+                    colors = androidx.compose.material3.NavigationBarItemDefaults.colors(
+                        unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 )
-            )
+            }
         }
     }
 }
