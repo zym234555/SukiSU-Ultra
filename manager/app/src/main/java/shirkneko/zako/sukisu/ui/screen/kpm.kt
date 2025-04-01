@@ -103,18 +103,15 @@ fun KpmScreen(
             if (confirmResult == ConfirmResult.Confirmed) {
                 val success = loadingDialog.withLoading {
                     try {
-                        val process = ProcessBuilder("nsenter", "-t", "1", "-m").start()
-                        process.waitFor()
                         loadKpmModule(tempFile.absolutePath)
+                        true
                     } catch (e: Exception) {
-                        Log.e("KsuCli", "Failed to execute nsenter command: ${e.message}")
-                        "failed"
+                        Log.e("KsuCli", "Failed to load KPM module: ${e.message}")
+                        false
                     }
                 }
 
-                Log.d("KsuCli", "loadKpmModule result: $success")
-
-                if (success.contains("Success", ignoreCase = true)) {
+                if (success) {
                     viewModel.fetchModuleList()
                     snackBarHost.showSnackbar(
                         message = kpmInstallSuccess,
@@ -136,7 +133,7 @@ fun KpmScreen(
             viewModel.fetchModuleList()
         }
     }
-    // 使用 SharedPreferences 存储声明是否关闭的状态
+
     val sharedPreferences = context.getSharedPreferences("app_preferences", Context.MODE_PRIVATE)
     var isNoticeClosed by remember { mutableStateOf(sharedPreferences.getBoolean("is_notice_closed", false)) }
 
@@ -196,7 +193,7 @@ fun KpmScreen(
                     )
                     IconButton(onClick = {
                         isNoticeClosed = true
-                        sharedPreferences.edit() { putBoolean("is_notice_closed", true) }
+                        sharedPreferences.edit { putBoolean("is_notice_closed", true) }
                     }) {
                         Icon(
                             imageVector = Icons.Outlined.Close,
@@ -241,10 +238,15 @@ fun KpmScreen(
                                         )
                                         if (confirmResult == ConfirmResult.Confirmed) {
                                             val success = loadingDialog.withLoading {
-                                                unloadKpmModule(module.id)
+                                                try {
+                                                    unloadKpmModule(module.id)
+                                                    true
+                                                } catch (e: Exception) {
+                                                    Log.e("KsuCli", "Failed to unload KPM module: ${e.message}")
+                                                    false
+                                                }
                                             }
-                                            Log.d("KsuCli", "unloadKpmModule result: $success")
-                                            if (success.contains("Success", ignoreCase = true)) {
+                                            if (success) {
                                                 viewModel.fetchModuleList()
                                                 snackBarHost.showSnackbar(
                                                     message = kpmUninstallSuccess,
@@ -323,7 +325,8 @@ private fun KpmModuleItem(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 FilledTonalButton(
-                    onClick = onControl
+                    onClick = onControl,
+                    enabled = module.hasAction
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.Settings,
