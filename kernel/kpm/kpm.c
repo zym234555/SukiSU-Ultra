@@ -54,113 +54,73 @@
 #endif
 #endif
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(6,6,0)
-    #define USE_DIRECT_PRINT
-#endif
-
 // ============================================================================================
 
 noinline
 NO_OPTIMIZE
-__section(".text") void sukisu_kpm_load_module_path(const char* path, const char* args, void* ptr, void __user* result) {
+void sukisu_kpm_load_module_path(const char* path, const char* args, void* ptr, void __user* result) {
     // This is a KPM module stub.
     int res = -1;
     printk("KPM: Stub function called (sukisu_kpm_load_module_path). path=%s args=%s ptr=%p\n", path, args, ptr);
     __asm__ volatile("nop");  // 精确控制循环不被优化
-#ifndef USE_DIRECT_PRINT
-    if(copy_to_user(result, &res, sizeof(res)) < 1)
-        printk("KPM: Copy to user failed.");
-#else
-    printk("KPM: Kernel version >= 6.6, unknown return");
-#endif
-
+    if(copy_to_user(result, &res, sizeof(res)) < 1) printk("KPM: Copy to user faild.");
 }
 
 noinline
 NO_OPTIMIZE
-__section(".text") void sukisu_kpm_unload_module(const char* name, void* ptr, void __user* result) {
+void sukisu_kpm_unload_module(const char* name, void* ptr, void __user* result) {
     // This is a KPM module stub.
     int res = -1;
     printk("KPM: Stub function called (sukisu_kpm_unload_module). name=%s ptr=%p\n", name, ptr);
     __asm__ volatile("nop");  // 精确控制循环不被优化
-#ifndef USE_DIRECT_PRINT
-    if(copy_to_user(result, &res, sizeof(res)) < 1)
-        printk("KPM: Copy to user failed.");
-#else
-    printk("KPM: Kernel version >= 6.6, unknown return");
-#endif
+    if(copy_to_user(result, &res, sizeof(res)) < 1) printk("KPM: Copy to user faild.");
 }
 
 noinline
 NO_OPTIMIZE
-__section(".text") void sukisu_kpm_num(void __user* result) {
+void sukisu_kpm_num(void __user* result) {
     // This is a KPM module stub.
     int res = 0;
     printk("KPM: Stub function called (sukisu_kpm_num).\n");
     __asm__ volatile("nop");  // 精确控制循环不被优化
-#ifndef USE_DIRECT_PRINT
-    if(copy_to_user(result, &res, sizeof(res)) < 1)
-        printk("KPM: Copy to user failed.");
-#else
-    printk("KPM: Kernel version >= 6.6, unknown return");
-#endif
+    if(copy_to_user(result, &res, sizeof(res)) < 1) printk("KPM: Copy to user faild.");
 }
 
 noinline
 NO_OPTIMIZE
-__section(".text") void sukisu_kpm_info(const char* name, void __user* out, void __user* result) {
+void sukisu_kpm_info(const char* name, void __user* out, void __user* result) {
     // This is a KPM module stub.
     int res = -1;
     printk("KPM: Stub function called (sukisu_kpm_info). name=%s buffer=%p\n", name, out);
     __asm__ volatile("nop");  // 精确控制循环不被优化
-#ifndef USE_DIRECT_PRINT
-    if(copy_to_user(result, &res, sizeof(res)) < 1)
-        printk("KPM: Copy to user failed.");
-#else
-    printk("KPM: Kernel version >= 6.6, unknown return");
-#endif
+    if(copy_to_user(result, &res, sizeof(res)) < 1) printk("KPM: Copy to user faild.");
 }
 
 noinline
 NO_OPTIMIZE
-__section(".text") void sukisu_kpm_list(void __user* out, unsigned int bufferSize, void __user* result) {
+void sukisu_kpm_list(void __user* out, unsigned int bufferSize, void __user* result) {
     // This is a KPM module stub.
     int res = -1;
     printk("KPM: Stub function called (sukisu_kpm_list). buffer=%p size=%d\n", out, bufferSize);
-#ifndef USE_DIRECT_PRINT
-    if(copy_to_user(result, &res, sizeof(res)) < 1)
-        printk("KPM: Copy to user failed.");
-#else
-    printk("KPM: Kernel version >= 6.6, unknown return");
-#endif
+    if(copy_to_user(result, &res, sizeof(res)) < 1) printk("KPM: Copy to user faild.");
 }
 
 noinline
 NO_OPTIMIZE
-__section(".text") void sukisu_kpm_control(void __user* name, void __user* args, void __user* result) {
+void sukisu_kpm_control(void __user* name, void __user* args, void __user* result) {
     // This is a KPM module stub.
     int res = -1;
     printk("KPM: Stub function called (sukisu_kpm_control). name=%p args=%p\n", name, args);
     __asm__ volatile("nop");  // 精确控制循环不被优化
-#ifndef USE_DIRECT_PRINT
-    if(copy_to_user(result, &res, sizeof(res)) < 1)
-        printk("KPM: Copy to user failed.");
-#else
-    printk("KPM: Kernel version >= 6.6, unknown return");
-#endif
+    if(copy_to_user(result, &res, sizeof(res)) < 1) printk("KPM: Copy to user faild.");
 }
 
 noinline
 NO_OPTIMIZE
-__section(".text") void sukisu_kpm_version(void __user* out, unsigned int bufferSize, void __user* result) {
+void sukisu_kpm_version(void __user* out, unsigned int bufferSize, void __user* result) {
     int res = -1;
     printk("KPM: Stub function called (sukisu_kpm_version). buffer=%p size=%d\n", out, bufferSize);
-#ifndef USE_DIRECT_PRINT
-    if(copy_to_user(result, &res, sizeof(res)) < 1)
-        printk("KPM: Copy to user failed.");
-#else
-    printk("KPM: Kernel version >= 6.6, unknown return");
-#endif
+    if(copy_to_user(result, &res, sizeof(res)) < 1) printk("KPM: Copy to user faild.");
 }
 
 EXPORT_SYMBOL(sukisu_kpm_load_module_path);
@@ -172,7 +132,7 @@ EXPORT_SYMBOL(sukisu_kpm_version);
 EXPORT_SYMBOL(sukisu_kpm_control);
 
 noinline
-__section(".text") int sukisu_handle_kpm(unsigned long arg2, unsigned long arg3, unsigned long arg4, unsigned long arg5)
+int sukisu_handle_kpm(unsigned long arg2, unsigned long arg3, unsigned long arg4, unsigned long arg5)
 {
     if(arg2 == SUKISU_KPM_LOAD) {
         char kernel_load_path[256] = { 0 };
@@ -217,7 +177,7 @@ __section(".text") int sukisu_handle_kpm(unsigned long arg2, unsigned long arg3,
     return 0;
 }
 
-__section(".text") int sukisu_is_kpm_control_code(unsigned long arg2) {
+int sukisu_is_kpm_control_code(unsigned long arg2) {
     return (arg2 >= CMD_KPM_CONTROL && arg2 <= CMD_KPM_CONTROL_MAX) ? 1 : 0;
 }
 

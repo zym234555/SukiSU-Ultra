@@ -36,14 +36,13 @@ struct CompactAddressSymbol {
     void* addr;
 };
 
-__section(".data") static struct CompactAddressSymbol address_symbol [] = {
+static struct CompactAddressSymbol address_symbol [] = {
     { "kallsyms_lookup_name", &kallsyms_lookup_name },
     { "compact_find_symbol", &sukisu_compact_find_symbol },
     { "is_run_in_sukisu_ultra", (void*)1 }
 };
 
-
-__section(".text") unsigned long sukisu_compact_find_symbol(const char* name) {
+unsigned long sukisu_compact_find_symbol(const char* name) {
     int i;
     unsigned long addr;
 
