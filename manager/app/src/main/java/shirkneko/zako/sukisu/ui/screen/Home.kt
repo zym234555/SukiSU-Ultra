@@ -51,6 +51,10 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.runtime.saveable.rememberSaveable
 import shirkneko.zako.sukisu.ui.theme.CardConfig
 import androidx.core.content.edit
+import java.io.BufferedReader
+import java.io.InputStreamReader
+import java.util.Scanner
+import java.util.zip.GZIPInputStream
 import kotlin.random.Random
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -333,6 +337,14 @@ private fun StatusCard(
                             text = stringResource(R.string.home_module_count, getModuleCount()),
                             style = MaterialTheme.typography.bodyMedium
                         )
+                        val kpmVersion = getKpmVersion()
+                        if (kpmVersion.isNotEmpty() && !kpmVersion.startsWith("Error")) {
+                            Spacer(Modifier.height(4.dp))
+                            Text(
+                                text = stringResource(R.string.home_kpm_module, getKpmModuleCount()),
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
                         Spacer(modifier = Modifier.height(4.dp))
 
                         val suSFS = getSuSFS()
@@ -555,16 +567,26 @@ private fun InfoCard() {
             InfoCardItem(stringResource(R.string.home_selinux_status), getSELinuxStatus())
 
 
-            if (!isSimpleMode){
-                Spacer(Modifier.height(16.dp))
+
+            if (!isSimpleMode) {
                 val kpmVersion = getKpmVersion()
-                val displayVersion = if (kpmVersion.isEmpty() || kpmVersion.startsWith("Error")) {
-                    stringResource(R.string.not_supported)
+                var displayVersion: String
+                val isKpmConfigured = checkKpmConfigured()
+
+                if (kpmVersion.isEmpty() || kpmVersion.startsWith("Error")) {
+                    val statusText = if (isKpmConfigured) {
+                        stringResource(R.string.kernel_patched)
+                    } else {
+                        stringResource(R.string.kernel_not_enabled)
+                    }
+                    displayVersion = "${stringResource(R.string.not_supported)} ($statusText)"
                 } else {
-                    kpmVersion
+                    displayVersion = "${stringResource(R.string.supported)} ($kpmVersion)"
                 }
+                Spacer(Modifier.height(16.dp))
                 InfoCardItem(stringResource(R.string.home_kpm_version), displayVersion)
             }
+
 
 
             if (!isSimpleMode) {
@@ -645,4 +667,24 @@ private fun getDeviceModel(context: Context): String {
     } catch (e: Exception) {
         Build.DEVICE
     }
+}
+
+private fun checkKpmConfigured(): Boolean {
+    try {
+        val process = Runtime.getRuntime().exec("su -c cat /proc/config.gz")
+        val inputStream = process.inputStream
+        val gzipInputStream = GZIPInputStream(inputStream)
+        val reader = BufferedReader(InputStreamReader(gzipInputStream))
+
+        var line: String?
+        while (reader.readLine().also { line = it } != null) {
+            if (line?.contains("CONFIG_KPM=y") == true) {
+                return true
+            }
+        }
+        reader.close()
+    } catch (e: Exception) {
+        e.printStackTrace()
+    }
+    return false
 }
