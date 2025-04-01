@@ -25,14 +25,6 @@ apksign {
 }
 
 android {
-    signingConfigs {
-        getByName("debug") {
-            storeFile = file("D:\\SukiSU\\release-key.keystore")
-            storePassword = "2832165"
-            keyAlias = "shirkneko"
-            keyPassword = "2832165"
-        }
-    }
     namespace = "shirkneko.zako.sukisu"
 
     buildTypes {

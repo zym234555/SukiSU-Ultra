@@ -549,8 +549,18 @@ private fun InfoCard() {
 
 
             if (!isSimpleMode) {
-            Spacer(Modifier.height(16.dp))
-            InfoCardItem(stringResource(R.string.home_kpm_version), getKpmVersion())
+                var showKpmVersion by remember { mutableStateOf(true) }
+                LaunchedEffect(Unit) {
+                    try {
+                        getKpmVersion()
+                    } catch (e: Exception) {
+                        showKpmVersion = false
+                    }
+                }
+                AnimatedVisibility(visible = showKpmVersion) {
+                    Spacer(Modifier.height(16.dp))
+                    InfoCardItem(stringResource(R.string.home_kpm_version), getKpmVersion())
+                }
             }
 
 
