@@ -24,7 +24,6 @@ class KpmViewModel : ViewModel() {
     var currentModuleDetail by mutableStateOf("")
         private set
 
-
     fun fetchModuleList() {
         viewModelScope.launch {
             isRefreshing = true
@@ -70,7 +69,7 @@ class KpmViewModel : ViewModel() {
         val info = getKpmModuleInfo(name)
         if (info.isBlank()) return null
 
-        val properties = info.lineSequence() // 使用序列提升大文本性能
+        val properties = info.lineSequence()
             .filter { line ->
                 val trimmed = line.trim()
                 trimmed.isNotEmpty() && !trimmed.startsWith("#")
@@ -80,7 +79,7 @@ class KpmViewModel : ViewModel() {
                     when (parts.size) {
                         2 -> parts[0].trim() to parts[1].trim()
                         1 -> parts[0].trim() to ""
-                        else -> null // 忽略无效行
+                        else -> null
                     }
                 }
             }
@@ -89,8 +88,8 @@ class KpmViewModel : ViewModel() {
         return ModuleInfo(
             id = name,
             name = properties["name"] ?: name,
-            version = properties["version"] ?: "unknown",
-            author = properties["author"] ?: "unknown",
+            version = properties["version"] ?: "",
+            author = properties["author"] ?: "",
             description = properties["description"] ?: "",
             args = properties["args"] ?: "",
             enabled = true,
@@ -111,7 +110,16 @@ class KpmViewModel : ViewModel() {
             }
         }
     }
-
+    fun controlModule(moduleId: String, args: String? = null): Int {
+        return try {
+            val result = controlKpmModule(moduleId, args)
+            Log.d("KsuCli", "Control module $moduleId result: $result")
+            result
+        } catch (e: Exception) {
+            Log.e("KsuCli", "Failed to control module $moduleId", e)
+            -1
+        }
+    }
 
     data class ModuleInfo(
         val id: String,

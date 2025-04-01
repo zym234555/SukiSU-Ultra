@@ -6,6 +6,8 @@ import android.content.Intent
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.SpringSpec
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -13,6 +15,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -206,7 +209,7 @@ fun KpmScreen(
             PullToRefreshBox(
                 onRefresh = { viewModel.fetchModuleList() },
                 isRefreshing = viewModel.isRefreshing,
-                modifier = Modifier
+                modifier = Modifier,
             ) {
                 if (viewModel.moduleList.isEmpty()) {
                     Box(
@@ -279,6 +282,13 @@ private fun KpmModuleItem(
     onUninstall: () -> Unit,
     onControl: () -> Unit
 ) {
+    val viewModel: KpmViewModel = viewModel()
+    val scope = rememberCoroutineScope()
+    val snackBarHost = remember { SnackbarHostState() }
+
+    val successMessage = stringResource(R.string.kpm_control_success)
+    val failureMessage = stringResource(R.string.kpm_control_failed)
+
     ElevatedCard(
         colors = getCardColors(MaterialTheme.colorScheme.secondaryContainer),
         elevation = CardDefaults.cardElevation(defaultElevation = getCardElevation())
@@ -325,7 +335,17 @@ private fun KpmModuleItem(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 FilledTonalButton(
-                    onClick = onControl,
+                    onClick = {
+                        scope.launch {
+                            val result = viewModel.controlModule(module.id, module.args)
+                            val message = when (result) {
+                                0 -> successMessage
+                                else -> failureMessage
+                            }
+                            snackBarHost.showSnackbar(message)
+                            onControl()
+                        }
+                    },
                     enabled = module.hasAction
                 ) {
                     Icon(
