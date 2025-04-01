@@ -47,7 +47,8 @@ class KpmViewModel : ViewModel() {
     private fun getAllKpmModuleInfo(): List<ModuleInfo> {
         val result = mutableListOf<ModuleInfo>()
         try {
-            val moduleNames = listKpmModules()
+            val str = listKpmModules()
+            val moduleNames = str
                 .split("\n")
                 .filter { it.isNotBlank() }
 

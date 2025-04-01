@@ -237,7 +237,7 @@
     <string name="kpm_install_success">Load of kpm module successful</string>
     <string name="kpm_install_failed">Load of kpm module failed</string>
     <string name="kpm_args">kpm parameters</string>
-    <string name="kpm_control">kpm control</string>
+    <string name="kpm_control">执行</string>
     <string name="home_kpm_version">KPM Version</string>
     <string name="close_notice">close</string>
     <string name="kernel_module_notice">The following kernel module functions were developed by KernelPatch and modified to include the kernel module functions of SukiSU Ultra</string>
