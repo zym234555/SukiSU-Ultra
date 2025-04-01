@@ -225,7 +225,6 @@
     <string name="kpm_empty">暂无已安装的内核模块</string>
     <string name="kpm_version">版本</string>
     <string name="kpm_author">作者</string>
-    <string name="kpm_execute">执行</string>
     <string name="kpm_uninstall">卸载</string>
     <string name="kpm_uninstall_confirm">确定要卸载内核模块 %1$s 吗？</string>
     <string name="kpm_uninstall_success">卸载成功</string>
@@ -235,9 +234,11 @@
     <string name="kpm_install_success">加载kpm模块成功</string>
     <string name="kpm_install_failed">加载kpm模块失败</string>
     <string name="home_kpm_version">KPM 版本</string>
+    <string name="kpm_control">执行</string>
     <string name="close_notice">关闭</string>
     <string name="kpm_control_success">成功</string>
     <string name="kpm_control_failed">错误</string>
+    <string name="not_supported">不支持</string>
     <string name="kernel_module_notice">以下内核模块功能由KernelPatch开发，经过修改后加入SukiSU Ultra的内核模块功能</string>
     <string name="home_ContributionCard_kernelsu">SukiSU Ultra展望</string>
     <string name="home_click_to_ContributionCard_kernelsu">SukiSU Ultra未来将会成为一个相对独立的KSU分支，但是依然感谢官方KernelSU和MKSU等做出的贡献</string>

@@ -227,7 +227,6 @@
     <string name="kpm_empty">No installed kernel modules at this time</string>
     <string name="kpm_version">releases</string>
     <string name="kpm_author">author</string>
-    <string name="kpm_execute">fulfillment</string>
     <string name="kpm_uninstall">uninstallation</string>
     <string name="kpm_uninstall_confirm">Determine the kernel module to uninstall: %1$s ？</string>
     <string name="kpm_uninstall_success">Uninstalled successfully</string>
@@ -245,4 +244,5 @@
     <string name="kpm_control_success">success</string>
     <string name="kpm_control_failed">failed</string>
     <string name="home_click_to_ContributionCard_kernelsu">SukiSU Ultra will be a relatively independent branch of KSU in the future, but thanks to the official KernelSU and MKSU etc. for their contributions!</string>
+    <string name="not_supported">unsupported</string>
 </resources>
