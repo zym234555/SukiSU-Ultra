@@ -486,51 +486,51 @@ private fun getKpmmgrPath(): String {
 }
 
 
-fun loadKpmModule(path: String, args: String? = null): String {
+fun loadKpmModule(path: String, args: String? = null): Boolean {
     val shell = getRootShell()
     val cmd = "${getKpmmgrPath()} load $path ${args ?: ""}"
     val result = ShellUtils.fastCmd(shell, cmd)
-    return result
+    return result.contains("Success")
 }
 
-fun unloadKpmModule(name: String): String {
+fun unloadKpmModule(name: String): Boolean {
     val shell = getRootShell()
     val cmd = "${getKpmmgrPath()} unload $name"
     val result = ShellUtils.fastCmd(shell, cmd)
-    return result
+    return result.trim().toIntOrNull() == 0
 }
 
-fun getKpmModuleCount(): String {
+fun getKpmModuleCount(): Int {
     val shell = getRootShell()
     val cmd = "${getKpmmgrPath()} num"
     val result = ShellUtils.fastCmd(shell, cmd)
-    return result
+    return result.trim().toIntOrNull() ?: 0
 }
 
 fun listKpmModules(): String {
     val shell = getRootShell()
     val cmd = "${getKpmmgrPath()} list"
     val result = ShellUtils.fastCmd(shell, cmd)
-    return result
+    return result.trim()
 }
 
 fun getKpmModuleInfo(name: String): String {
     val shell = getRootShell()
     val cmd = "${getKpmmgrPath()} info $name"
     val result = ShellUtils.fastCmd(shell, cmd)
-    return result
+    return result.trim()
 }
 
-fun controlKpmModule(name: String, args: String? = null): String {
+fun controlKpmModule(name: String, args: String? = null): Int {
     val shell = getRootShell()
     val cmd = "${getKpmmgrPath()} control $name ${args ?: ""}"
     val result = ShellUtils.fastCmd(shell, cmd)
-    return result
+    return result.trim().toIntOrNull() ?: -1
 }
 
 fun getKpmVersion(): String {
     val shell = getRootShell()
     val cmd = "${getKpmmgrPath()} version"
     val result = ShellUtils.fastCmd(shell, cmd)
-    return result
+    return result.trim()
 }
