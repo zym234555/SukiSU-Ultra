@@ -347,13 +347,6 @@ private fun StatusCard(
                                 style = MaterialTheme.typography.bodyMedium
                             )
                         }
-                        Spacer(modifier = Modifier.height(4.dp))
-
-                        val kpmVersion = getKpmVersion()
-                        Text(
-                            text = stringResource(R.string.home_kpm_version, kpmVersion),
-                            style = MaterialTheme.typography.bodyMedium
-                        )
                     }
                 }
 
@@ -553,6 +546,12 @@ private fun InfoCard() {
 
             Spacer(Modifier.height(16.dp))
             InfoCardItem(stringResource(R.string.home_selinux_status), getSELinuxStatus())
+
+
+            if (!isSimpleMode) {
+            Spacer(Modifier.height(16.dp))
+            InfoCardItem(stringResource(R.string.home_kpm_version), getKpmVersion())
+            }
 
 
             if (!isSimpleMode) {

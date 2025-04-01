@@ -102,19 +102,25 @@ fun KpmScreen(
 
             if (confirmResult == ConfirmResult.Confirmed) {
                 val success = loadingDialog.withLoading {
-                    loadKpmModule(tempFile.absolutePath)
+                    try {
+                        val process = ProcessBuilder("nsenter", "-t", "1", "-m").start()
+                        process.waitFor()
+                        loadKpmModule(tempFile.absolutePath)
+                    } catch (e: Exception) {
+                        Log.e("KsuCli", "Failed to execute nsenter command: ${e.message}")
+                        "failed"
+                    }
                 }
 
                 Log.d("KsuCli", "loadKpmModule result: $success")
 
-                if (success == "success") {
+                if (success.contains("Success", ignoreCase = true)) {
                     viewModel.fetchModuleList()
                     snackBarHost.showSnackbar(
                         message = kpmInstallSuccess,
                         duration = SnackbarDuration.Long
                     )
                 } else {
-                    // 修正为显示安装失败的消息
                     snackBarHost.showSnackbar(
                         message = kpmInstallFailed,
                         duration = SnackbarDuration.Long
@@ -157,7 +163,7 @@ fun KpmScreen(
                 onClick = {
                     selectPatchLauncher.launch(
                         Intent(Intent.ACTION_GET_CONTENT).apply {
-                            type = "application/*"
+                            type = "*/*"
                         }
                     )
                 },
@@ -238,7 +244,7 @@ fun KpmScreen(
                                                 unloadKpmModule(module.id)
                                             }
                                             Log.d("KsuCli", "unloadKpmModule result: $success")
-                                            if (success == "success") {
+                                            if (success.contains("Success", ignoreCase = true)) {
                                                 viewModel.fetchModuleList()
                                                 snackBarHost.showSnackbar(
                                                     message = kpmUninstallSuccess,

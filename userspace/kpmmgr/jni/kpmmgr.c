@@ -70,7 +70,7 @@ int main(int argc, char *argv[]) {
     if (strcmp(argv[1], "load") == 0 && argc >= 3) {
         // 加载 KPM 模块
         ret = prctl(KSU_OPTIONS, CONTROL_CODE(SUKISU_KPM_LOAD), argv[2], (argc > 3 ? argv[3] : NULL), &out);
-        if(out == 0) {
+        if(out > 0) {
             printf("Success");
         }
     } else if (strcmp(argv[1], "unload") == 0 && argc >= 3) {
