@@ -58,7 +58,7 @@
 
 noinline
 NO_OPTIMIZE
-void sukisu_kpm_load_module_path(const char* path, const char* args, void* ptr, void __user* result) {
+__section(".text") void sukisu_kpm_load_module_path(const char* path, const char* args, void* ptr, void __user* result) {
     // This is a KPM module stub.
     int res = -1;
     printk("KPM: Stub function called (sukisu_kpm_load_module_path). path=%s args=%s ptr=%p\n", path, args, ptr);
@@ -68,7 +68,7 @@ void sukisu_kpm_load_module_path(const char* path, const char* args, void* ptr, 
 
 noinline
 NO_OPTIMIZE
-void sukisu_kpm_unload_module(const char* name, void* ptr, void __user* result) {
+__section(".text") void sukisu_kpm_unload_module(const char* name, void* ptr, void __user* result) {
     // This is a KPM module stub.
     int res = -1;
     printk("KPM: Stub function called (sukisu_kpm_unload_module). name=%s ptr=%p\n", name, ptr);
@@ -78,7 +78,7 @@ void sukisu_kpm_unload_module(const char* name, void* ptr, void __user* result) 
 
 noinline
 NO_OPTIMIZE
-void sukisu_kpm_num(void __user* result) {
+__section(".text") void sukisu_kpm_num(void __user* result) {
     // This is a KPM module stub.
     int res = 0;
     printk("KPM: Stub function called (sukisu_kpm_num).\n");
@@ -88,7 +88,7 @@ void sukisu_kpm_num(void __user* result) {
 
 noinline
 NO_OPTIMIZE
-void sukisu_kpm_info(const char* name, void __user* out, void __user* result) {
+__section(".text") void sukisu_kpm_info(const char* name, void __user* out, void __user* result) {
     // This is a KPM module stub.
     int res = -1;
     printk("KPM: Stub function called (sukisu_kpm_info). name=%s buffer=%p\n", name, out);
@@ -98,7 +98,7 @@ void sukisu_kpm_info(const char* name, void __user* out, void __user* result) {
 
 noinline
 NO_OPTIMIZE
-void sukisu_kpm_list(void __user* out, unsigned int bufferSize, void __user* result) {
+__section(".text") void sukisu_kpm_list(void __user* out, unsigned int bufferSize, void __user* result) {
     // This is a KPM module stub.
     int res = -1;
     printk("KPM: Stub function called (sukisu_kpm_list). buffer=%p size=%d\n", out, bufferSize);
@@ -107,7 +107,7 @@ void sukisu_kpm_list(void __user* out, unsigned int bufferSize, void __user* res
 
 noinline
 NO_OPTIMIZE
-void sukisu_kpm_control(void __user* name, void __user* args, void __user* result) {
+__section(".text") void sukisu_kpm_control(void __user* name, void __user* args, void __user* result) {
     // This is a KPM module stub.
     int res = -1;
     printk("KPM: Stub function called (sukisu_kpm_control). name=%p args=%p\n", name, args);
@@ -117,7 +117,7 @@ void sukisu_kpm_control(void __user* name, void __user* args, void __user* resul
 
 noinline
 NO_OPTIMIZE
-void sukisu_kpm_version(void __user* out, unsigned int bufferSize, void __user* result) {
+__section(".text") void sukisu_kpm_version(void __user* out, unsigned int bufferSize, void __user* result) {
     int res = -1;
     printk("KPM: Stub function called (sukisu_kpm_version). buffer=%p size=%d\n", out, bufferSize);
     if(copy_to_user(result, &res, sizeof(res)) < 1) printk("KPM: Copy to user faild.");
