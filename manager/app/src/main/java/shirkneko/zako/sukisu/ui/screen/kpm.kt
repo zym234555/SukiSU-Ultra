@@ -115,12 +115,12 @@ fun KpmScreen(
                     viewModel.fetchModuleList()
                     snackBarHost.showSnackbar(
                         message = kpmInstallSuccess,
-                        duration = SnackbarDuration.Long
+                        duration = SnackbarDuration.Short
                     )
                 } else {
                     snackBarHost.showSnackbar(
                         message = kpmInstallFailed,
-                        duration = SnackbarDuration.Long
+                        duration = SnackbarDuration.Short
                     )
                 }
             }
@@ -250,12 +250,12 @@ fun KpmScreen(
                                                 viewModel.fetchModuleList()
                                                 snackBarHost.showSnackbar(
                                                     message = kpmUninstallSuccess,
-                                                    duration = SnackbarDuration.Long
+                                                    duration = SnackbarDuration.Short
                                                 )
                                             } else {
                                                 snackBarHost.showSnackbar(
                                                     message = kpmUninstallFailed,
-                                                    duration = SnackbarDuration.Long
+                                                    duration = SnackbarDuration.Short
                                                 )
                                             }
                                         }
