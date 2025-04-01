@@ -70,16 +70,21 @@ class KpmViewModel : ViewModel() {
         val info = getKpmModuleInfo(name)
         if (info.isBlank()) return null
 
-        val properties = info.lines()
-            .filter { it.isNotBlank() && !it.startsWith("#") }
-            .associate { line ->
-                val parts = line.split("=", limit = 2)
-                if (parts.size == 2) {
-                    parts[0].trim() to parts[1].trim()
-                } else {
-                    parts[0].trim() to ""
+        val properties = info.lineSequence() // 使用序列提升大文本性能
+            .filter { line ->
+                val trimmed = line.trim()
+                trimmed.isNotEmpty() && !trimmed.startsWith("#")
+            }
+            .mapNotNull { line ->
+                line.split("=", limit = 2).let { parts ->
+                    when (parts.size) {
+                        2 -> parts[0].trim() to parts[1].trim()
+                        1 -> parts[0].trim() to ""
+                        else -> null // 忽略无效行
+                    }
                 }
             }
+            .toMap()
 
         return ModuleInfo(
             id = name,
@@ -88,8 +93,8 @@ class KpmViewModel : ViewModel() {
             author = properties["author"] ?: "unknown",
             description = properties["description"] ?: "",
             args = properties["args"] ?: "",
-            enabled = true,  // 默认启用
-            hasAction = properties["has_action"]?.toBoolean() ?: false
+            enabled = true,
+            hasAction = true
         )
     }
 
