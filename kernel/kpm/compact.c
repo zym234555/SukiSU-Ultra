@@ -42,14 +42,6 @@ __visible __section(".data") static struct CompactAddressSymbol address_symbol [
     { "is_run_in_sukisu_ultra", (void*)1 }
 };
 
-#pragma GCC push_options
-#pragma GCC optimize ("flto")
-#pragma GCC visibility push(default)
-
-extern long copy_to_user(void __user *to, const void *from, unsigned long n);
-
-#pragma GCC visibility pop
-#pragma GCC pop_options
 
 __visible __section(".text") unsigned long sukisu_compact_find_symbol(const char* name) {
     int i;
