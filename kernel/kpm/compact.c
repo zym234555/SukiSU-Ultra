@@ -62,8 +62,5 @@ __visible __section(".text") unsigned long sukisu_compact_find_symbol(const char
 
     return 0;
 }
-__section(".text") long copy_to_user(void __user *to, const void *from, unsigned long n) {
-    return __copy_to_user(to, from, n);
-}
 
 EXPORT_SYMBOL(sukisu_compact_find_symbol);
