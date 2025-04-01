@@ -1,18 +1,17 @@
-package shirkneko.zako.sukisu.ui.screen
-
 import android.app.Activity.RESULT_OK
 import android.content.Context
 import android.content.Intent
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.SpringSpec
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -24,6 +23,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootGraph
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import shirkneko.zako.sukisu.R
 import shirkneko.zako.sukisu.ui.component.ConfirmResult
@@ -38,7 +38,6 @@ import shirkneko.zako.sukisu.ui.util.unloadKpmModule
 import java.io.File
 import androidx.core.content.edit
 import shirkneko.zako.sukisu.ui.theme.ThemeConfig
-
 
 /**
  * KPM 管理界面
@@ -103,27 +102,24 @@ fun KpmScreen(
             if (confirmResult == ConfirmResult.Confirmed) {
                 val success = loadingDialog.withLoading {
                     try {
-                        val process = ProcessBuilder("nsenter", "-t", "1", "-m").start()
-                        process.waitFor()
                         loadKpmModule(tempFile.absolutePath)
+                        true
                     } catch (e: Exception) {
-                        Log.e("KsuCli", "Failed to execute nsenter command: ${e.message}")
-                        "failed"
+                        Log.e("KsuCli", "Failed to load KPM module: ${e.message}")
+                        false
                     }
                 }
 
-                Log.d("KsuCli", "loadKpmModule result: $success")
-
-                if (success.contains("Success", ignoreCase = true)) {
+                if (success) {
                     viewModel.fetchModuleList()
                     snackBarHost.showSnackbar(
                         message = kpmInstallSuccess,
-                        duration = SnackbarDuration.Long
+                        duration = SnackbarDuration.Short
                     )
                 } else {
                     snackBarHost.showSnackbar(
                         message = kpmInstallFailed,
-                        duration = SnackbarDuration.Long
+                        duration = SnackbarDuration.Short
                     )
                 }
             }
@@ -132,11 +128,12 @@ fun KpmScreen(
     }
 
     LaunchedEffect(Unit) {
-        if (viewModel.moduleList.isEmpty()) {
+        while(true) {
             viewModel.fetchModuleList()
+            delay(5000)
         }
     }
-    // 使用 SharedPreferences 存储声明是否关闭的状态
+
     val sharedPreferences = context.getSharedPreferences("app_preferences", Context.MODE_PRIVATE)
     var isNoticeClosed by remember { mutableStateOf(sharedPreferences.getBoolean("is_notice_closed", false)) }
 
@@ -196,7 +193,7 @@ fun KpmScreen(
                     )
                     IconButton(onClick = {
                         isNoticeClosed = true
-                        sharedPreferences.edit() { putBoolean("is_notice_closed", true) }
+                        sharedPreferences.edit { putBoolean("is_notice_closed", true) }
                     }) {
                         Icon(
                             imageVector = Icons.Outlined.Close,
@@ -206,64 +203,63 @@ fun KpmScreen(
                 }
             }
 
-            PullToRefreshBox(
-                onRefresh = { viewModel.fetchModuleList() },
-                isRefreshing = viewModel.isRefreshing,
-                modifier = Modifier
-            ) {
-                if (viewModel.moduleList.isEmpty()) {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            stringResource(R.string.kpm_empty),
-                            textAlign = TextAlign.Center
-                        )
-                    }
-                } else {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        items(viewModel.moduleList) { module ->
-                            val kpmUninstallConfirm = String.format(kpmUninstallConfirmTemplate, module.name)
-                            KpmModuleItem(
-                                module = module,
-                                onUninstall = {
-                                    scope.launch {
-                                        val confirmResult = confirmDialog.awaitConfirm(
-                                            title = kpmUninstall,
-                                            content = kpmUninstallConfirm,
-                                            confirm = uninstall,
-                                            dismiss = cancel
-                                        )
-                                        if (confirmResult == ConfirmResult.Confirmed) {
-                                            val success = loadingDialog.withLoading {
+            if (viewModel.moduleList.isEmpty()) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        stringResource(R.string.kpm_empty),
+                        textAlign = TextAlign.Center
+                    )
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    items(viewModel.moduleList) { module ->
+                        val kpmUninstallConfirm = String.format(kpmUninstallConfirmTemplate, module.name)
+                        KpmModuleItem(
+                            module = module,
+                            onUninstall = {
+                                scope.launch {
+                                    val confirmResult = confirmDialog.awaitConfirm(
+                                        title = kpmUninstall,
+                                        content = kpmUninstallConfirm,
+                                        confirm = uninstall,
+                                        dismiss = cancel
+                                    )
+                                    if (confirmResult == ConfirmResult.Confirmed) {
+                                        val success = loadingDialog.withLoading {
+                                            try {
                                                 unloadKpmModule(module.id)
-                                            }
-                                            Log.d("KsuCli", "unloadKpmModule result: $success")
-                                            if (success.contains("Success", ignoreCase = true)) {
-                                                viewModel.fetchModuleList()
-                                                snackBarHost.showSnackbar(
-                                                    message = kpmUninstallSuccess,
-                                                    duration = SnackbarDuration.Long
-                                                )
-                                            } else {
-                                                snackBarHost.showSnackbar(
-                                                    message = kpmUninstallFailed,
-                                                    duration = SnackbarDuration.Long
-                                                )
+                                                true
+                                            } catch (e: Exception) {
+                                                Log.e("KsuCli", "Failed to unload KPM module: ${e.message}")
+                                                false
                                             }
                                         }
+                                        if (success) {
+                                            viewModel.fetchModuleList()
+                                            snackBarHost.showSnackbar(
+                                                message = kpmUninstallSuccess,
+                                                duration = SnackbarDuration.Short
+                                            )
+                                        } else {
+                                            snackBarHost.showSnackbar(
+                                                message = kpmUninstallFailed,
+                                                duration = SnackbarDuration.Short
+                                            )
+                                        }
                                     }
-                                },
-                                onControl = {
-                                    viewModel.loadModuleDetail(module.id)
                                 }
-                            )
-                        }
+                            },
+                            onControl = {
+                                viewModel.loadModuleDetail(module.id)
+                            }
+                        )
                     }
                 }
             }
@@ -277,6 +273,13 @@ private fun KpmModuleItem(
     onUninstall: () -> Unit,
     onControl: () -> Unit
 ) {
+    val viewModel: KpmViewModel = viewModel()
+    val scope = rememberCoroutineScope()
+    val snackBarHost = remember { SnackbarHostState() }
+
+    val successMessage = stringResource(R.string.kpm_control_success)
+    val failureMessage = stringResource(R.string.kpm_control_failed)
+
     ElevatedCard(
         colors = getCardColors(MaterialTheme.colorScheme.secondaryContainer),
         elevation = CardDefaults.cardElevation(defaultElevation = getCardElevation())
@@ -323,7 +326,18 @@ private fun KpmModuleItem(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 FilledTonalButton(
-                    onClick = onControl
+                    onClick = {
+                        scope.launch {
+                            val result = viewModel.controlModule(module.id, module.args)
+                            val message = when (result) {
+                                0 -> successMessage
+                                else -> failureMessage
+                            }
+                            snackBarHost.showSnackbar(message)
+                            onControl()
+                        }
+                    },
+                    enabled = module.hasAction
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.Settings,

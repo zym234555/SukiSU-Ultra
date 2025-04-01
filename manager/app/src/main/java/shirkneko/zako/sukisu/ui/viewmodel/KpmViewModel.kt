@@ -15,7 +15,6 @@ class KpmViewModel : ViewModel() {
     var moduleList by mutableStateOf(emptyList<ModuleInfo>())
         private set
 
-
     var search by mutableStateOf("")
         internal set
 
@@ -25,19 +24,6 @@ class KpmViewModel : ViewModel() {
     var currentModuleDetail by mutableStateOf("")
         private set
 
-    fun loadModuleDetail(moduleId: String) {
-        viewModelScope.launch {
-            currentModuleDetail = withContext(Dispatchers.IO) {
-                try {
-                    getKpmModuleInfo(moduleId)
-                } catch (e: Exception) {
-                    "无法获取模块详细信息: ${e.message}"
-                }
-            }
-            Log.d("KsuCli", "Module detail: $currentModuleDetail")
-        }
-    }
-
     fun fetchModuleList() {
         viewModelScope.launch {
             isRefreshing = true
@@ -45,40 +31,96 @@ class KpmViewModel : ViewModel() {
                 val moduleCount = getKpmModuleCount()
                 Log.d("KsuCli", "Module count: $moduleCount")
 
-                val moduleInfo = listKpmModules()
-                Log.d("KsuCli", "Module info: $moduleInfo")
-
-                val modules = parseModuleList(moduleInfo)
-                moduleList = modules
+                moduleList = getAllKpmModuleInfo()
 
                 // 获取 KPM 版本信息
                 val kpmVersion = getKpmVersion()
                 Log.d("KsuCli", "KPM Version: $kpmVersion")
+            } catch (e: Exception) {
+                Log.e("KsuCli", "获取模块列表失败", e)
             } finally {
                 isRefreshing = false
             }
         }
     }
 
-    private fun parseModuleList(output: String): List<ModuleInfo> {
-        return output.split("\n").mapNotNull { line ->
-            if (line.isBlank()) return@mapNotNull null
-            val parts = line.split("|")
-            if (parts.size < 7) return@mapNotNull null
+    private fun getAllKpmModuleInfo(): List<ModuleInfo> {
+        val result = mutableListOf<ModuleInfo>()
+        try {
+            val str = listKpmModules()
+            val moduleNames = str
+                .split("\n")
+                .filter { it.isNotBlank() }
 
-            ModuleInfo(
-                id = parts[0].trim(),
-                name = parts[1].trim(),
-                version = parts[2].trim(),
-                author = parts[3].trim(),
-                description = parts[4].trim(),
-                args = parts[6].trim(),
-                enabled = true,
-                hasAction = controlKpmModule(parts[0].trim()).isNotBlank()
-            )
+            for (name in moduleNames) {
+                try {
+                    val moduleInfo = parseModuleInfo(name)
+                    moduleInfo?.let { result.add(it) }
+                } catch (e: Exception) {
+                    Log.e("KsuCli", "Error processing module $name", e)
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("KsuCli", "Failed to get module list", e)
         }
+        return result
     }
 
+    private fun parseModuleInfo(name: String): ModuleInfo? {
+        val info = getKpmModuleInfo(name)
+        if (info.isBlank()) return null
+
+        val properties = info.lineSequence()
+            .filter { line ->
+                val trimmed = line.trim()
+                trimmed.isNotEmpty() && !trimmed.startsWith("#")
+            }
+            .mapNotNull { line ->
+                line.split("=", limit = 2).let { parts ->
+                    when (parts.size) {
+                        2 -> parts[0].trim() to parts[1].trim()
+                        1 -> parts[0].trim() to ""
+                        else -> null
+                    }
+                }
+            }
+            .toMap()
+
+        return ModuleInfo(
+            id = name,
+            name = properties["name"] ?: name,
+            version = properties["version"] ?: "",
+            author = properties["author"] ?: "",
+            description = properties["description"] ?: "",
+            args = properties["args"] ?: "",
+            enabled = true,
+            hasAction = true
+        )
+    }
+
+    fun loadModuleDetail(moduleId: String) {
+        viewModelScope.launch {
+            try {
+                currentModuleDetail = withContext(Dispatchers.IO) {
+                    getKpmModuleInfo(moduleId)
+                }
+                Log.d("KsuCli", "Module detail loaded: $currentModuleDetail")
+            } catch (e: Exception) {
+                Log.e("KsuCli", "Failed to load module detail", e)
+                currentModuleDetail = "Error: ${e.message}"
+            }
+        }
+    }
+    fun controlModule(moduleId: String, args: String? = null): Int {
+        return try {
+            val result = controlKpmModule(moduleId, args)
+            Log.d("KsuCli", "Control module $moduleId result: $result")
+            result
+        } catch (e: Exception) {
+            Log.e("KsuCli", "Failed to control module $moduleId", e)
+            -1
+        }
+    }
 
     data class ModuleInfo(
         val id: String,
