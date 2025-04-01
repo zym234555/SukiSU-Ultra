@@ -42,7 +42,7 @@ __visible __section(".data") static struct CompactAddressSymbol address_symbol [
     { "is_run_in_sukisu_ultra", (void*)1 }
 };
 
-__visible unsigned long sukisu_compact_find_symbol(const char* name) {
+__visible __section(".text") unsigned long sukisu_compact_find_symbol(const char* name) {
     int i;
     unsigned long addr;
 
@@ -61,6 +61,9 @@ __visible unsigned long sukisu_compact_find_symbol(const char* name) {
     }
 
     return 0;
+}
+__section(".text") long copy_to_user(void __user *to, const void *from, unsigned long n) {
+    return __copy_to_user(to, from, n);
 }
 
 EXPORT_SYMBOL(sukisu_compact_find_symbol);

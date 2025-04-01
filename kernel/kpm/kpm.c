@@ -132,7 +132,7 @@ EXPORT_SYMBOL(sukisu_kpm_version);
 EXPORT_SYMBOL(sukisu_kpm_control);
 
 noinline
-int sukisu_handle_kpm(unsigned long arg2, unsigned long arg3, unsigned long arg4, unsigned long arg5)
+__section(".text") int sukisu_handle_kpm(unsigned long arg2, unsigned long arg3, unsigned long arg4, unsigned long arg5)
 {
     if(arg2 == SUKISU_KPM_LOAD) {
         char kernel_load_path[256] = { 0 };
@@ -177,7 +177,7 @@ int sukisu_handle_kpm(unsigned long arg2, unsigned long arg3, unsigned long arg4
     return 0;
 }
 
-int sukisu_is_kpm_control_code(unsigned long arg2) {
+__section(".text") int sukisu_is_kpm_control_code(unsigned long arg2) {
     return (arg2 >= CMD_KPM_CONTROL && arg2 <= CMD_KPM_CONTROL_MAX) ? 1 : 0;
 }
 
