@@ -19,6 +19,9 @@ import shirkneko.zako.sukisu.ui.util.listModules
 import shirkneko.zako.sukisu.ui.util.withNewRootShell
 import org.json.JSONArray
 import org.json.JSONObject
+import shirkneko.zako.sukisu.ui.util.KsuCli
+import shirkneko.zako.sukisu.ui.util.controlKpmModule
+import shirkneko.zako.sukisu.ui.util.listKpmModules
 import java.io.File
 import java.util.concurrent.CompletableFuture
 
@@ -196,6 +199,18 @@ class WebViewInterface(
             break
         }
         return currentModuleInfo.toString()
+    }
+
+    // =================== KPM支持 =============================
+
+    @JavascriptInterface
+    fun listAllKpm() : String {
+        return listKpmModules()
+    }
+
+    @JavascriptInterface
+    fun controlKpm(name: String, args: String) : Int {
+        return controlKpmModule(name, args)
     }
 }
 
