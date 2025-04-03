@@ -210,24 +210,36 @@ fun MoreSettingsScreen(navigator: DestinationsNavigator) {
                 }
             }
 
-            // 添加简洁模块开关
-            SwitchItem(
-                icon = Icons.Filled.FormatPaint,
-                title = stringResource(R.string.simple_mode),
-                summary = stringResource(R.string.simple_mode_summary),
-                checked = isSimpleMode
-            ) {
-                onSimpleModeChange(it)
-            }
+            var isExpanded by remember { mutableStateOf(false) }
 
-            // 隐藏内核部分版本号
-            SwitchItem(
-                icon = Icons.Filled.FormatPaint,
-                title = stringResource(R.string.hide_kernel_kernelsu_version),
-                summary = stringResource(R.string.hide_kernel_kernelsu_version_summary),
-                checked = isHideVersion
-            ) {
-                onHideVersionChange(it)
+            ListItem(
+                leadingContent = { Icon(Icons.Filled.FormatPaint, null) },
+                headlineContent = { Text(stringResource(R.string.more_settings_simplicity_mode)) },
+                modifier = Modifier.clickable {
+                    isExpanded = !isExpanded
+                }
+            )
+
+            if (isExpanded) {
+                // 添加简洁模块开关
+                SwitchItem(
+                    icon = Icons.Filled.Brush,
+                    title = stringResource(R.string.simple_mode),
+                    summary = stringResource(R.string.simple_mode_summary),
+                    checked = isSimpleMode
+                ) {
+                    onSimpleModeChange(it)
+                }
+
+                // 隐藏内核部分版本号
+                SwitchItem(
+                    icon = Icons.Filled.VisibilityOff,
+                    title = stringResource(R.string.hide_kernel_kernelsu_version),
+                    summary = stringResource(R.string.hide_kernel_kernelsu_version_summary),
+                    checked = isHideVersion
+                ) {
+                    onHideVersionChange(it)
+                }
             }
 
             // region SUSFS 配置（仅在支持时显示）
