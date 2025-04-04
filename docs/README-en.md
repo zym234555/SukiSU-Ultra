@@ -15,11 +15,7 @@ Android device root solution based on [KernelSU](https://github.com/KernelSU/Ker
 
 ## How to add
 
-Using the susfs-stable or susfs-dev branch (integrated susfs with support for non-GKI devices)
-
-```
-curl -LSs "https://raw.githubusercontent.com/ShirkNeko/KernelSU/main/kernel/setup.sh" | bash -s susfs-stable
-```
+Using the susfs-dev branch (integrated susfs with support for non-GKI devices)
 
 ```
 curl -LSs "https://raw.githubusercontent.com/ShirkNeko/SukiSU-Ultra/main/kernel/setup.sh" | bash -s susfs-dev
@@ -30,15 +26,9 @@ Use main branching
 curl -LSs "https://raw.githubusercontent.com/ShirkNeko/KernelSU/main/kernel/setup.sh" | bash -s main
 ```
 
-Use dev branching（With support for non-GKI devices）
-```
-curl -LSs "https://raw.githubusercontent.com/ShirkNeko/SukiSU-Ultra/main/kernel/setup.sh" | bash -s main
-```
-
 ## How to use integrated susfs
 
 1. Use the susfs-dev branch directly without any patching
-2. Manually patch susfs using a dev branch that supports non-GKI devices.
 
 
 ## More links

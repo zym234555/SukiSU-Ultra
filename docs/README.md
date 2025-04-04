@@ -15,10 +15,7 @@
 ## 如何添加
 在内核源码的根目录下执行以下命令：
 
-使用 susfs-stable 或者 susfs-dev 分支（已集成susfs，带非GKI设备的支持）
-```
-curl -LSs "https://raw.githubusercontent.com/ShirkNeko/KernelSU/main/kernel/setup.sh" | bash -s susfs-stable
-```
+使用 susfs-dev 分支（已集成susfs，带非GKI设备的支持）
 
 ```
 curl -LSs "https://raw.githubusercontent.com/ShirkNeko/SukiSU-Ultra/main/kernel/setup.sh" | bash -s susfs-dev
@@ -30,15 +27,9 @@ curl -LSs "https://raw.githubusercontent.com/ShirkNeko/SukiSU-Ultra/main/kernel/
 curl -LSs "https://raw.githubusercontent.com/ShirkNeko/SukiSU-Ultra/main/kernel/setup.sh" | bash -s main
 ```
 
-
-使用 dev 分支（带非GKI设备的支持）
-```
-curl -LSs "https://raw.githubusercontent.com/ShirkNeko/KernelSU/main/kernel/setup.sh" | bash -s main
-```
 ## 如何集成 susfs
 
-1. 直接使用 susfs-stable 或者 susfs-dev 分支，不需要再集成 susfs
-2. 使用支持非GKI设备的 dev 分支,手动补丁 susfs
+1. 直接使用 susfs-dev 分支，不需要再集成 susfs
 
 ## 钩子方法
 - 此部分引用自 [rsuntk 的钩子方法](https://github.com/rsuntk/KernelSU)
