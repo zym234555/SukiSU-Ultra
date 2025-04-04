@@ -47,7 +47,7 @@ endif
 
 obj-$(CONFIG_KSU) += kernelsu.o
 
-#KSU_MANUAL_VERSION := 12714
+KSU_MANUAL_VERSION := 12717
 
 ifeq ($(strip $(KSU_MANUAL_VERSION)),)
     ifeq ($(shell test -e $(srctree)/$(src)/../.git; echo $$?),0)
@@ -60,7 +60,7 @@ ifeq ($(strip $(KSU_MANUAL_VERSION)),)
         ccflags-y += -DKSU_VERSION=$(KSU_VERSION)
     else
         $(warning "KSU_GIT_VERSION not defined! Using default version.")
-        KSU_VERSION := $(KSU_VERSION)
+        KSU_VERSION := 12717
         $(info -- KernelSU version (Default): $(KSU_VERSION))
         ccflags-y += -DKSU_VERSION=$(KSU_VERSION)
     endif
