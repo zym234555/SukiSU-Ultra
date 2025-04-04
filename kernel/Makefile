@@ -47,20 +47,20 @@ endif
 
 obj-$(CONFIG_KSU) += kernelsu.o
 
-KSU_MANUAL_VERSION := 12714
+#KSU_MANUAL_VERSION := 12714
 
 ifeq ($(strip $(KSU_MANUAL_VERSION)),)
     ifeq ($(shell test -e $(srctree)/$(src)/../.git; echo $$?),0)
         $(shell cd $(srctree)/$(src); /usr/bin/env PATH="$$PATH":/usr/bin:/usr/local/bin [ -f ../.git/shallow ] && git fetch --unshallow)
-        KSU_GIT_VERSION := $(shell cd $(srctree)/$(src); /usr/bin/env PATH="$$PATH":/usr/bin:/usr/local/bin git rev-list --count HEAD)
-        # ksu_version: major * 10000 + git version + 500 for historical reasons
-        $(eval KSU_VERSION=$(shell expr 12000 + $(KSU_GIT_VERSION) + 500))
+        # 获取 main 分支的提交数量
+        KSU_GIT_VERSION := $(shell cd $(srctree)/$(src); /usr/bin/env PATH="$$PATH":/usr/bin:/usr/local/bin git rev-list --count main)
+        # 计算 KSU_VERSION
+        $(eval KSU_VERSION=$(shell expr 10000 + $(KSU_GIT_VERSION) + 606))
         $(info -- KernelSU version (Git-based): $(KSU_VERSION))
         ccflags-y += -DKSU_VERSION=$(KSU_VERSION)
     else
-        # .git is a text file while the module is imported by 'git submodule add'.
         $(warning "KSU_GIT_VERSION not defined! Using default version.")
-        KSU_VERSION := 12714
+        KSU_VERSION := $(KSU_VERSION)
         $(info -- KernelSU version (Default): $(KSU_VERSION))
         ccflags-y += -DKSU_VERSION=$(KSU_VERSION)
     endif
