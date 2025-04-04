@@ -407,39 +407,45 @@ fun MoreSettingsScreen(navigator: DestinationsNavigator) {
                     )
                 }
             )
-
-            if (ThemeConfig.customBackgroundUri != null && showCardSettings) {
                 // 透明度 Slider
-                ListItem(
-                    leadingContent = { Icon(Icons.Filled.Opacity, null) },
-                    headlineContent = { Text(stringResource(R.string.settings_card_alpha)) },
-                    supportingContent = {
-                        Slider(
-                            value = cardAlpha,
-                            onValueChange = { newValue ->
-                                cardAlpha = newValue
-                                CardConfig.cardAlpha = newValue
-                                CardConfig.isCustomAlphaSet = true
-                                prefs.edit { putBoolean("is_custom_alpha_set", true) }
-                                prefs.edit { putFloat("card_alpha", newValue) }
-                            },
-                            onValueChangeFinished = {
-                                CoroutineScope(Dispatchers.IO).launch {
-                                    saveCardConfig(context)
+                AnimatedVisibility(
+                    visible = ThemeConfig.customBackgroundUri != null && showCardSettings,
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp)
+                ) {
+                    ListItem(
+                        leadingContent = { Icon(Icons.Filled.Opacity, null) },
+                        headlineContent = { Text(stringResource(R.string.settings_card_alpha)) },
+                        supportingContent = {
+                            Slider(
+                                value = cardAlpha,
+                                onValueChange = { newValue ->
+                                    cardAlpha = newValue
+                                    CardConfig.cardAlpha = newValue
+                                    CardConfig.isCustomAlphaSet = true
+                                    prefs.edit { putBoolean("is_custom_alpha_set", true) }
+                                    prefs.edit { putFloat("card_alpha", newValue) }
+                                },
+                                onValueChangeFinished = {
+                                    CoroutineScope(Dispatchers.IO).launch {
+                                        saveCardConfig(context)
+                                    }
+                                },
+                                valueRange = 0f..1f,
+                                colors = getSliderColors(cardAlpha, useCustomColors = true),
+                                thumb = {
+                                    SliderDefaults.Thumb(
+                                        interactionSource = remember { MutableInteractionSource() },
+                                        thumbSize = DpSize(0.dp, 0.dp)
+                                    )
                                 }
-                            },
-                            valueRange = 0f..1f,
-                            colors = getSliderColors(cardAlpha, useCustomColors = true),
-                            thumb = {
-                                SliderDefaults.Thumb(
-                                    interactionSource = remember { MutableInteractionSource() },
-                                    thumbSize = DpSize(0.dp, 0.dp)
-                                )
-                            }
-                        )
-                    }
-                )
-
+                            )
+                        }
+                    )
+                }
+                AnimatedVisibility(
+                    visible = ThemeConfig.customBackgroundUri != null && showCardSettings,
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp)
+                ){
                 ListItem(
                     leadingContent = { Icon(Icons.Filled.DarkMode, null) },
                     headlineContent = { Text(stringResource(R.string.theme_mode)) },
@@ -448,7 +454,7 @@ fun MoreSettingsScreen(navigator: DestinationsNavigator) {
                         showThemeModeDialog = true
                     }
                 )
-
+                }
 
                     // 主题模式选择对话框
                     if (showThemeModeDialog) {
@@ -511,7 +517,7 @@ fun MoreSettingsScreen(navigator: DestinationsNavigator) {
                 }
             }
         }
-    }
+
 
 @Composable
 private fun getSliderColors(cardAlpha: Float, useCustomColors: Boolean = false): SliderColors {
