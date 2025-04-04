@@ -117,8 +117,7 @@ private fun BottomBar(navController: NavHostController) {
 
     NavigationBar(
         tonalElevation = cardElevation, // 动态设置阴影
-        containerColor = cardColor.copy(alpha = cardAlpha), // 动态设置颜色和透明度
-        contentColor = if (cardColor.luminance() > 0.5) Color.Black else Color.White, // 根据背景亮度设置文字颜色
+        containerColor = cardColor.copy(alpha = cardAlpha),
         windowInsets = WindowInsets.systemBars.union(WindowInsets.displayCutout).only(
             WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom
         )
@@ -182,9 +181,6 @@ private fun BottomBar(navController: NavHostController) {
                     },
                     label = { Text(stringResource(destination.label)) },
                     alwaysShowLabel = false,
-                    colors = androidx.compose.material3.NavigationBarItemDefaults.colors(
-                        unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
                 )
             }
         }

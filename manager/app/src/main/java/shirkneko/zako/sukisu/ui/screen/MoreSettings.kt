@@ -131,7 +131,7 @@ fun MoreSettingsScreen(navigator: DestinationsNavigator) {
     val systemIsDark = isSystemInDarkTheme()
     LaunchedEffect(Unit) {
         CardConfig.apply {
-            cardAlpha = prefs.getFloat("card_alpha", 0.65f)
+            cardAlpha = prefs.getFloat("card_alpha", 0.45f)
             cardElevation = if (prefs.getBoolean("custom_background_enabled", false)) 0.dp else defaultElevation
             isCustomAlphaSet = prefs.getBoolean("is_custom_alpha_set", false)
 
@@ -139,7 +139,7 @@ fun MoreSettingsScreen(navigator: DestinationsNavigator) {
             if (!isCustomAlphaSet) {
                 val isDarkMode = ThemeConfig.forceDarkMode ?: systemIsDark
                 if (isDarkMode) {
-                    cardAlpha = 0.5f
+                    cardAlpha = 0.35f
                 }
             }
         }
@@ -385,10 +385,10 @@ fun MoreSettingsScreen(navigator: DestinationsNavigator) {
                                 context.saveCustomBackground(null)
                                 isCustomBackgroundEnabled = false
                                 CardConfig.cardElevation = CardConfig.defaultElevation
-                                CardConfig.cardAlpha = 1f
+                                CardConfig.cardAlpha = 0.45f
                                 CardConfig.isCustomAlphaSet = false
                                 saveCardConfig(context)
-                                cardAlpha = 0.65f
+                                cardAlpha = 0.35f
                                 themeMode = 0
                                 context.saveThemeMode(null)
                                 CardConfig.isUserDarkModeEnabled = false

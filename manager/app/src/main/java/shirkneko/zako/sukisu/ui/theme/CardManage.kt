@@ -15,7 +15,7 @@ import androidx.compose.ui.unit.dp
 object CardConfig {
     val defaultElevation: Dp = 0.dp
 
-    var cardAlpha by mutableStateOf(1f)
+    var cardAlpha by mutableStateOf(0.45f)
     var cardElevation by mutableStateOf(defaultElevation)
     var isShadowEnabled by mutableStateOf(true)
     var isCustomAlphaSet by mutableStateOf(false)
@@ -38,7 +38,7 @@ object CardConfig {
 
     fun load(context: Context) {
         val prefs = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
-        cardAlpha = prefs.getFloat("card_alpha", 1f)
+        cardAlpha = prefs.getFloat("card_alpha", 0.45f)
         cardElevation = if (prefs.getBoolean("custom_background_enabled", false)) 0.dp else defaultElevation
         isCustomAlphaSet = prefs.getBoolean("is_custom_alpha_set", false)
         isUserDarkModeEnabled = prefs.getBoolean("is_user_dark_mode_enabled", false)
@@ -53,7 +53,7 @@ object CardConfig {
 
     fun setDarkModeDefaults() {
         if (!isCustomAlphaSet) {
-        cardAlpha = 0.5f
+        cardAlpha = 0.35f
         cardElevation = 0.dp
         }
     }
