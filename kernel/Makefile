@@ -47,27 +47,14 @@ endif
 
 obj-$(CONFIG_KSU) += kernelsu.o
 
-#KSU_MANUAL_VERSION := 12717
-
-ifeq ($(strip $(KSU_MANUAL_VERSION)),)
-    ifeq ($(shell test -e $(srctree)/$(src)/../.git; echo $$?),0)
-        $(shell cd $(srctree)/$(src); /usr/bin/env PATH="$$PATH":/usr/bin:/usr/local/bin [ -f ../.git/shallow ] && git fetch --unshallow)
-        # 获取 main 分支的提交数量
-        KSU_GIT_VERSION := $(shell cd $(srctree)/$(src); /usr/bin/env PATH="$$PATH":/usr/bin:/usr/local/bin git rev-list --count main)
-        # 计算 KSU_VERSION
-        $(eval KSU_VERSION=$(shell expr 10000 + $(KSU_GIT_VERSION) + 606))
-        $(info -- KernelSU version (Git-based): $(KSU_VERSION))
-        ccflags-y += -DKSU_VERSION=$(KSU_VERSION)
-    else
-        $(warning "KSU_GIT_VERSION not defined! Using default version.")
-        KSU_VERSION := 16
-        $(info -- KernelSU version (Default): $(KSU_VERSION))
-        ccflags-y += -DKSU_VERSION=$(KSU_VERSION)
-    endif
-else
-    KSU_VERSION := $(KSU_MANUAL_VERSION)
-    $(info -- KernelSU version (Manual): $(KSU_VERSION))
-    ccflags-y += -DKSU_VERSION=$(KSU_VERSION)
+ifeq ($(shell test -e $(srctree)/$(src)/../.git; echo $$?),0)
+$(shell cd $(srctree)/$(src); /usr/bin/env PATH="$$PATH":/usr/bin:/usr/local/bin [ -f ../.git/shallow ] && git fetch --unshallow)
+# Get the number of commits on the main branch
+KSU_GIT_VERSION := $(shell cd $(srctree)/$(src); /usr/bin/env PATH="$$PATH":/usr/bin:/usr/local/bin git rev-list --count main)
+# Calculate KSU_VERSION
+$(eval KSU_VERSION=$(shell expr 10000 + $(KSU_GIT_VERSION) + 606))
+$(info -- KernelSU version (main): $(KSU_VERSION))
+ccflags-y += -DKSU_VERSION=$(KSU_VERSION)
 endif
 
 # SELinux drivers check
