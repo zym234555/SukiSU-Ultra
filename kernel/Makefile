@@ -60,7 +60,7 @@ ifeq ($(strip $(KSU_MANUAL_VERSION)),)
         ccflags-y += -DKSU_VERSION=$(KSU_VERSION)
     else
         $(warning "KSU_GIT_VERSION not defined! Using default version.")
-        KSU_VERSION := $(KSU_VERSION)
+        KSU_VERSION := 16
         $(info -- KernelSU version (Default): $(KSU_VERSION))
         ccflags-y += -DKSU_VERSION=$(KSU_VERSION)
     endif
