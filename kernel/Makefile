@@ -47,14 +47,17 @@ endif
 
 obj-$(CONFIG_KSU) += kernelsu.o
 
+# .git is a text file while the module is imported by 'git submodule add'.
 ifeq ($(shell test -e $(srctree)/$(src)/../.git; echo $$?),0)
 $(shell cd $(srctree)/$(src); /usr/bin/env PATH="$$PATH":/usr/bin:/usr/local/bin [ -f ../.git/shallow ] && git fetch --unshallow)
-# Get the number of commits on the main branch
 KSU_GIT_VERSION := $(shell cd $(srctree)/$(src); /usr/bin/env PATH="$$PATH":/usr/bin:/usr/local/bin git rev-list --count main)
-# Calculate KSU_VERSION
+# ksu_version: major * 10000 + git version + 606 for historical reasons
 $(eval KSU_VERSION=$(shell expr 10000 + $(KSU_GIT_VERSION) + 606))
-$(info -- KernelSU version (main): $(KSU_VERSION))
+$(info -- KernelSU version: $(KSU_VERSION))
 ccflags-y += -DKSU_VERSION=$(KSU_VERSION)
+else # If there is no .git file, the default version will be passed.
+$(warning "KSU_GIT_VERSION not defined! It is better to make KernelSU a git submodule!")
+ccflags-y += -DKSU_VERSION=12500
 endif
 
 # SELinux drivers check
