@@ -1,8 +1,7 @@
 use anyhow::Result;
-use notify::{Watcher, RecommendedWatcher, RecursiveMode, EventKind};
 use std::path::Path;
 
-const KPM_DIR: &str = "/data/adb/kpm";
+pub const KPM_DIR: &str = "/data/adb/kpm";
 
 pub fn start_kpm_watcher() -> Result<()> {
     let mut watcher = notify::recommended_watcher(|res| {
@@ -16,7 +15,7 @@ pub fn start_kpm_watcher() -> Result<()> {
     Ok(())
 }
 
-fn handle_kpm_event(event: notify::Event) {
+pub fn handle_kpm_event(event: notify::Event) {
     if event.kind.is_create() {
         event.paths.iter().for_each(|path| {
             if path.extension().map_or(false, |ext| ext == "kpm") {
@@ -34,7 +33,7 @@ fn handle_kpm_event(event: notify::Event) {
     }
 }
 
-fn load_kpm(path: &Path) -> Result<()> {
+pub fn load_kpm(path: &Path) -> Result<()> {
     let status = std::process::Command::new("/data/adb/ksu/bin/kpmmgr")
         .args(["load", path.to_str().unwrap(), ""])
         .status()?;
@@ -45,7 +44,7 @@ fn load_kpm(path: &Path) -> Result<()> {
     Ok(())
 }
 
-fn unload_kpm(name: &str) -> Result<()> {
+pub unload_kpm(name: &str) -> Result<()> {
     let status = std::process::Command::new("/data/adb/ksu/bin/kpmmgr")
         .args(["unload", name])
         .status()?;
