@@ -5,6 +5,7 @@ use anyhow::{Context, Result};
 use log::{info, warn};
 use rustix::fs::{MountFlags, mount};
 use std::path::Path;
+use crate::kpm;
 
 pub fn on_post_data_fs() -> Result<()> {
     ksucalls::report_post_fs_data();
