@@ -44,7 +44,7 @@ pub fn load_kpm(path: &Path) -> Result<()> {
     Ok(())
 }
 
-pub unload_kpm(name: &str) -> Result<()> {
+pub fn unload_kpm(name: &str) -> Result<()> {
     let status = std::process::Command::new("/data/adb/ksu/bin/kpmmgr")
         .args(["unload", name])
         .status()?;
