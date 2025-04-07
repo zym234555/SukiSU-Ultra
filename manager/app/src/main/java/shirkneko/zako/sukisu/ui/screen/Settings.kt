@@ -20,9 +20,11 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Undo
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -49,12 +51,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
-import com.maxkeppeker.sheets.core.models.base.Header
+import androidx.core.content.edit
 import com.maxkeppeker.sheets.core.models.base.IconSource
-import com.maxkeppeker.sheets.core.models.base.rememberUseCaseState
-import com.maxkeppeler.sheets.list.ListDialog
 import com.maxkeppeler.sheets.list.models.ListOption
-import com.maxkeppeler.sheets.list.models.ListSelection
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootGraph
 import com.ramcosta.composedestinations.generated.destinations.AppProfileTemplateScreenDestination
@@ -75,14 +74,14 @@ import shirkneko.zako.sukisu.ui.component.SwitchItem
 import shirkneko.zako.sukisu.ui.component.rememberConfirmDialog
 import shirkneko.zako.sukisu.ui.component.rememberCustomDialog
 import shirkneko.zako.sukisu.ui.component.rememberLoadingDialog
+import shirkneko.zako.sukisu.ui.theme.CardConfig
+import shirkneko.zako.sukisu.ui.theme.ThemeConfig
+import shirkneko.zako.sukisu.ui.theme.getCardColors
+import shirkneko.zako.sukisu.ui.theme.getCardElevation
 import shirkneko.zako.sukisu.ui.util.LocalSnackbarHost
 import shirkneko.zako.sukisu.ui.util.getBugreportFile
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import androidx.compose.material.icons.filled.ExpandMore
-import androidx.compose.material3.MaterialTheme
-import shirkneko.zako.sukisu.ui.theme.CardConfig
-import androidx.core.content.edit
 
 
 /**
@@ -111,7 +110,6 @@ fun SettingScreen(navigator: DestinationsNavigator) {
             AboutDialog(it)
         }
         val loadingDialog = rememberLoadingDialog()
-        val shrinkDialog = rememberConfirmDialog()
         // endregion
 
         Column(
@@ -451,20 +449,73 @@ fun rememberUninstallDialog(onSelected: (UninstallType) -> Unit): DialogHandle {
         }
 
         var selection = UninstallType.NONE
-        ListDialog(state = rememberUseCaseState(visible = true, onFinishedRequest = {
-            if (selection != UninstallType.NONE) {
-                onSelected(selection)
-            }
-        }, onCloseRequest = {
-            dismiss()
-        }), header = Header.Default(
-            title = stringResource(R.string.settings_uninstall),
-        ), selection = ListSelection.Single(
-            showRadioButtons = false,
-            options = listOptions,
-        ) { index, _ ->
-            selection = options[index]
-        })
+        val cardColor = if (!ThemeConfig.useDynamicColor) {
+            ThemeConfig.currentTheme.ButtonContrast
+        } else {
+            MaterialTheme.colorScheme.secondaryContainer
+        }
+
+        AlertDialog(
+            onDismissRequest = {
+                dismiss()
+            },
+            title = {
+                Text(text = stringResource(R.string.settings_uninstall))
+            },
+            text = {
+                Column {
+                    listOptions.forEachIndexed { index, option ->
+                        Row(
+                            modifier = Modifier
+                                .clickable {
+                                    selection = options[index]
+                                }
+                                .padding(vertical = 8.dp)
+                        ) {
+                            Icon(
+                                imageVector = options[index].icon,
+                                contentDescription = null,
+                                modifier = Modifier.padding(end = 8.dp)
+                            )
+                            Column {
+                                Text(text = option.titleText)
+                                option.subtitleText?.let {
+                                    Text(
+                                        text = it,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                androidx.compose.material3.TextButton(
+                    onClick = {
+                        if (selection != UninstallType.NONE) {
+                            onSelected(selection)
+                        }
+                        dismiss()
+                    }
+                ) {
+                    Text(text = stringResource(android.R.string.ok))
+                }
+            },
+            dismissButton = {
+                androidx.compose.material3.TextButton(
+                    onClick = {
+                        dismiss()
+                    }
+                ) {
+                    Text(text = stringResource(android.R.string.cancel))
+                }
+            },
+            containerColor = getCardColors(cardColor.copy(alpha = 0.9f)).containerColor.copy(alpha = 0.9f),
+            shape = MaterialTheme.shapes.medium,
+            tonalElevation = getCardElevation()
+        )
     }
 }
 

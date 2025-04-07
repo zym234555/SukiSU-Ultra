@@ -9,7 +9,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.StringRes
 import androidx.compose.foundation.LocalIndication
-import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -29,11 +29,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.documentfile.provider.DocumentFile
-import com.maxkeppeker.sheets.core.models.base.Header
-import com.maxkeppeker.sheets.core.models.base.rememberUseCaseState
-import com.maxkeppeler.sheets.list.ListDialog
 import com.maxkeppeler.sheets.list.models.ListOption
-import com.maxkeppeler.sheets.list.models.ListSelection
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootGraph
 import com.ramcosta.composedestinations.generated.destinations.FlashScreenDestination
@@ -43,6 +39,9 @@ import shirkneko.zako.sukisu.R
 import shirkneko.zako.sukisu.ui.component.DialogHandle
 import shirkneko.zako.sukisu.ui.component.rememberConfirmDialog
 import shirkneko.zako.sukisu.ui.component.rememberCustomDialog
+import shirkneko.zako.sukisu.ui.theme.ThemeConfig
+import shirkneko.zako.sukisu.ui.theme.getCardColors
+import shirkneko.zako.sukisu.ui.theme.getCardElevation
 import shirkneko.zako.sukisu.ui.util.*
 import shirkneko.zako.sukisu.utils.AssetsUtil
 import java.io.File
@@ -500,33 +499,77 @@ fun rememberSelectKmiDialog(onSelected: (String?) -> Unit): DialogHandle {
         val supportedKmi by produceState(initialValue = emptyList<String>()) {
             value = getSupportedKmis()
         }
-        val options = supportedKmi.map { value ->
+        val listOptions = supportedKmi.map { value ->
             ListOption(
-                titleText = value
+                titleText = value,
+                subtitleText = null,
+                icon = null
             )
         }
 
-        var selection by remember { mutableStateOf<String?>(null) }
-        Box(
-            modifier = Modifier.background(MaterialTheme.colorScheme.surface)
-        ) {
-            ListDialog(
-                state = rememberUseCaseState(visible = true, onFinishedRequest = {
-                    onSelected(selection)
-                }, onCloseRequest = {
-                    dismiss()
-                }),
-                header = Header.Default(
-                    title = stringResource(R.string.select_kmi),
-                ),
-                selection = ListSelection.Single(
-                    showRadioButtons = true,
-                    options = options,
-                ) { _, option ->
-                    selection = option.titleText
-                }
-            )
+        var selection: String? = null
+        val cardColor = if (!ThemeConfig.useDynamicColor) {
+            ThemeConfig.currentTheme.ButtonContrast
+        } else {
+            MaterialTheme.colorScheme.secondaryContainer
         }
+
+        AlertDialog(
+            onDismissRequest = {
+                dismiss()
+            },
+            title = {
+                Text(text = stringResource(R.string.select_kmi))
+            },
+            text = {
+                Column {
+                    listOptions.forEachIndexed { index, option ->
+                        Row(
+                            modifier = Modifier
+                                .clickable {
+                                    selection = supportedKmi[index]
+                                }
+                                .padding(vertical = 8.dp)
+                        ) {
+                            Column {
+                                Text(text = option.titleText)
+                                option.subtitleText?.let {
+                                    Text(
+                                        text = it,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        if (selection != null) {
+                            onSelected(selection)
+                        }
+                        dismiss()
+                    }
+                ) {
+                    Text(text = stringResource(android.R.string.ok))
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        dismiss()
+                    }
+                ) {
+                    Text(text = stringResource(android.R.string.cancel))
+                }
+            },
+            containerColor = getCardColors(cardColor.copy(alpha = 0.9f)).containerColor.copy(alpha = 0.9f),
+            shape = MaterialTheme.shapes.medium,
+            tonalElevation = getCardElevation()
+        )
     }
 }
 
