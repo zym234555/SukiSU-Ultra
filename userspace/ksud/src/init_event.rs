@@ -103,7 +103,7 @@ pub fn on_post_data_fs() -> Result<()> {
 
     for entry in std::fs::read_dir(kpm::KPM_DIR)? {
         let path = entry?.path();
-        if path.extension().map_or(false, |ext| ext == "kpm") {
+        if path.extension().is_some_and(|ext| ext == "kpm") {
             let _ = kpm::load_kpm(&path);
         }
     }

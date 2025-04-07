@@ -37,26 +37,26 @@ pub fn start_kpm_watcher() -> Result<()> {
     Ok(())
 }
 
-// 处理 KPM 文件事件
-fn handle_kpm_event(event: notify::Event) {
-    if event.kind.is_create() {
-        event.paths.iter().for_each(|path| {
-            if path.extension().map_or(false, |ext| ext == "kpm") {
-                let _ = load_kpm(path);
-            }
-        });
-    }
-
-    if event.kind.is_remove() {
-        event.paths.iter().for_each(|path| {
-            if let Some(name) = path.file_stem() {
-                let _ = unload_kpm(name.to_string_lossy().as_ref());
-            }
-        });
+pub fn handle_kpm_event(event: notify::Event) {
+    match event.kind {
+        notify::EventKind::Create(_) => {
+            event.paths.iter().for_each(|path| {
+                if path.extension().is_some_and(|ext| ext == "kpm") {
+                    let _ = load_kpm(path);
+                }
+            });
+        }
+        notify::EventKind::Remove(_) => {
+            event.paths.iter().for_each(|path| {
+                if let Some(name) = path.file_stem() {
+                    let _ = unload_kpm(name.to_string_lossy().as_ref());
+                }
+            });
+        }
+        _ => {}
     }
 }
 
-// 加载 KPM 模块
 pub fn load_kpm(path: &Path) -> Result<()> {
     let status = std::process::Command::new(KPMMGR_PATH)
         .args(["load", path.to_str().unwrap(), ""])
@@ -68,35 +68,38 @@ pub fn load_kpm(path: &Path) -> Result<()> {
     Ok(())
 }
 
-// 卸载 KPM 模块并删除文件
 pub fn unload_kpm(name: &str) -> Result<()> {
     let status = std::process::Command::new(KPMMGR_PATH)
         .args(["unload", name])
-        .status()?;
-    
-    if status.success() {
-        let kpm_path = Path::new(KPM_DIR).join(format!("{}.kpm", name));
-        if kpm_path.exists() {
-            if let Err(e) = fs::remove_file(&kpm_path) {
-                log::error!("Failed to delete KPM file: {}", e);
-            } else {
-                log::info!("Deleted KPM files: {}", kpm_path.display());
-            }
-        }
-        log::info!("Uninstalled KPM: {}", name);
+        .status()
+        .map_err(|e| anyhow!("Failed to execute kpmmgr: {}", e))?;
+
+    let kpm_path = Path::new(KPM_DIR).join(format!("{}.kpm", name));
+    if kpm_path.exists() {
+        fs::remove_file(&kpm_path)
+            .map_err(|e| anyhow!("Failed to delete KPM file: {}", e))
+            .map(|_| log::info!("Deleted KPM file: {}", kpm_path.display()))?;
     }
+
+    if status.success() {
+        log::info!("Successfully unloaded KPM: {}", name);
+    } else {
+        log::warn!("KPM unloading may have failed: {}", name);
+    }
+    
     Ok(())
 }
 
-// 删除所有 KPM 模块
 pub fn remove_all_kpms() -> Result<()> {
     ensure_kpm_dir()?;
     
     for entry in fs::read_dir(KPM_DIR)? {
         let path = entry?.path();
-        if path.extension().map_or(false, |ext| ext == "kpm") {
+        if path.extension().is_some_and(|ext| ext == "kpm") {
             if let Some(name) = path.file_stem() {
-                let _ = unload_kpm(name.to_string_lossy().as_ref());
+                unload_kpm(name.to_string_lossy().as_ref())
+                    .unwrap_or_else(|e| log::error!("Failed to remove KPM: {}", e));
+                let _ = fs::remove_file(&path);
             }
         }
     }
