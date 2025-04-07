@@ -26,8 +26,28 @@
 #include <linux/slab.h>
 #include "kpm.h"
 #include "compact.h"
+#include "../allowlist.h"
 
 unsigned long sukisu_compact_find_symbol(const char* name);
+
+// ======================================================================
+// 兼容函数 for KPM
+
+static
+int sukisu_is_su_allow_uid(uid_t uid) {
+    return ksu_is_allow_uid(uid) ? 1 : 0;
+}
+
+static
+int sukisu_get_ap_mod_exclude(uid_t uid) {
+    // Not supported
+    return 0;
+}
+
+static
+int sukisu_is_uid_should_umount(uid_t uid) {
+    return ksu_uid_should_umount(uid) ? 1 : 0;
+}
 
 // ======================================================================
 
@@ -39,7 +59,10 @@ struct CompactAddressSymbol {
 static struct CompactAddressSymbol address_symbol [] = {
     { "kallsyms_lookup_name", &kallsyms_lookup_name },
     { "compact_find_symbol", &sukisu_compact_find_symbol },
-    { "is_run_in_sukisu_ultra", (void*)1 }
+    { "is_run_in_sukisu_ultra", (void*)1 },
+    { "is_su_allow_uid", &sukisu_is_su_allow_uid },
+    { "get_ap_mod_exclude", &sukisu_get_ap_mod_exclude },
+    { "is_uid_should_umount", &sukisu_is_uid_should_umount }
 };
 
 unsigned long sukisu_compact_find_symbol(const char* name) {
