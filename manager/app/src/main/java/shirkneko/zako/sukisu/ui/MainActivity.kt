@@ -41,6 +41,7 @@ import com.ramcosta.composedestinations.animations.NavHostAnimatedDestinationSty
 import com.ramcosta.composedestinations.generated.NavGraphs
 import com.ramcosta.composedestinations.utils.isRouteOnBackStackAsState
 import com.ramcosta.composedestinations.utils.rememberDestinationsNavigator
+import io.sukisu.ultra.UltraToolInstall
 import shirkneko.zako.sukisu.Natives
 import shirkneko.zako.sukisu.ksuApp
 import shirkneko.zako.sukisu.ui.screen.BottomBarDestination
@@ -72,7 +73,10 @@ class MainActivity : ComponentActivity() {
 
 
         val isManager = Natives.becomeManager(ksuApp.packageName)
-        if (isManager) install()
+        if (isManager) {
+            install()
+            UltraToolInstall.tryToInstall()
+        }
 
         setContent {
             KernelSUTheme {

@@ -481,7 +481,7 @@ fun susfsSUS_SU_Mode(): String {
     return result
 }
 
-private fun getKpmmgrPath(): String {
+fun getKpmmgrPath(): String {
     return ksuApp.applicationInfo.nativeLibraryDir + File.separator + "libkpmmgr.so"
 }
 
