@@ -1,4 +1,4 @@
-# SukiSU
+# SukiSU Ultra
 
 **简体中文** | [English](README-en.md)
 
@@ -6,9 +6,9 @@
 
 **实验性!使用风险自负!**
 
-
 >
 > 这是非官方分支，保留所有权利 [@tiann](https://github.com/tiann)
+> 但是，我们将会在未来成为一个单独维护的KSU分支
 >
 
 
@@ -47,6 +47,12 @@ curl -LSs "https://raw.githubusercontent.com/ShirkNeko/SukiSU-Ultra/main/kernel/
     - 部分手动集成KPROBES的非 GKI 2.0 设备不需要手动 VFS 钩子 `new_hook.patch` 补丁
 
 
+## KPM支持
+
+- 我们基于KernelPatch去掉了和KSU重复的功能，保留了KPM支持
+- 我们将会引入更多的兼容APatch的函数来确保KPM功能的完整性
+开源地址: https://github.com/ShirkNeko/SukiSU_KernelPatch_patch
+
 ## 更多链接
 基于 SukiSU 和 susfs 编译的项目
 - [GKI](https://github.com/ShirkNeko/GKI_KernelSU_SUSFS) 
@@ -76,6 +82,7 @@ curl -LSs "https://raw.githubusercontent.com/ShirkNeko/SukiSU-Ultra/main/kernel/
 3. [App Profile](https://kernelsu.org/guide/app-profile.html)：将 root 权限锁在笼子里
 4. 恢复对非 GKI 2.0 内核的支持
 5. 更多自定义功能
+6. 对KPM内核模块的支持
 
 
 ## 许可证
@@ -90,8 +97,6 @@ curl -LSs "https://raw.githubusercontent.com/ShirkNeko/SukiSU-Ultra/main/kernel/
 - [yspbwx2010](https://github.com/yspbwx2010) 非常感谢
 
 
-
-
 如何以上名单没有你的名称，我会及时更新，再次感谢大家的支持
 
 ## 贡献
@@ -104,3 +109,4 @@ curl -LSs "https://raw.githubusercontent.com/ShirkNeko/SukiSU-Ultra/main/kernel/
 - [Magisk](https://github.com/topjohnwu/Magisk)：强大的 root 工具
 - [genuine](https://github.com/brevent/genuine/)：APK v2 签名验证
 - [Diamorphine](https://github.com/m0nad/Diamorphine)：一些 rootkit 技能
+- [KernelPatch](https://github.com/bmax121/KernelPatch): KernelPatch是APatch实现内核模块的关键部分
