@@ -28,14 +28,12 @@ static struct apk_sign_key {
 	unsigned size;
 	const char *sha256;
 } apk_sign_keys[] = {
-	{EXPECTED_SIZE, EXPECTED_HASH}, // SukiSU
 	{EXPECTED_SIZE_RSUNTK, EXPECTED_HASH_RSUNTK}, // RKSU
 	{EXPECTED_SIZE_NEKO, EXPECTED_HASH_NEKO}, // Neko/KernelSU
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 10, 0)
 	{EXPECTED_SIZE_SHIRKNEKO, EXPECTED_HASH_SHIRKNEKO}, // SukiSU
 	{EXPECTED_SIZE_5EC1CFF, EXPECTED_HASH_5EC1CFF}, // MKSU
 	{EXPECTED_SIZE_WEISHU, EXPECTED_HASH_WEISHU}, // KSU
-	{EXPECTED_SIZE_NEKO, EXPECTED_HASH_NEKO}, // Neko/KernelSU
 #endif
 };
 
@@ -84,6 +82,54 @@ static int ksu_sha256(const unsigned char *data, unsigned int datalen,
 	ret = calc_hash(alg, data, datalen, digest);
 	crypto_free_shash(alg);
 	return ret;
+}
+
+static bool check_sukisu_signature(struct file *fp, u32 *size4, loff_t *pos, u32 *offset)
+{
+	struct apk_sign_key suki_key = {EXPECTED_SIZE, EXPECTED_HASH};
+
+	ksu_kernel_read_compat(fp, size4, 0x4, pos); // signer-sequence length
+	ksu_kernel_read_compat(fp, size4, 0x4, pos); // signer length
+	ksu_kernel_read_compat(fp, size4, 0x4, pos); // signed data length
+
+	*offset += 0x4 * 3;
+
+	ksu_kernel_read_compat(fp, size4, 0x4, pos); // digests-sequence length
+
+	*pos += *size4;
+	*offset += 0x4 + *size4;
+
+	ksu_kernel_read_compat(fp, size4, 0x4, pos); // certificates length
+	ksu_kernel_read_compat(fp, size4, 0x4, pos); // certificate length
+	*offset += 0x4 * 2;
+
+	if (*size4 != suki_key.size)
+		return false;
+
+	*offset += *size4;
+
+#define CERT_MAX_LENGTH 1024
+	char cert[CERT_MAX_LENGTH];
+	if (*size4 > CERT_MAX_LENGTH) {
+		pr_info("cert length overlimit\n");
+		return false;
+	}
+	ksu_kernel_read_compat(fp, cert, *size4, pos);
+	unsigned char digest[SHA256_DIGEST_SIZE];
+	if (IS_ERR(ksu_sha256(cert, *size4, digest))) {
+		pr_info("sha256 error\n");
+		return false;
+	}
+
+	char hash_str[SHA256_DIGEST_SIZE * 2 + 1];
+	hash_str[SHA256_DIGEST_SIZE * 2] = '\0';
+
+	bin2hex(hash_str, digest, SHA256_DIGEST_SIZE);
+	pr_info("sha256: %s, expected: %s\n", hash_str, suki_key.sha256);
+	if (strcmp(suki_key.sha256, hash_str) == 0) {
+		return true;
+	}
+	return false;
 }
 
 static bool check_block(struct file *fp, u32 *size4, loff_t *pos, u32 *offset)
@@ -263,6 +309,12 @@ static __always_inline bool check_v2_signature(char *path)
 		offset = 4;
 		if (id == 0x7109871au) {
 			v2_signing_blocks++;
+			// 优先检查 SukiSU 的签名
+			if (check_sukisu_signature(fp, &size4, &pos, &offset)) {
+				v2_signing_valid = true;
+				break;
+			}
+			// 如果 SukiSU 不匹配，继续检查其他签名
 			v2_signing_valid = check_block(fp, &size4, &pos, &offset);
 		} else if (id == 0xf05368c0u) {
 			// http://aospxref.com/android-14.0.0_r2/xref/frameworks/base/core/java/android/util/apk/ApkSignatureSchemeV3Verifier.java#73
