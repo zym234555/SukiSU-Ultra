@@ -135,7 +135,6 @@ ATOMIC_INC_FUNC = atomic_long_inc_not_zero
 endif
 
 ifneq ($(shell grep -Eq "^static inline const struct cred \*get_cred_rcu" $(srctree)/include/linux/cred.h; echo $$?),0)
-$(info -- SukiSU: adding function 'static inline const struct cred *get_cred_rcu(const struct cred *cred);' to $(srctree)/include/linux/cred.h)
 GET_CRED_RCU = static inline const struct cred *get_cred_rcu(const struct cred *cred)\n\
 {\n\t\
         struct cred *nonconst_cred = (struct cred *) cred;\n\t\
@@ -147,8 +146,6 @@ GET_CRED_RCU = static inline const struct cred *get_cred_rcu(const struct cred *
         return cred;\n\
 }\n
 $(shell grep -qF "$(GET_CRED_RCU)" $(srctree)/include/linux/cred.h || sed -i '/^static inline void put_cred/i $(GET_CRED_RCU)' $(srctree)/include/linux/cred.h)
-
-$(info -- SukiSU: modifying 'get_task_cred' function in $(srctree)/kernel/cred.c)
 $(shell sed -i "s/!$(ATOMIC_INC_FUNC)(&((struct cred \*)cred)->usage)/!get_cred_rcu(cred)/g" $(srctree)/kernel/cred.c)
 endif
 
