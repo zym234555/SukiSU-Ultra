@@ -11,14 +11,16 @@ kernelsu-objs += kernel_compat.o
 kernelsu-objs += selinux/selinux.o
 kernelsu-objs += selinux/sepolicy.o
 kernelsu-objs += selinux/rules.o
-ccflags-y += -Wno-implicit-function-declaration -Wno-strict-prototypes -Wno-int-conversion
-ccflags-y += -Wno-declaration-after-statement -Wno-unused-function
+
 ccflags-y += -I$(srctree)/security/selinux -I$(srctree)/security/selinux/include
 ccflags-y += -I$(objtree)/security/selinux -include $(srctree)/include/uapi/asm-generic/errno.h
 
-obj-$(CONFIG_KPM) += kpm/
+ccflags-y += -Wno-implicit-function-declaration -Wno-strict-prototypes -Wno-int-conversion
+ccflags-y += -Wno-declaration-after-statement -Wno-unused-function
 
 obj-$(CONFIG_KSU) += kernelsu.o
+
+obj-$(CONFIG_KPM) += kpm/
 
 # Do checks before compile
 ifneq ($(shell grep -q "int path_umount" $(srctree)/fs/namespace.c; echo $$?),0)
