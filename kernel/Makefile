@@ -127,20 +127,12 @@ ifeq ($(shell grep -q "CONFIG_KDP_CRED" $(srctree)/kernel/cred.c; echo $$?),0)
 ccflags-y += -DSAMSUNG_UH_DRIVER_EXIST
 endif
 
-
-BackPort := $(strip $(shell \
-    if [ "$(VERSION)" -ge "5" -a "$(PATCHLEVEL)" -ge "10" ]; then \
-      echo FALSE; \
-    else \
-      echo TRUE; \
-    fi \
-))
-ifeq ($(BackPort),FALSE)
+# 处理自动backport
+ifeq ($(IS_GKI),FALSE)
 ccflags-y += -DKSU_COMPAT_GET_CRED_RCU
 
 ccflags-y += -DKSU_UMOUNT
 
-# Determine the appropriate atomic function and apply patch accordingly
 ifeq ($(shell grep -q "atomic_inc_not_zero" $(srctree)/kernel/cred.c; echo $$?),0)
 ATOMIC_INC_FUNC = atomic_inc_not_zero
 else ifeq ($(shell grep -q "atomic_long_inc_not_zero" $(srctree)/kernel/cred.c; echo $$?),0)
@@ -149,10 +141,8 @@ else
 $(info -- SukiSU: Neither atomic_inc_not_zero nor atomic_long_inc_not_zero found in kernel/cred.c)
 endif
 
-# Inform which function is being patched
 $(info -- SukiSU: Using $(ATOMIC_INC_FUNC) in get_cred_rcu patch.)
 
-# Add the get_cred_rcu function to cred.h if not already present
 ifneq ($(shell grep -Eq "^static inline const struct cred \*get_cred_rcu" $(srctree)/include/linux/cred.h; echo $$?),0)
 $(info -- SukiSU: adding function 'static inline const struct cred *get_cred_rcu(const struct cred *cred);' to $(srctree)/include/linux/cred.h)
 GET_CRED_RCU = static inline const struct cred *get_cred_rcu(const struct cred *cred)\n\
@@ -167,7 +157,6 @@ GET_CRED_RCU = static inline const struct cred *get_cred_rcu(const struct cred *
 }\n
 $(shell grep -qF "$(GET_CRED_RCU)" $(srctree)/include/linux/cred.h || sed -i '/^static inline void put_cred/i $(GET_CRED_RCU)' $(srctree)/include/linux/cred.h)
 
-# Modify get_task_cred in cred.c
 $(info -- SukiSU: modifying 'get_task_cred' function in $(srctree)/kernel/cred.c)
 $(shell sed -i "s/!$(ATOMIC_INC_FUNC)(&((struct cred \*)cred)->usage)/!get_cred_rcu(cred)/g" $(srctree)/kernel/cred.c)
 endif
