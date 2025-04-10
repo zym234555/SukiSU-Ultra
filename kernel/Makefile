@@ -93,7 +93,7 @@ ATOMIC_INC_FUNC = atomic_inc_not_zero
 else ifeq ($(shell grep -q "atomic_long_inc_not_zero" $(srctree)/kernel/cred.c; echo $$?),0)
 ATOMIC_INC_FUNC = atomic_long_inc_not_zero
 else
-$(info -- KSU_SUSFS: Neither atomic_inc_not_zero nor atomic_long_inc_not_zero found in kernel/cred.c)
+$(info -- SukiSU_SUSFS: Neither atomic_inc_not_zero nor atomic_long_inc_not_zero found in kernel/cred.c)
 endif
 
 # 写入签名
@@ -142,7 +142,7 @@ endif
 
 # 添加 get_cred_rcu 函数
 ifneq ($(shell grep -Eq "^static inline const struct cred \*get_cred_rcu" $(srctree)/include/linux/cred.h; echo $$?),0)
-$(info -- KSU_SUSFS: adding function 'static inline const struct cred *get_cred_rcu();' to $(srctree)/include/linux/cred.h)
+$(info -- SukiSU_SUSFS: adding function 'static inline const struct cred *get_cred_rcu();' to $(srctree)/include/linux/cred.h)
 GET_CRED_RCU = static inline const struct cred *get_cred_rcu(const struct cred *cred)\n\
 {\n\t\
         struct cred *nonconst_cred = (struct cred *) cred;\n\t\
@@ -160,7 +160,7 @@ endif
 
 # 添加 can_umount 函数
 ifneq ($(shell grep -Eq "^static int can_umount" $(srctree)/fs/namespace.c; echo $$?),0)
-$(info -- KSU_SUSFS: adding function 'static int can_umount(const struct path *path, int flags);' to $(srctree)/fs/namespace.c)
+$(info -- SukiSU_SUSFS: adding function 'static int can_umount(const struct path *path, int flags);' to $(srctree)/fs/namespace.c)
 CAN_UMOUNT = static int can_umount(const struct path *path, int flags)\n\
 {\n\t\
         struct mount *mnt = real_mount(path->mnt);\n\t\
@@ -184,7 +184,7 @@ endif
 
 # 添加 path_umount 函数
 ifneq ($(shell grep -Eq "^int path_umount" $(srctree)/fs/namespace.c; echo $$?),0)
-$(info -- KSU_SUSFS: adding function 'int path_umount(struct path *path, int flags);' to $(srctree)/fs/namespace.c)
+$(info -- SukiSU_SUSFS: adding function 'int path_umount(struct path *path, int flags);' to $(srctree)/fs/namespace.c)
 PATH_UMOUNT = int path_umount(struct path *path, int flags)\n\
 {\n\t\
         struct mount *mnt = real_mount(path->mnt);\n\t\
@@ -202,7 +202,7 @@ endif
 
 # 添加 path_umount 声明到 fs/internal.h
 ifneq ($(shell grep -Eq "^int path_umount" $(srctree)/fs/internal.h; echo $$?),0)
-$(info -- KSU_SUSFS: adding 'int path_umount(struct path *path, int flags);' to $(srctree)/fs/internal.h)
+$(info -- SukiSU_SUSFS: adding 'int path_umount(struct path *path, int flags);' to $(srctree)/fs/internal.h)
 $(shell printf "\nint path_umount(struct path *path, int flags);\n" >> $(srctree)/fs/internal.h)
 endif
 
