@@ -130,8 +130,8 @@ endif
 # 处理自动backport
 ifeq ($(IS_GKI),FALSE)
 ccflags-y += -DKSU_COMPAT_GET_CRED_RCU
-
 ccflags-y += -DKSU_UMOUNT
+endif
 
 ifeq ($(shell grep -q "atomic_inc_not_zero" $(srctree)/kernel/cred.c; echo $$?),0)
 ATOMIC_INC_FUNC = atomic_inc_not_zero
@@ -260,7 +260,6 @@ endif
 ifneq ($(shell grep -Eq "^int path_umount" $(srctree)/fs/internal.h; echo $$?),0)
 $(shell sed -i '/^extern void __init mnt_init/a int path_umount(struct path *path, int flags);' $(srctree)/fs/internal.h;)
 $(info -- KSU_SUSFS: adding 'int path_umount(struct path *path, int flags);' to $(srctree)/fs/internal.h)
-endif
 endif
 
 ## For susfs stuff ##
