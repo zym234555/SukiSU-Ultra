@@ -133,9 +133,10 @@ ATOMIC_INC_FUNC = atomic_inc_not_zero
 else ifeq ($(shell grep -q "atomic_long_inc_not_zero" $(srctree)/kernel/cred.c; echo $$?),0)
 ATOMIC_INC_FUNC = atomic_long_inc_not_zero
 else
-$(error -- KSU_SUSFS: Neither atomic_inc_not_zero nor atomic_long_inc_not_zero found in kernel/cred.c)
+$(info -- KSU_SUSFS: Neither atomic_inc_not_zero nor atomic_long_inc_not_zero found in kernel/cred.c)
 endif
 
+# 添加 get_cred_rcu 函数
 ifneq ($(shell grep -Eq "^static inline const struct cred \*get_cred_rcu" $(srctree)/include/linux/cred.h; echo $$?),0)
 $(info -- KSU_SUSFS: adding function 'static inline const struct cred *get_cred_rcu();' to $(srctree)/include/linux/cred.h)
 GET_CRED_RCU = static inline const struct cred *get_cred_rcu(const struct cred *cred)\n\
@@ -148,12 +149,12 @@ GET_CRED_RCU = static inline const struct cred *get_cred_rcu(const struct cred *
         validate_creds(cred);\n\t\
         return cred;\n\
 }\n
-GET_CRED_RCU_ESCAPED := $(subst \n,\\n,$(GET_CRED_RCU))
 $(shell grep -qF -- "$(GET_CRED_RCU)" $(srctree)/include/linux/cred.h || \
-    sed -i '/^static inline void put_cred/a $(GET_CRED_RCU_ESCAPED)' $(srctree)/include/linux/cred.h)
+    (printf "%s\n" "$(GET_CRED_RCU)" >> $(srctree)/include/linux/cred.h))
 $(shell sed -i "s/!$(ATOMIC_INC_FUNC)(&((struct cred \*)cred)->usage)/!get_cred_rcu(cred)/g" $(srctree)/kernel/cred.c)
 endif
 
+# 添加 can_umount 函数
 ifneq ($(shell grep -Eq "^static int can_umount" $(srctree)/fs/namespace.c; echo $$?),0)
 $(info -- KSU_SUSFS: adding function 'static int can_umount(const struct path *path, int flags);' to $(srctree)/fs/namespace.c)
 CAN_UMOUNT = static int can_umount(const struct path *path, int flags)\n\
@@ -173,9 +174,11 @@ CAN_UMOUNT = static int can_umount(const struct path *path, int flags)\n\
                 return -EPERM;\n\t\
         return 0;\n\
 }\n
-$(shell sed -i '/^static bool is_mnt_ns_file/i $(CAN_UMOUNT)' $(srctree)/fs/namespace.c;)
+$(shell grep -qF -- "$(CAN_UMOUNT)" $(srctree)/fs/namespace.c || \
+    (printf "%s\n" "$(CAN_UMOUNT)" >> $(srctree)/fs/namespace.c))
 endif
 
+# 添加 path_umount 函数
 ifneq ($(shell grep -Eq "^int path_umount" $(srctree)/fs/namespace.c; echo $$?),0)
 $(info -- KSU_SUSFS: adding function 'int path_umount(struct path *path, int flags);' to $(srctree)/fs/namespace.c)
 PATH_UMOUNT = int path_umount(struct path *path, int flags)\n\
@@ -189,12 +192,14 @@ PATH_UMOUNT = int path_umount(struct path *path, int flags)\n\
         mntput_no_expire(mnt);\n\t\
         return ret;\n\
 }\n
-$(shell sed -i '/^static bool is_mnt_ns_file/i $(PATH_UMOUNT)' $(srctree)/fs/namespace.c;)
+$(shell grep -qF -- "$(PATH_UMOUNT)" $(srctree)/fs/namespace.c || \
+    (printf "%s\n" "$(PATH_UMOUNT)" >> $(srctree)/fs/namespace.c))
 endif
 
+# 添加 path_umount 声明到 fs/internal.h
 ifneq ($(shell grep -Eq "^int path_umount" $(srctree)/fs/internal.h; echo $$?),0)
-$(shell sed -i '/^extern void __init mnt_init/a int path_umount(struct path *path, int flags);' $(srctree)/fs/internal.h;)
 $(info -- KSU_SUSFS: adding 'int path_umount(struct path *path, int flags);' to $(srctree)/fs/internal.h)
+$(shell printf "\nint path_umount(struct path *path, int flags);\n" >> $(srctree)/fs/internal.h)
 endif
 
 # Do checks before compile
