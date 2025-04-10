@@ -85,6 +85,17 @@ else
 $(info -- KPM is disabled)
 endif
 
+# 检查原子函数
+ifeq ($(shell grep -q "atomic_inc_not_zero" $(srctree)/kernel/cred.c; echo $$?),0)
+ATOMIC_INC_FUNC = atomic_inc_not_zero
+else ifeq ($(shell grep -q "atomic_long_inc_not_zero" $(srctree)/kernel/cred.c; echo $$?),0)
+ATOMIC_INC_FUNC = atomic_long_inc_not_zero
+else
+$(info -- SukiSU: Neither atomic_inc_not_zero nor atomic_long_inc_not_zero found in kernel/cred.c)
+endif
+
+$(info -- SukiSU: Using $(ATOMIC_INC_FUNC) in get_cred_rcu patch.)
+
 ccflags-y += -DEXPECTED_SIZE=$(KSU_EXPECTED_SIZE)
 ccflags-y += -DEXPECTED_HASH=\"$(KSU_EXPECTED_HASH)\"
 
@@ -132,16 +143,6 @@ ifeq ($(IS_GKI),FALSE)
 ccflags-y += -DKSU_COMPAT_GET_CRED_RCU
 ccflags-y += -DKSU_UMOUNT
 endif
-
-ifeq ($(shell grep -q "atomic_inc_not_zero" $(srctree)/kernel/cred.c; echo $$?),0)
-ATOMIC_INC_FUNC = atomic_inc_not_zero
-else ifeq ($(shell grep -q "atomic_long_inc_not_zero" $(srctree)/kernel/cred.c; echo $$?),0)
-ATOMIC_INC_FUNC = atomic_long_inc_not_zero
-else
-$(info -- SukiSU: Neither atomic_inc_not_zero nor atomic_long_inc_not_zero found in kernel/cred.c)
-endif
-
-$(info -- SukiSU: Using $(ATOMIC_INC_FUNC) in get_cred_rcu patch.)
 
 ifneq ($(shell grep -Eq "^static inline const struct cred \*get_cred_rcu" $(srctree)/include/linux/cred.h; echo $$?),0)
 $(info -- SukiSU: adding function 'static inline const struct cred *get_cred_rcu(const struct cred *cred);' to $(srctree)/include/linux/cred.h)
