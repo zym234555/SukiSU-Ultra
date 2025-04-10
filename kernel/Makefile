@@ -136,49 +136,26 @@ BackPort := $(strip $(shell \
     fi \
 ))
 ifeq ($(BackPort),FALSE)
-define check_file_exists
-    if [ ! -f $(1) ]; then \
-        echo "-- SukiSU: Error: File '$(1)' does not exist"; \
-        exit 1; \
-    fi
-endef
+ccflags-y += -DKSU_COMPAT_GET_CRED_RCU
 
-define check_function_exists
-    $(call check_file_exists, $(1))
-    grep -Pq '^\s*static\s+inline\s+const\s+struct\s+cred\s+\*\s+get_cred_rcu\s*\(' $(1)
-endef
+ccflags-y += -DKSU_UMOUNT
 
-define check_code_block
-    $(call check_file_exists, $(1))
-    grep -Fq "$(2)" $(1)
-endef
-
-
-define insert_code_block
-    $(call check_file_exists, $(1))
-    $(call backup_file, $(1))
-    if ! $(call check_code_block, $(1), $(2)); then \
-        echo "-- SukiSU: Inserting code block into $(1)"; \
-        sed -i '/^$(3)/i $(2)' $(1); \
-    else \
-        echo "-- SukiSU: Code block already exists in $(1), skipping"; \
-    fi
-endef
-
-# 检测原子函数
-ifeq ($(shell grep -E 'atomic_inc_not_zero|atomic_long_inc_not_zero' $(srctree)/kernel/cred.c | head -1 | cut -d' ' -f1), atomic_inc_not_zero)
-    ATOMIC_INC_FUNC := atomic_inc_not_zero
-else ifeq ($(shell grep -E 'atomic_inc_not_zero|atomic_long_inc_not_zero' $(srctree)/kernel/cred.c | head -1 | cut -d' ' -f1), atomic_long_inc_not_zero)
-    ATOMIC_INC_FUNC := atomic_long_inc_not_zero
+# Determine the appropriate atomic function and apply patch accordingly
+ifeq ($(shell grep -q "atomic_inc_not_zero" $(srctree)/kernel/cred.c; echo $$?),0)
+ATOMIC_INC_FUNC = atomic_inc_not_zero
+else ifeq ($(shell grep -q "atomic_long_inc_not_zero" $(srctree)/kernel/cred.c; echo $$?),0)
+ATOMIC_INC_FUNC = atomic_long_inc_not_zero
 else
-    $(info -- SukiSU: Neither atomic_inc_not_zero nor atomic_long_inc_not_zero found in kernel/cred.c)
-    $(error Aborting due to unsupported atomic function)
+$(info -- SukiSU: Neither atomic_inc_not_zero nor atomic_long_inc_not_zero found in kernel/cred.c)
 endif
 
+# Inform which function is being patched
 $(info -- SukiSU: Using $(ATOMIC_INC_FUNC) in get_cred_rcu patch.)
 
-# 定义get_cred_rcu函数
-GET_CRED_RCU := static inline const struct cred *get_cred_rcu(const struct cred *cred)\n\
+# Add the get_cred_rcu function to cred.h if not already present
+ifneq ($(shell grep -Eq "^static inline const struct cred \*get_cred_rcu" $(srctree)/include/linux/cred.h; echo $$?),0)
+$(info -- SukiSU: adding function 'static inline const struct cred *get_cred_rcu(const struct cred *cred);' to $(srctree)/include/linux/cred.h)
+GET_CRED_RCU = static inline const struct cred *get_cred_rcu(const struct cred *cred)\n\
 {\n\t\
         struct cred *nonconst_cred = (struct cred *) cred;\n\t\
         if (!cred)\n\t\t\
@@ -188,19 +165,16 @@ GET_CRED_RCU := static inline const struct cred *get_cred_rcu(const struct cred 
         validate_creds(cred);\n\t\
         return cred;\n\
 }\n
+$(shell grep -qF "$(GET_CRED_RCU)" $(srctree)/include/linux/cred.h || sed -i '/^static inline void put_cred/i $(GET_CRED_RCU)' $(srctree)/include/linux/cred.h)
 
-# 插入get_cred_rcu函数
-ifneq ($(shell $(call check_function_exists, $(srctree)/include/linux/cred.h); echo $$?),0)
-    $(info -- SukiSU: Adding function 'get_cred_rcu' to $(srctree)/include/linux/cred.h)
-    $(call insert_code_block, $(srctree)/include/linux/cred.h, $(GET_CRED_RCU), static inline void put_cred)
+# Modify get_task_cred in cred.c
+$(info -- SukiSU: modifying 'get_task_cred' function in $(srctree)/kernel/cred.c)
+$(shell sed -i "s/!$(ATOMIC_INC_FUNC)(&((struct cred \*)cred)->usage)/!get_cred_rcu(cred)/g" $(srctree)/kernel/cred.c)
 endif
 
-# 修改get_task_cred函数
-$(info -- SukiSU: Modifying 'get_task_cred' function in $(srctree)/kernel/cred.c)
-$(shell sed -i "s/!$(ATOMIC_INC_FUNC)(&((struct cred \*)cred)->usage)/!get_cred_rcu(cred)/g" $(srctree)/kernel/cred.c)
-
-# 定义can_umount函数
-CAN_UMOUNT := static int can_umount(const struct path *path, int flags)\n\
+ifneq ($(shell grep -Eq "^static int can_umount" $(srctree)/fs/namespace.c; echo $$?),0)
+$(info -- SukiSU: adding function 'static int can_umount(const struct path *path, int flags);' to $(srctree)/fs/namespace.c)
+CAN_UMOUNT = static int can_umount(const struct path *path, int flags)\n\
 {\n\t\
         struct mount *mnt = real_mount(path->mnt);\n\t\
         if (flags & ~(MNT_FORCE | MNT_DETACH | MNT_EXPIRE | UMOUNT_NOFOLLOW))\n\t\t\
@@ -217,15 +191,12 @@ CAN_UMOUNT := static int can_umount(const struct path *path, int flags)\n\
                 return -EPERM;\n\t\
         return 0;\n\
 }\n
-
-# 插入can_umount函数
-ifneq ($(shell grep -Pq '^\s*static\s+int\s+can_umount\s*\(' $(srctree)/fs/namespace.c; echo $$?),0)
-    $(info -- SukiSU: Adding function 'can_umount' to $(srctree)/fs/namespace.c)
-    $(call insert_code_block, $(srctree)/fs/namespace.c, $(CAN_UMOUNT), static bool is_mnt_ns_file)
+$(shell sed -i '/^static bool is_mnt_ns_file/i $(CAN_UMOUNT)' $(srctree)/fs/namespace.c;)
 endif
 
-# 定义path_umount函数
-PATH_UMOUNT := int path_umount(struct path *path, int flags)\n\
+ifneq ($(shell grep -Eq "^int path_umount" $(srctree)/fs/namespace.c; echo $$?),0)
+$(info -- SukiSU: adding function 'int path_umount(struct path *path, int flags);' to $(srctree)/fs/namespace.c)
+PATH_UMOUNT = int path_umount(struct path *path, int flags)\n\
 {\n\t\
         struct mount *mnt = real_mount(path->mnt);\n\t\
         int ret;\n\t\
@@ -236,20 +207,71 @@ PATH_UMOUNT := int path_umount(struct path *path, int flags)\n\
         mntput_no_expire(mnt);\n\t\
         return ret;\n\
 }\n
-
-# 插入path_umount函数
-ifneq ($(shell grep -Pq '^\s*int\s+path_umount\s*\(' $(srctree)/fs/namespace.c; echo $$?),0)
-    $(info -- SukiSU: Adding function 'path_umount' to $(srctree)/fs/namespace.c)
-    $(call insert_code_block, $(srctree)/fs/namespace.c, $(PATH_UMOUNT), static bool is_mnt_ns_file)
+$(shell sed -i '/^static bool is_mnt_ns_file/i $(PATH_UMOUNT)' $(srctree)/fs/namespace.c;)
 endif
 
-# 插入path_umount声明
-ifneq ($(shell grep -Pq '^\s*int\s+path_umount\s*\(' $(srctree)/fs/internal.h; echo $$?),0)
-    $(info -- SukiSU: Adding 'path_umount' declaration to $(srctree)/fs/internal.h)
-    $(call insert_code_block, $(srctree)/fs/internal.h, "int path_umount(struct path *path, int flags);", extern void __init mnt_init)
+ifneq ($(shell grep -Eq "^int path_umount" $(srctree)/fs/internal.h; echo $$?),0)
+$(shell sed -i '/^extern void __init mnt_init/a int path_umount(struct path *path, int flags);' $(srctree)/fs/internal.h;)
+$(info -- SukiSU: adding 'int path_umount(struct path *path, int flags);' to $(srctree)/fs/internal.h)
 endif
 
-ccflags-y += -DKSU_UMOUNT
+ifneq ($(shell grep -Eq "get_cred_rcu" $(srctree)/include/linux/cred.h; echo $$?),0)
+$(info -- KSU_SUSFS: adding function 'static inline const struct cred *get_cred_rcu();' to $(srctree)/include/linux/cred.h)
+GET_CRED_RCU = static inline const struct cred *get_cred_rcu(const struct cred *cred)\n\
+{\n\t\
+	struct cred *nonconst_cred = (struct cred *) cred;\n\t\
+	if (!cred)\n\t\t\
+		return NULL;\n\t\
+	if (!atomic_inc_not_zero(&nonconst_cred->usage))\n\t\t\
+		return NULL;\n\t\
+	validate_creds(cred);\n\t\
+	return cred;\n\
+}\n
+$(shell sed -i '/^static inline void put_cred/i $(GET_CRED_RCU)' $(srctree)/include/linux/cred.h;)
+endif
+
+ifneq ($(shell grep -Eq "^static int can_umount" $(srctree)/fs/namespace.c; echo $$?),0)
+$(info -- KSU_SUSFS: adding function 'static int can_umount(const struct path *path, int flags);' to $(srctree)/fs/namespace.c)
+CAN_UMOUNT = static int can_umount(const struct path *path, int flags)\n\
+{\n\t\
+        struct mount *mnt = real_mount(path->mnt);\n\t\
+        if (flags & ~(MNT_FORCE | MNT_DETACH | MNT_EXPIRE | UMOUNT_NOFOLLOW))\n\t\t\
+                return -EINVAL;\n\t\
+        if (!may_mount())\n\t\t\
+                return -EPERM;\n\t\
+        if (path->dentry != path->mnt->mnt_root)\n\t\t\
+                return -EINVAL;\n\t\
+        if (!check_mnt(mnt))\n\t\t\
+                return -EINVAL;\n\t\
+        if (mnt->mnt.mnt_flags & MNT_LOCKED)\n\t\t\
+                return -EINVAL;\n\t\
+        if (flags & MNT_FORCE && !capable(CAP_SYS_ADMIN))\n\t\t\
+                return -EPERM;\n\t\
+        return 0;\n\
+}\n
+$(shell sed -i '/^static bool is_mnt_ns_file/i $(CAN_UMOUNT)' $(srctree)/fs/namespace.c;)
+endif
+
+ifneq ($(shell grep -Eq "^int path_umount" $(srctree)/fs/namespace.c; echo $$?),0)
+$(info -- KSU_SUSFS: adding function 'int path_umount(struct path *path, int flags);' to $(srctree)/fs/namespace.c)
+PATH_UMOUNT = int path_umount(struct path *path, int flags)\n\
+{\n\t\
+        struct mount *mnt = real_mount(path->mnt);\n\t\
+        int ret;\n\t\
+        ret = can_umount(path, flags);\n\t\
+        if (!ret)\n\t\t\
+                ret = do_umount(mnt, flags);\n\t\
+        dput(path->dentry);\n\t\
+        mntput_no_expire(mnt);\n\t\
+        return ret;\n\
+}\n
+$(shell sed -i '/^static bool is_mnt_ns_file/i $(PATH_UMOUNT)' $(srctree)/fs/namespace.c;)
+endif
+
+ifneq ($(shell grep -Eq "^int path_umount" $(srctree)/fs/internal.h; echo $$?),0)
+$(shell sed -i '/^extern void __init mnt_init/a int path_umount(struct path *path, int flags);' $(srctree)/fs/internal.h;)
+$(info -- KSU_SUSFS: adding 'int path_umount(struct path *path, int flags);' to $(srctree)/fs/internal.h)
+endif
 endif
 
 ## For susfs stuff ##
