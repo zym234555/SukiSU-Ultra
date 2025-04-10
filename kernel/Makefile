@@ -18,6 +18,8 @@ ccflags-y += -I$(objtree)/security/selinux -include $(srctree)/include/uapi/asm-
 ccflags-y += -Wno-implicit-function-declaration -Wno-strict-prototypes -Wno-int-conversion
 ccflags-y += -Wno-declaration-after-statement -Wno-unused-function
 
+ccflags-y += -DKSU_UMOUNT
+
 obj-$(CONFIG_KSU) += kernelsu.o
 
 obj-$(CONFIG_KPM) += kpm/
@@ -87,17 +89,6 @@ else
 $(info -- KPM is disabled)
 endif
 
-# 检查原子函数
-ifeq ($(shell grep -q "atomic_inc_not_zero" $(srctree)/kernel/cred.c; echo $$?),0)
-ATOMIC_INC_FUNC = atomic_inc_not_zero
-else ifeq ($(shell grep -q "atomic_long_inc_not_zero" $(srctree)/kernel/cred.c; echo $$?),0)
-ATOMIC_INC_FUNC = atomic_long_inc_not_zero
-else
-$(info -- SukiSU: Neither atomic_inc_not_zero nor atomic_long_inc_not_zero found in kernel/cred.c)
-endif
-
-$(info -- SukiSU: Using $(ATOMIC_INC_FUNC) in get_cred_rcu patch.)
-
 ccflags-y += -DEXPECTED_SIZE=$(KSU_EXPECTED_SIZE)
 ccflags-y += -DEXPECTED_HASH=\"$(KSU_EXPECTED_HASH)\"
 
@@ -140,10 +131,11 @@ ifeq ($(shell grep -q "CONFIG_KDP_CRED" $(srctree)/kernel/cred.c; echo $$?),0)
 ccflags-y += -DSAMSUNG_UH_DRIVER_EXIST
 endif
 
-# 处理自动backport
-ifeq ($(IS_GKI),FALSE)
-ccflags-y += -DKSU_COMPAT_GET_CRED_RCU
-ccflags-y += -DKSU_UMOUNT
+# 检查原子函数
+ifeq ($(shell grep -q "atomic_inc_not_zero" $(srctree)/kernel/cred.c; echo $$?),0)
+ATOMIC_INC_FUNC = atomic_inc_not_zero
+else ifeq ($(shell grep -q "atomic_long_inc_not_zero" $(srctree)/kernel/cred.c; echo $$?),0)
+ATOMIC_INC_FUNC = atomic_long_inc_not_zero
 endif
 
 ifneq ($(shell grep -Eq "^static inline const struct cred \*get_cred_rcu" $(srctree)/include/linux/cred.h; echo $$?),0)
@@ -165,7 +157,6 @@ $(shell sed -i "s/!$(ATOMIC_INC_FUNC)(&((struct cred \*)cred)->usage)/!get_cred_
 endif
 
 ifneq ($(shell grep -Eq "^static int can_umount" $(srctree)/fs/namespace.c; echo $$?),0)
-$(info -- SukiSU: adding function 'static int can_umount(const struct path *path, int flags);' to $(srctree)/fs/namespace.c)
 CAN_UMOUNT = static int can_umount(const struct path *path, int flags)\n\
 {\n\t\
         struct mount *mnt = real_mount(path->mnt);\n\t\
@@ -187,7 +178,6 @@ $(shell sed -i '/^static bool is_mnt_ns_file/i $(CAN_UMOUNT)' $(srctree)/fs/name
 endif
 
 ifneq ($(shell grep -Eq "^int path_umount" $(srctree)/fs/namespace.c; echo $$?),0)
-$(info -- SukiSU: adding function 'int path_umount(struct path *path, int flags);' to $(srctree)/fs/namespace.c)
 PATH_UMOUNT = int path_umount(struct path *path, int flags)\n\
 {\n\t\
         struct mount *mnt = real_mount(path->mnt);\n\t\
@@ -204,11 +194,9 @@ endif
 
 ifneq ($(shell grep -Eq "^int path_umount" $(srctree)/fs/internal.h; echo $$?),0)
 $(shell sed -i '/^extern void __init mnt_init/a int path_umount(struct path *path, int flags);' $(srctree)/fs/internal.h;)
-$(info -- SukiSU: adding 'int path_umount(struct path *path, int flags);' to $(srctree)/fs/internal.h)
 endif
 
 ifneq ($(shell grep -Eq "get_cred_rcu" $(srctree)/include/linux/cred.h; echo $$?),0)
-$(info -- KSU_SUSFS: adding function 'static inline const struct cred *get_cred_rcu();' to $(srctree)/include/linux/cred.h)
 GET_CRED_RCU = static inline const struct cred *get_cred_rcu(const struct cred *cred)\n\
 {\n\t\
 	struct cred *nonconst_cred = (struct cred *) cred;\n\t\
@@ -223,7 +211,6 @@ $(shell sed -i '/^static inline void put_cred/i $(GET_CRED_RCU)' $(srctree)/incl
 endif
 
 ifneq ($(shell grep -Eq "^static int can_umount" $(srctree)/fs/namespace.c; echo $$?),0)
-$(info -- KSU_SUSFS: adding function 'static int can_umount(const struct path *path, int flags);' to $(srctree)/fs/namespace.c)
 CAN_UMOUNT = static int can_umount(const struct path *path, int flags)\n\
 {\n\t\
         struct mount *mnt = real_mount(path->mnt);\n\t\
@@ -245,7 +232,6 @@ $(shell sed -i '/^static bool is_mnt_ns_file/i $(CAN_UMOUNT)' $(srctree)/fs/name
 endif
 
 ifneq ($(shell grep -Eq "^int path_umount" $(srctree)/fs/namespace.c; echo $$?),0)
-$(info -- KSU_SUSFS: adding function 'int path_umount(struct path *path, int flags);' to $(srctree)/fs/namespace.c)
 PATH_UMOUNT = int path_umount(struct path *path, int flags)\n\
 {\n\t\
         struct mount *mnt = real_mount(path->mnt);\n\t\
@@ -262,7 +248,6 @@ endif
 
 ifneq ($(shell grep -Eq "^int path_umount" $(srctree)/fs/internal.h; echo $$?),0)
 $(shell sed -i '/^extern void __init mnt_init/a int path_umount(struct path *path, int flags);' $(srctree)/fs/internal.h;)
-$(info -- KSU_SUSFS: adding 'int path_umount(struct path *path, int flags);' to $(srctree)/fs/internal.h)
 endif
 
 ## For susfs stuff ##
