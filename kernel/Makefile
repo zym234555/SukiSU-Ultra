@@ -18,8 +18,6 @@ ccflags-y += -I$(objtree)/security/selinux -include $(srctree)/include/uapi/asm-
 ccflags-y += -Wno-implicit-function-declaration -Wno-strict-prototypes -Wno-int-conversion
 ccflags-y += -Wno-declaration-after-statement -Wno-unused-function
 
-ccflags-y += -DKSU_UMOUNT
-
 obj-$(CONFIG_KSU) += kernelsu.o
 
 obj-$(CONFIG_KPM) += kpm/
@@ -35,13 +33,13 @@ IS_GKI := $(strip $(shell \
   ))
 
 ifeq ($(IS_GKI),TRUE)
-$(info -- KernelSU: Kernel version is GKI.)
+$(info -- SukiSU: Kernel version is GKI.)
 # GKI manual hook checks
 # https://github.com/Pzqqt/android_kernel_xiaomi_marble/commit/5b8596b5604bcd0e6e12697a01136a0bb9eb0257
 ifeq ($(strip $(CONFIG_KSU_MANUAL_HOOK)),y)
-$(info -- KernelSU: Hooks with Manual hook!)
+$(info -- SukiSU: Hooks with Manual hook!)
 ifeq ($(strip $(CONFIG_KSU)),m)
-$(error CONFIG_KSU_MANUAL_HOOK cannot be enabled when compiling KernelSU as LKM!)
+$(error CONFIG_KSU_MANUAL_HOOK cannot be enabled when compiling SukiSU as LKM!)
 endif
 else
 ccflags-y += -DKSU_HOOK_WITH_KPROBES
@@ -54,10 +52,10 @@ $(shell cd $(srctree)/$(src); /usr/bin/env PATH="$$PATH":/usr/bin:/usr/local/bin
 KSU_GIT_VERSION := $(shell cd $(srctree)/$(src); /usr/bin/env PATH="$$PATH":/usr/bin:/usr/local/bin git rev-list --count main)
 # ksu_version: major * 10000 + git version + 606 for historical reasons
 $(eval KSU_VERSION=$(shell expr 10000 + $(KSU_GIT_VERSION) + 606))
-$(info -- KernelSU version: $(KSU_VERSION))
+$(info -- SukiSU version: $(KSU_VERSION))
 ccflags-y += -DKSU_VERSION=$(KSU_VERSION)
 else # If there is no .git file, the default version will be passed.
-$(warning "KSU_GIT_VERSION not defined! It is better to make KernelSU a git submodule!")
+$(warning "KSU_GIT_VERSION not defined! It is better to make SukiSU a git submodule!")
 ccflags-y += -DKSU_VERSION=12500
 endif
 
@@ -71,11 +69,11 @@ endif
 
 ifdef KSU_MANAGER_PACKAGE
 ccflags-y += -DKSU_MANAGER_PACKAGE=\"$(KSU_MANAGER_PACKAGE)\"
-$(info -- KernelSU Manager package name: $(KSU_MANAGER_PACKAGE))
+$(info -- SukiSU Manager package name: $(KSU_MANAGER_PACKAGE))
 endif
 
-$(info -- KernelSU Manager signature size: $(KSU_EXPECTED_SIZE))
-$(info -- KernelSU Manager signature hash: $(KSU_EXPECTED_HASH))
+$(info -- SukiSU Manager signature size: $(KSU_EXPECTED_SIZE))
+$(info -- SukiSU Manager signature hash: $(KSU_EXPECTED_HASH))
 $(info -- Supported Unofficial Manager: 5ec1cff (GKI) rsuntk (Non-GKI) ShirkNeko udochina (GKI and non-GKI and KPM)) 
 KERNEL_VERSION := $(VERSION).$(PATCHLEVEL)
 
@@ -93,8 +91,11 @@ ATOMIC_INC_FUNC = atomic_inc_not_zero
 else ifeq ($(shell grep -q "atomic_long_inc_not_zero" $(srctree)/kernel/cred.c; echo $$?),0)
 ATOMIC_INC_FUNC = atomic_long_inc_not_zero
 else
-$(info -- SukiSU_SUSFS: Neither atomic_inc_not_zero nor atomic_long_inc_not_zero found in kernel/cred.c)
+$(info -- SukiSU compat: Neither atomic_inc_not_zero nor atomic_long_inc_not_zero found in kernel/cred.c)
 endif
+
+# Inform which function is being patched
+$(info -- SukiSU compat: Using $(ATOMIC_INC_FUNC) in get_cred_rcu patch.)
 
 # 写入签名
 ccflags-y += -DEXPECTED_SIZE=$(KSU_EXPECTED_SIZE)
@@ -139,11 +140,13 @@ ifeq ($(shell grep -q "CONFIG_KDP_CRED" $(srctree)/kernel/cred.c; echo $$?),0)
 ccflags-y += -DSAMSUNG_UH_DRIVER_EXIST
 endif
 
+ccflags-y += -DKSU_COMPAT_GET_CRED_RCU
+ccflags-y += -DKSU_UMOUNT
 
-# 添加 get_cred_rcu 函数
+# Add the get_cred_rcu function to cred.h if not already present
 ifneq ($(shell grep -Eq "^static inline const struct cred \*get_cred_rcu" $(srctree)/include/linux/cred.h; echo $$?),0)
-$(info -- SukiSU_SUSFS: adding function 'static inline const struct cred *get_cred_rcu();' to $(srctree)/include/linux/cred.h)
-GET_CRED_RCU = static inline const struct cred *get_cred_rcu(const struct cred *cred)\n\
+$(info -- SukiSU compat: adding function 'static inline const struct cred *get_cred_rcu(const struct cred *cred);' to $(srctree)/include/linux/cred.h)
++GET_CRED_RCU = static inline const struct cred *get_cred_rcu(const struct cred *cred)\n\
 {\n\t\
         struct cred *nonconst_cred = (struct cred *) cred;\n\t\
         if (!cred)\n\t\t\
@@ -153,14 +156,15 @@ GET_CRED_RCU = static inline const struct cred *get_cred_rcu(const struct cred *
         validate_creds(cred);\n\t\
         return cred;\n\
 }\n
-$(shell grep -qF -- "$(GET_CRED_RCU)" $(srctree)/include/linux/cred.h || \
-    (printf "%s\n" "$(GET_CRED_RCU)" >> $(srctree)/include/linux/cred.h))
+$(shell grep -qF "$(GET_CRED_RCU)" $(srctree)/include/linux/cred.h || sed -i '/^static inline void put_cred/i $(GET_CRED_RCU)' $(srctree)/include/linux/cred.h)
+
+# Modify get_task_cred in cred.c
+$(info -- SukiSU compat: modifying 'get_task_cred' function in $(srctree)/kernel/cred.c)
 $(shell sed -i "s/!$(ATOMIC_INC_FUNC)(&((struct cred \*)cred)->usage)/!get_cred_rcu(cred)/g" $(srctree)/kernel/cred.c)
 endif
 
-# 添加 can_umount 函数
 ifneq ($(shell grep -Eq "^static int can_umount" $(srctree)/fs/namespace.c; echo $$?),0)
-$(info -- SukiSU_SUSFS: adding function 'static int can_umount(const struct path *path, int flags);' to $(srctree)/fs/namespace.c)
+$(info -- SukiSU compat: adding function 'static int can_umount(const struct path *path, int flags);' to $(srctree)/fs/namespace.c)
 CAN_UMOUNT = static int can_umount(const struct path *path, int flags)\n\
 {\n\t\
         struct mount *mnt = real_mount(path->mnt);\n\t\
@@ -178,13 +182,11 @@ CAN_UMOUNT = static int can_umount(const struct path *path, int flags)\n\
                 return -EPERM;\n\t\
         return 0;\n\
 }\n
-$(shell grep -qF -- "$(CAN_UMOUNT)" $(srctree)/fs/namespace.c || \
-    (printf "%s\n" "$(CAN_UMOUNT)" >> $(srctree)/fs/namespace.c))
+$(shell sed -i '/^static bool is_mnt_ns_file/i $(CAN_UMOUNT)' $(srctree)/fs/namespace.c;)
 endif
 
-# 添加 path_umount 函数
 ifneq ($(shell grep -Eq "^int path_umount" $(srctree)/fs/namespace.c; echo $$?),0)
-$(info -- SukiSU_SUSFS: adding function 'int path_umount(struct path *path, int flags);' to $(srctree)/fs/namespace.c)
+$(info -- SukiSU compat: adding function 'int path_umount(struct path *path, int flags);' to $(srctree)/fs/namespace.c)
 PATH_UMOUNT = int path_umount(struct path *path, int flags)\n\
 {\n\t\
         struct mount *mnt = real_mount(path->mnt);\n\t\
@@ -196,19 +198,12 @@ PATH_UMOUNT = int path_umount(struct path *path, int flags)\n\
         mntput_no_expire(mnt);\n\t\
         return ret;\n\
 }\n
-$(shell grep -qF -- "$(PATH_UMOUNT)" $(srctree)/fs/namespace.c || \
-    (printf "%s\n" "$(PATH_UMOUNT)" >> $(srctree)/fs/namespace.c))
+$(shell sed -i '/^static bool is_mnt_ns_file/i $(PATH_UMOUNT)' $(srctree)/fs/namespace.c;)
 endif
 
-# 添加 path_umount 声明到 fs/internal.h
 ifneq ($(shell grep -Eq "^int path_umount" $(srctree)/fs/internal.h; echo $$?),0)
-$(info -- SukiSU_SUSFS: adding 'int path_umount(struct path *path, int flags);' to $(srctree)/fs/internal.h)
-$(shell printf "\nint path_umount(struct path *path, int flags);\n" >> $(srctree)/fs/internal.h)
-endif
-
-# Do checks before compile
-ifneq ($(shell grep -q "int path_umount" $(srctree)/fs/namespace.c; echo $$?),0)
-$(error -- Backporting path_umount is mandatory !! Read: https://kernelsu.org/guide/how-to-integrate-for-non-gki.html#how-to-backport-path-umount)
+$(shell sed -i '/^extern void __init mnt_init/a int path_umount(struct path *path, int flags);' $(srctree)/fs/internal.h;)
+$(info -- SukiSU compat: adding 'int path_umount(struct path *path, int flags);' to $(srctree)/fs/internal.h)
 endif
 
 
