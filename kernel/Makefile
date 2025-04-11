@@ -140,7 +140,6 @@ ifeq ($(shell grep -q "CONFIG_KDP_CRED" $(srctree)/kernel/cred.c; echo $$?),0)
 ccflags-y += -DSAMSUNG_UH_DRIVER_EXIST
 endif
 
-ccflags-y += -DKSU_COMPAT_GET_CRED_RCU
 ccflags-y += -DKSU_UMOUNT
 
 # Add the get_cred_rcu function to cred.h if not already present
@@ -204,6 +203,14 @@ endif
 ifneq ($(shell grep -Eq "^int path_umount" $(srctree)/fs/internal.h; echo $$?),0)
 $(shell sed -i '/^extern void __init mnt_init/a int path_umount(struct path *path, int flags);' $(srctree)/fs/internal.h;)
 $(info -- SukiSU compat: adding 'int path_umount(struct path *path, int flags);' to $(srctree)/fs/internal.h)
+endif
+
+# Do checks before compile
+ifeq ($(shell grep -q "int\s\+\path_umount" $(srctree)/fs/namespace.c; echo $$?),0)
+$(info -- SukiSU: checks ok. Found path_umount)
+else
+$(info -- SukiSU: checks failed, abort.)
+$(error -- Backporting path_umount is mandatory !! Read: https://kernelsu.org/guide/how-to-integrate-for-non-gki.html#how-to-backport-path-umount)
 endif
 
 
