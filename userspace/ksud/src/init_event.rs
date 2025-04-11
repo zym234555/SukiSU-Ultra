@@ -5,9 +5,12 @@ use anyhow::{Context, Result};
 use log::{info, warn};
 use rustix::fs::{MountFlags, mount};
 use std::path::Path;
+use crate::kpm;
 
 pub fn on_post_data_fs() -> Result<()> {
     ksucalls::report_post_fs_data();
+
+    kpm::start_kpm_watcher()?;
 
     utils::umask(0);
 
@@ -97,6 +100,13 @@ pub fn on_post_data_fs() -> Result<()> {
     }
 
     run_stage("post-mount", true);
+
+    for entry in std::fs::read_dir(kpm::KPM_DIR)? {
+        let path = entry?.path();
+        if path.extension().is_some_and(|ext| ext == "kpm") {
+            let _ = kpm::load_kpm(&path);
+        }
+    }
 
     Ok(())
 }
