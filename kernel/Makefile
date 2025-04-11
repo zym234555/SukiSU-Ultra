@@ -141,6 +141,7 @@ ccflags-y += -DSAMSUNG_UH_DRIVER_EXIST
 endif
 
 ccflags-y += -DKSU_UMOUNT
+ccflags-y += -DKSU_COMPAT_GET_CRED_RCU
 
 # Add the get_cred_rcu function to cred.h if not already present
 ifneq ($(shell grep -Eq "^static inline const struct cred \*get_cred_rcu" $(srctree)/include/linux/cred.h; echo $$?),0)
