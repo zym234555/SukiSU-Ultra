@@ -14,6 +14,7 @@ mod restorecon;
 mod sepolicy;
 mod su;
 mod utils;
+mod kpm;
 
 fn main() -> anyhow::Result<()> {
     cli::run()
