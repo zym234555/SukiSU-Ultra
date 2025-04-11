@@ -146,7 +146,7 @@ ccflags-y += -DKSU_COMPAT_GET_CRED_RCU
 # Add the get_cred_rcu function to cred.h if not already present
 ifneq ($(shell grep -Eq "^static inline const struct cred \*get_cred_rcu" $(srctree)/include/linux/cred.h; echo $$?),0)
 $(info -- SukiSU compat: adding function 'static inline const struct cred *get_cred_rcu(const struct cred *cred);' to $(srctree)/include/linux/cred.h)
-+GET_CRED_RCU = static inline const struct cred *get_cred_rcu(const struct cred *cred)\n\
+GET_CRED_RCU = static inline const struct cred *get_cred_rcu(const struct cred *cred)\n\
 {\n\t\
         struct cred *nonconst_cred = (struct cred *) cred;\n\t\
         if (!cred)\n\t\t\
