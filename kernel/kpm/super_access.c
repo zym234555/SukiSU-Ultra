@@ -67,6 +67,7 @@ struct DynamicStructInfo {
 
 // ==================================================================================
 
+#include <../fs/mount.h>
 #include <linux/mount.h>
 
 // 定义元数据
