@@ -68,7 +68,14 @@ struct DynamicStructInfo {
 
 #include <linux/version.h>
 
+
+#define KERNEL_VERSION_6_6 KERNEL_VERSION(6, 6, 0)
+
 #define KERNEL_VERSION_6_1 KERNEL_VERSION(6, 1, 0)
+
+#define KERNEL_VERSION_5_15 KERNEL_VERSION(5, 15, 0)
+
+#define KERNEL_VERSION_5_10 KERNEL_VERSION(5, 10, 0)
 
 #define KERNEL_VERSION_4_14 KERNEL_VERSION(4, 14, 0)
 
@@ -98,7 +105,7 @@ DYNAMIC_STRUCT_BEGIN(mnt_namespace)
     DEFINE_MEMBER(mnt_namespace, root)
     DEFINE_MEMBER(mnt_namespace, seq)
     DEFINE_MEMBER(mnt_namespace, mounts)
-#if LINUX_VERSION_CODE < KERNEL_VERSION_6_1
+#if LINUX_VERSION_CODE < KERNEL_VERSION_5_15
     DEFINE_MEMBER(mnt_namespace, count)
 #endif
 DYNAMIC_STRUCT_END(mnt_namespace)
@@ -112,10 +119,10 @@ DYNAMIC_STRUCT_BEGIN(kprobe)
     DEFINE_MEMBER(kprobe, offset)
     DEFINE_MEMBER(kprobe, pre_handler)
     DEFINE_MEMBER(kprobe, post_handler)
-#if LINUX_VERSION_CODE < KERNEL_VERSION_6_1
+#if LINUX_VERSION_CODE < KERNEL_VERSION_5_15
     DEFINE_MEMBER(kprobe, fault_handler)
 #endif
-#if LINUX_VERSION_CODE < KERNEL_VERSION_4_14
+#if LINUX_VERSION_CODE < KERNEL_VERSION_5_10
     DEFINE_MEMBER(kprobe, break_handler)
 #endif
     DEFINE_MEMBER(kprobe, flags)
