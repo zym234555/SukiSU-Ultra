@@ -68,7 +68,7 @@ struct DynamicStructInfo {
 
 #include <linux/version.h>
 
-#define KERNEL_VERSION_6_6 KERNEL_VERSION(6, 6, 0)
+#define KERNEL_VERSION_6_1 KERNEL_VERSION(6, 1, 0)
 
 
 #include <../fs/mount.h>
@@ -96,7 +96,7 @@ DYNAMIC_STRUCT_BEGIN(mnt_namespace)
     DEFINE_MEMBER(mnt_namespace, root)
     DEFINE_MEMBER(mnt_namespace, seq)
     DEFINE_MEMBER(mnt_namespace, mounts)
-#if LINUX_VERSION_CODE < KERNEL_VERSION_6_6
+#if LINUX_VERSION_CODE < KERNEL_VERSION_6_1
     DEFINE_MEMBER(mnt_namespace, count)
 #endif
 DYNAMIC_STRUCT_END(mnt_namespace)
@@ -110,7 +110,7 @@ DYNAMIC_STRUCT_BEGIN(kprobe)
     DEFINE_MEMBER(kprobe, offset)
     DEFINE_MEMBER(kprobe, pre_handler)
     DEFINE_MEMBER(kprobe, post_handler)
-#if LINUX_VERSION_CODE < KERNEL_VERSION_6_6
+#if LINUX_VERSION_CODE < KERNEL_VERSION_6_1
     DEFINE_MEMBER(kprobe, fault_handler)
 #endif
     DEFINE_MEMBER(kprobe, flags)
@@ -150,7 +150,7 @@ DYNAMIC_STRUCT_BEGIN(netlink_kernel_cfg)
     DEFINE_MEMBER(netlink_kernel_cfg, cb_mutex)
     DEFINE_MEMBER(netlink_kernel_cfg, bind)
     DEFINE_MEMBER(netlink_kernel_cfg, unbind)
-#if LINUX_VERSION_CODE < KERNEL_VERSION_6_6
+#if LINUX_VERSION_CODE < KERNEL_VERSION_6_1
     DEFINE_MEMBER(netlink_kernel_cfg, compare)
 #endif
 DYNAMIC_STRUCT_END(netlink_kernel_cfg)
