@@ -2,7 +2,6 @@
 #include <linux/module.h>
 #include <linux/kernel.h>
 #include <linux/fs.h>
-#include <linux/nsproxy.h>
 #include <linux/kernfs.h>
 #include <linux/file.h>
 #include <linux/slab.h>
