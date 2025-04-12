@@ -258,4 +258,5 @@
     <string name="confirm_uninstall_title">确认卸载</string>
     <string name="confirm_uninstall_confirm">删除</string>
     <string name="confirm_uninstall_dismiss">取消</string>
+    <string name="theme_color">主题颜色</string>
 </resources>
