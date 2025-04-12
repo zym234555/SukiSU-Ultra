@@ -26,7 +26,8 @@
 #include <linux/slab.h>
 #include "kpm.h"
 #include "compact.h"
-#include <stddef.h> // 需要包含 offsetof 宏
+#include <linux/types.h>
+#include <linux/stddef.h>
 
 // 结构体成员元数据
 struct DynamicStructMember {
@@ -156,7 +157,7 @@ struct DynamicStructInfo* dynamic_struct_infos[] = {
     STRUCT_INFO(vfsmount),
     STRUCT_INFO(mnt_namespace),
     #ifdef CONFIG_KPROBES
-        STRUCT_INFO(kprobe)
+        STRUCT_INFO(kprobe),
     #endif
     STRUCT_INFO(vm_area_struct),
     STRUCT_INFO(vm_operations_struct),
