@@ -115,9 +115,6 @@ DYNAMIC_STRUCT_BEGIN(kprobe)
 #if LINUX_VERSION_CODE < KERNEL_VERSION_5_15
     DEFINE_MEMBER(kprobe, fault_handler)
 #endif
-#if LINUX_VERSION_CODE < KERNEL_VERSION_4_14
-    DEFINE_MEMBER(kprobe, break_handler)
-#endif
     DEFINE_MEMBER(kprobe, flags)
 DYNAMIC_STRUCT_END(kprobe)
 #endif
