@@ -70,8 +70,6 @@ struct DynamicStructInfo {
 
 #define KERNEL_VERSION_6_1 KERNEL_VERSION(6, 1, 0)
 #define KERNEL_VERSION_5_15 KERNEL_VERSION(5, 15, 0)
-#define KERNEL_VERSION_4_14 KERNEL_VERSION(4, 14, 0)
-
 
 #include <../fs/mount.h>
 #include <linux/mount.h>
