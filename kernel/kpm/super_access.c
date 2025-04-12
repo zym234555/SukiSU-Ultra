@@ -105,7 +105,6 @@ DYNAMIC_STRUCT_BEGIN(kprobe)
     DEFINE_MEMBER(kprobe, pre_handler)
     DEFINE_MEMBER(kprobe, post_handler)
     DEFINE_MEMBER(kprobe, fault_handler)
-    DEFINE_MEMBER(kprobe, break_handler)
     DEFINE_MEMBER(kprobe, flags)
 DYNAMIC_STRUCT_END(kprobe)
 
