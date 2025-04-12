@@ -2,7 +2,6 @@
 #include <linux/module.h>
 #include <linux/kernel.h>
 #include <linux/fs.h>
-#include <linux/nsproxy.h>
 #include <linux/kernfs.h>
 #include <linux/file.h>
 #include <linux/slab.h>
@@ -67,6 +66,7 @@ struct DynamicStructInfo {
 
 // ==================================================================================
 
+#include <../fs/mount.h>
 #include <linux/mount.h>
 
 // 定义元数据
@@ -105,7 +105,6 @@ DYNAMIC_STRUCT_BEGIN(kprobe)
     DEFINE_MEMBER(kprobe, pre_handler)
     DEFINE_MEMBER(kprobe, post_handler)
     DEFINE_MEMBER(kprobe, fault_handler)
-    DEFINE_MEMBER(kprobe, break_handler)
     DEFINE_MEMBER(kprobe, flags)
 DYNAMIC_STRUCT_END(kprobe)
 
