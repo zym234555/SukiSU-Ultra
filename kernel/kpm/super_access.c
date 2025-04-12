@@ -26,7 +26,8 @@
 #include <linux/slab.h>
 #include "kpm.h"
 #include "compact.h"
-#include <stddef.h> // 需要包含 offsetof 宏
+#include <linux/types.h>
+#include <linux/stddef.h>
 
 // 结构体成员元数据
 struct DynamicStructMember {
@@ -65,7 +66,21 @@ struct DynamicStructInfo {
 
 // ==================================================================================
 
-#include <fs/mount.h>
+#include <linux/version.h>
+
+
+#define KERNEL_VERSION_6_6 KERNEL_VERSION(6, 6, 0)
+
+#define KERNEL_VERSION_6_1 KERNEL_VERSION(6, 1, 0)
+
+#define KERNEL_VERSION_5_15 KERNEL_VERSION(5, 15, 0)
+
+#define KERNEL_VERSION_5_10 KERNEL_VERSION(5, 10, 0)
+
+#define KERNEL_VERSION_4_14 KERNEL_VERSION(4, 14, 0)
+
+
+#include <../fs/mount.h>
 #include <linux/mount.h>
 
 // 定义元数据
@@ -86,28 +101,32 @@ DYNAMIC_STRUCT_BEGIN(vfsmount)
 DYNAMIC_STRUCT_END(vfsmount)
 
 DYNAMIC_STRUCT_BEGIN(mnt_namespace)
-    DEFINE_MEMBER(mnt_namespace, count)
     DEFINE_MEMBER(mnt_namespace, ns)
     DEFINE_MEMBER(mnt_namespace, root)
     DEFINE_MEMBER(mnt_namespace, seq)
     DEFINE_MEMBER(mnt_namespace, mounts)
+#if LINUX_VERSION_CODE < KERNEL_VERSION_5_15
+    DEFINE_MEMBER(mnt_namespace, count)
+#endif
 DYNAMIC_STRUCT_END(mnt_namespace)
 
 #include <linux/kprobes.h>
 
 #ifdef CONFIG_KPROBES
-
 DYNAMIC_STRUCT_BEGIN(kprobe)
     DEFINE_MEMBER(kprobe, addr)
     DEFINE_MEMBER(kprobe, symbol_name)
     DEFINE_MEMBER(kprobe, offset)
     DEFINE_MEMBER(kprobe, pre_handler)
     DEFINE_MEMBER(kprobe, post_handler)
+#if LINUX_VERSION_CODE < KERNEL_VERSION_5_15
     DEFINE_MEMBER(kprobe, fault_handler)
+#endif
+#if LINUX_VERSION_CODE < KERNEL_VERSION_5_10
     DEFINE_MEMBER(kprobe, break_handler)
+#endif
     DEFINE_MEMBER(kprobe, flags)
 DYNAMIC_STRUCT_END(kprobe)
-
 #endif
 
 #include <linux/mm.h>
@@ -143,7 +162,9 @@ DYNAMIC_STRUCT_BEGIN(netlink_kernel_cfg)
     DEFINE_MEMBER(netlink_kernel_cfg, cb_mutex)
     DEFINE_MEMBER(netlink_kernel_cfg, bind)
     DEFINE_MEMBER(netlink_kernel_cfg, unbind)
+#if LINUX_VERSION_CODE < KERNEL_VERSION_6_1
     DEFINE_MEMBER(netlink_kernel_cfg, compare)
+#endif
 DYNAMIC_STRUCT_END(netlink_kernel_cfg)
 
 // =====================================================================================================================
@@ -156,7 +177,7 @@ struct DynamicStructInfo* dynamic_struct_infos[] = {
     STRUCT_INFO(vfsmount),
     STRUCT_INFO(mnt_namespace),
     #ifdef CONFIG_KPROBES
-        STRUCT_INFO(kprobe)
+        STRUCT_INFO(kprobe),
     #endif
     STRUCT_INFO(vm_area_struct),
     STRUCT_INFO(vm_operations_struct),
