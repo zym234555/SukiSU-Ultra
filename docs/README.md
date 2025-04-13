@@ -28,15 +28,9 @@ curl -LSs "https://raw.githubusercontent.com/ShirkNeko/SukiSU-Ultra/main/kernel/
 curl -LSs "https://raw.githubusercontent.com/ShirkNeko/SukiSU-Ultra/main/kernel/setup.sh" | bash -s main
 ```
 
-
-使用 dev 分支 (带非GKI设备的支持)
-```
-curl -LSs "https://raw.githubusercontent.com/ShirkNeko/KernelSU/main/kernel/setup.sh" | bash -s dev
-```
 ## 如何集成 susfs
 
 1. 直接使用 susfs-stable 或者 susfs-dev 分支，不需要再集成 susfs
-2. 使用支持非GKI设备的 dev 分支, 手动补丁 susfs
 
 ## 钩子方法
 - 此部分引用自 [rsuntk 的钩子方法](https://github.com/rsuntk/KernelSU)

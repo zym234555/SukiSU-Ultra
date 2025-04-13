@@ -26,11 +26,6 @@ Use the main branch
 curl -LSs "https://raw.githubusercontent.com/ShirkNeko/KernelSU/main/kernel/setup.sh" | bash -s main
 ```
 
-Use dev branch（With support for non-GKI devices）
-```
-curl -LSs "https://raw.githubusercontent.com/ShirkNeko/KernelSU/main/kernel/setup.sh" | bash -s dev
-```
-
 ## How to use integrated susfs
 
 1. Use the susfs-dev branch directly without any patching
