@@ -8,7 +8,6 @@ use std::ffi::OsStr;
 pub const KPM_DIR: &str = "/data/adb/kpm";
 pub const KPMMGR_PATH: &str = "/data/adb/ksu/bin/kpmmgr";
 
-
 // 确保 KPM 目录存在，如果不存在则创建
 pub fn ensure_kpm_dir() -> Result<()> {
     if !Path::new(KPM_DIR).exists() {
@@ -74,29 +73,22 @@ fn handle_remove_event(paths: Vec<std::path::PathBuf>) {
     }
 }
 
+fn handle_modify_event(paths: Vec<std::path::PathBuf>) {
+    for path in paths {
+        log::info!("Modified file: {}", path.display());
+    }
+}
+
 // 加载 KPM 模块
-fn load_kpm_modules() -> Result<()> {
-    if !Path::new(kpm::KPM_DIR).exists() {
-        log::warn!("KPM directory does not exist: {}", kpm::KPM_DIR);
-        return Ok(());
+pub fn load_kpm(path: &Path) -> Result<()> {
+    let path_str = path.to_str().ok_or_else(|| anyhow!("Invalid path: {}", path.display()))?;
+    let status = std::process::Command::new(KPMMGR_PATH)
+        .args(["load", path_str, ""])
+        .status()?;
+
+    if status.success() {
+        log::info!("Loaded KPM: {}", path.display());
     }
-
-    for entry in std::fs::read_dir(kpm::KPM_DIR)? {
-        let path = entry?.path();
-        if let Some(file_name) = path.file_stem() {
-            if let Some(file_name_str) = file_name.to_str() {
-                log::info!("Loading KPM module: {}", file_name_str);
-            }
-        }
-
-        if path.extension().is_some_and(|ext| ext == "kpm") {
-            match kpm::load_kpm(&path) {
-                Ok(()) => log::info!("Successfully loaded KPM module: {}", path.display()),
-                Err(e) => log::warn!("Failed to load KPM module {}: {}", path.display(), e),
-            }
-        }
-    }
-
     Ok(())
 }
 
@@ -175,5 +167,31 @@ pub fn load_existing_kpms() -> Result<()> {
             }
         }
     }
+    Ok(())
+}
+
+// 加载 KPM 模块
+pub fn load_kpm_modules() -> Result<()> {
+    if !Path::new(KPM_DIR).exists() {
+        log::warn!("KPM directory does not exist: {}", KPM_DIR);
+        return Ok(());
+    }
+
+    for entry in std::fs::read_dir(KPM_DIR)? {
+        let path = entry?.path();
+        if let Some(file_name) = path.file_stem() {
+            if let Some(file_name_str) = file_name.to_str() {
+                log::info!("Loading KPM module: {}", file_name_str);
+            }
+        }
+
+        if path.extension().is_some_and(|ext| ext == "kpm") {
+            match load_kpm(&path) {
+                Ok(()) => log::info!("Successfully loaded KPM module: {}", path.display()),
+                Err(e) => log::warn!("Failed to load KPM module {}: {}", path.display(), e),
+            }
+        }
+    }
+
     Ok(())
 }
