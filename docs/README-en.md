@@ -9,6 +9,7 @@ Android device root solution based on [KernelSU](https://github.com/tiann/Kernel
 
 >
 > This is an unofficial fork. All rights are reserved to [@tiann](https://github.com/tiann)
+> However, we will be a separately maintained branch of KSU in the future
 >
 
 - Fully adapted for non-GKI devices (susfs-dev and unsusfs-patched dev branches only)
@@ -30,6 +31,18 @@ curl -LSs "https://raw.githubusercontent.com/ShirkNeko/KernelSU/main/kernel/setu
 
 1. Use the susfs-dev branch directly without any patching
 
+
+
+## KPM support
+
+- We have removed duplicate KSU functions based on KernelPatch and retained KPM support.
+- We will introduce more APatch-compatible functions to ensure the integrity of KPM functionality.
+
+
+Open source address: https://github.com/ShirkNeko/SukiSU_KernelPatch_patch
+
+
+KPM template address: https://github.com/udochina/KPM-Build-Anywhere
 
 ## More links
 Projects compiled based on Sukisu and susfs
@@ -72,6 +85,7 @@ Note: You only need to fill in the first two parts of kernel versions, such as 5
 3. [App Profile](https://kernelsu.org/guide/app-profile.html): Lock root privileges in a cage. 
 4. Bringing back non-GKI/GKI 1.0 support
 5. More customization
+6. Support for KPM kernel modules
 
 
 
@@ -101,3 +115,4 @@ If the above list does not have your name, I will update it as soon as possible,
 - [Magisk](https://github.com/topjohnwu/Magisk): Powerful root utility
 - [genuine](https://github.com/brevent/genuine/): APK v2 Signature Verification
 - [Diamorphine](https://github.com/m0nad/Diamorphine): Some rootkit utilities.
+- [KernelPatch](https://github.com/bmax121/KernelPatch): KernelPatch is a key part of the APatch implementation of the kernel module
