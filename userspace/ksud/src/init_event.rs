@@ -102,24 +102,7 @@ pub fn on_post_data_fs() -> Result<()> {
     run_stage("post-mount", true);
 
     // load kpm modules
-    for entry in std::fs::read_dir(kpm::KPM_DIR)? {
-        let path = entry?.path();
-        if let Some(file_name) = path.file_stem() {
-            if let Some(file_name_str) = file_name.to_str() {
-                if file_name_str.is_empty() {
-                    log::warn!("Invalid KPM file name: {}", path.display());
-                    continue;
-                }
-            }
-        }
-    
-        if path.extension().is_some_and(|ext| ext == "kpm") {
-            match kpm::load_kpm(&path) {
-                Ok(()) => log::info!("Successfully loaded KPM module: {}", path.display()),
-                Err(e) => log::warn!("Failed to load KPM module {}: {}", path.display(), e),
-            }
-        }
-    }
+    load_kpm_modules()?;
 
     Ok(())
 }

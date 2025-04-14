@@ -18,7 +18,6 @@ pub fn ensure_kpm_dir() -> Result<()> {
 
 pub fn start_kpm_watcher() -> Result<()> {
     ensure_kpm_dir()?;
-    load_existing_kpms()?;
 
     // 检查是否处于安全模式
     if crate::utils::is_safe_mode() {
@@ -155,36 +154,21 @@ pub fn remove_all_kpms() -> Result<()> {
     Ok(())
 }
 
-// 系统启动后加载所有现有的 KPM 模块
-pub fn load_existing_kpms() -> Result<()> {
-    ensure_kpm_dir()?;
-
-    for entry in fs::read_dir(KPM_DIR)? {
-        let path = entry?.path();
-        if path.extension().map_or(false, |ext| ext == "kpm") {
-            if let Err(e) = load_kpm(&path) {
-                log::warn!("Failed to load {}: {}", path.display(), e);
-            }
-        }
-    }
-    Ok(())
-}
-
 // 加载 KPM 模块
 pub fn load_kpm_modules() -> Result<()> {
-    if !Path::new(KPM_DIR).exists() {
-        log::warn!("KPM directory does not exist: {}", KPM_DIR);
-        return Ok(());
-    }
+    ensure_kpm_dir()?;
 
     for entry in std::fs::read_dir(KPM_DIR)? {
         let path = entry?.path();
         if let Some(file_name) = path.file_stem() {
             if let Some(file_name_str) = file_name.to_str() {
-                log::info!("Loading KPM module: {}", file_name_str);
+                if file_name_str.is_empty() {
+                    log::warn!("Invalid KPM file name: {}", path.display());
+                    continue;
+                }
             }
         }
-
+    
         if path.extension().is_some_and(|ext| ext == "kpm") {
             match load_kpm(&path) {
                 Ok(()) => log::info!("Successfully loaded KPM module: {}", path.display()),
