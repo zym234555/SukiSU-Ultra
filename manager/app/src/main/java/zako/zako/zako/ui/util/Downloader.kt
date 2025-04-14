@@ -63,8 +63,7 @@ fun download(
 }
 
 fun checkNewVersion(): LatestVersionInfo {
-    // 改为新的 release 接口
-    val url = "https://api.github.com/repos/zako/SukiSU-Ultra/releases/latest"
+    val url = "https://api.github.com/repos/ShirkNeko/SukiSU-Ultra/releases/latest"
     val defaultValue = LatestVersionInfo()
     return runCatching {
         okhttp3.OkHttpClient().newCall(okhttp3.Request.Builder().url(url).build()).execute()
