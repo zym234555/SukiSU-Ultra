@@ -102,7 +102,7 @@ pub fn on_post_data_fs() -> Result<()> {
     run_stage("post-mount", true);
 
     // load kpm modules
-    load_kpm_modules()?;
+    kpm::load_kpm_modules()?;
 
     Ok(())
 }
