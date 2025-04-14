@@ -75,15 +75,28 @@ fn handle_remove_event(paths: Vec<std::path::PathBuf>) {
 }
 
 // 加载 KPM 模块
-pub fn load_kpm(path: &Path) -> Result<()> {
-    let path_str = path.to_str().ok_or_else(|| anyhow!("Invalid path: {}", path.display()))?;
-    let status = std::process::Command::new(KPMMGR_PATH)
-        .args(["load", path_str, ""])
-        .status()?;
-
-    if status.success() {
-        log::info!("Loaded KPM: {}", path.display());
+fn load_kpm_modules() -> Result<()> {
+    if !Path::new(kpm::KPM_DIR).exists() {
+        log::warn!("KPM directory does not exist: {}", kpm::KPM_DIR);
+        return Ok(());
     }
+
+    for entry in std::fs::read_dir(kpm::KPM_DIR)? {
+        let path = entry?.path();
+        if let Some(file_name) = path.file_stem() {
+            if let Some(file_name_str) = file_name.to_str() {
+                log::info!("Loading KPM module: {}", file_name_str);
+            }
+        }
+
+        if path.extension().is_some_and(|ext| ext == "kpm") {
+            match kpm::load_kpm(&path) {
+                Ok(()) => log::info!("Successfully loaded KPM module: {}", path.display()),
+                Err(e) => log::warn!("Failed to load KPM module {}: {}", path.display(), e),
+            }
+        }
+    }
+
     Ok(())
 }
 
