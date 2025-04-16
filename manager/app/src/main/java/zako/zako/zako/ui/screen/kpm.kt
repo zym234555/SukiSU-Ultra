@@ -47,6 +47,8 @@ import java.net.URLEncoder
  * 以下内核模块功能由KernelPatch开发，经过修改后加入SukiSU Ultra的内核模块功能
  * 开发者：zako, Liaokong
  */
+var globalModuleFileName: String = ""
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Destination<RootGraph>
 @Composable
@@ -70,13 +72,16 @@ fun KpmScreen(
     val kpmInstallFailed = stringResource(R.string.kpm_install_failed)
     val cancel = stringResource(R.string.cancel)
     val uninstall = stringResource(R.string.uninstall)
-    val FailedtoCheckModuleFile = stringResource(R.string.snackbar_failed_to_check_module_file)
+    val failedToCheckModuleFile = stringResource(R.string.snackbar_failed_to_check_module_file)
     val kpmUninstallSuccess = stringResource(R.string.kpm_uninstall_success)
     val kpmUninstallFailed = stringResource(R.string.kpm_uninstall_failed)
     val kpmInstallMode = stringResource(R.string.kpm_install_mode)
     val kpmInstallModeLoad = stringResource(R.string.kpm_install_mode_load)
     val kpmInstallModeEmbed = stringResource(R.string.kpm_install_mode_embed)
     val kpmInstallModeDescription = stringResource(R.string.kpm_install_mode_description)
+    val invalidFileTypeMessage = stringResource(R.string.invalid_file_type)
+    val confirmTitle = stringResource(R.string.confirm_uninstall_title_with_filename)
+    val confirmContent = stringResource(R.string.confirm_uninstall_content, globalModuleFileName)
 
     var tempFileForInstall by remember { mutableStateOf<File?>(null) }
     val installModeDialog = rememberCustomDialog { dismiss ->
@@ -167,7 +172,7 @@ fun KpmScreen(
 
             if (!tempFile.name.endsWith(".kpm")) {
                 snackBarHost.showSnackbar(
-                    message = "文件类型不正确，请选择 .kpm 文件",
+                    message = invalidFileTypeMessage,
                     duration = SnackbarDuration.Short
                 )
                 tempFile.delete()
@@ -282,10 +287,12 @@ fun KpmScreen(
                                         snackBarHost = snackBarHost,
                                         kpmUninstallSuccess = kpmUninstallSuccess,
                                         kpmUninstallFailed = kpmUninstallFailed,
-                                        FailedtoCheckModuleFile = FailedtoCheckModuleFile,
+                                        failedToCheckModuleFile = failedToCheckModuleFile,
                                         uninstall = uninstall,
                                         cancel = cancel,
-                                        confirmDialog = confirmDialog
+                                        confirmDialog = confirmDialog,
+                                        confirmTitle = confirmTitle,
+                                        confirmContent = confirmContent
                                     )
                                 }
                             },
@@ -369,12 +376,15 @@ private suspend fun handleModuleUninstall(
     snackBarHost: SnackbarHostState,
     kpmUninstallSuccess: String,
     kpmUninstallFailed: String,
-    FailedtoCheckModuleFile: String,
+    failedToCheckModuleFile: String,
     uninstall: String,
     cancel: String,
+    confirmTitle : String,
+    confirmContent : String,
     confirmDialog: ConfirmDialogHandle
 ) {
     val moduleFileName = "${module.id}.kpm"
+    globalModuleFileName = moduleFileName
     val moduleFilePath = "/data/adb/kpm/$moduleFileName"
 
     val fileExists = try {
@@ -383,15 +393,14 @@ private suspend fun handleModuleUninstall(
     } catch (e: Exception) {
         Log.e("KsuCli", "Failed to check module file existence: ${e.message}", e)
         snackBarHost.showSnackbar(
-            message = FailedtoCheckModuleFile,
+            message = failedToCheckModuleFile,
             duration = SnackbarDuration.Short
         )
         false
     }
-
     val confirmResult = confirmDialog.awaitConfirm(
-        title = "将卸载以下kpm模块：\n$moduleFileName",
-        content = "The following kpm modules will be uninstalled：\n$moduleFileName",
+        title = confirmTitle,
+        content = confirmContent,
         confirm = uninstall,
         dismiss = cancel
     )

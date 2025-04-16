@@ -263,4 +263,7 @@
     <string name="confirm_uninstall_confirm">removing</string>
     <string name="confirm_uninstall_dismiss">abolish</string>
     <string name="theme_color">Theme Color</string>
+    <string name="invalid_file_type">Incorrect file type, select .kpm file</string>
+    <string name="confirm_uninstall_title_with_filename">uninstallation</string>
+    <string name="confirm_uninstall_content">The following kpm modules will be uninstalled：\n%s</string>
 </resources>
