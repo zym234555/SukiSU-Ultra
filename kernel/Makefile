@@ -52,7 +52,15 @@ $(info -- SukiSU Manager signature size: $(KSU_EXPECTED_SIZE))
 $(info -- SukiSU Manager signature hash: $(KSU_EXPECTED_HASH))
 $(info -- Supported Unofficial Manager: 5ec1cff (GKI) rsuntk (Non-GKI) ShirkNeko udochina (GKI and non-GKI and KPM)) 
 KERNEL_VERSION := $(VERSION).$(PATCHLEVEL)
+ifeq ($(shell test $(VERSION) -ge 5 -a $(PATCHLEVEL) -ge 10; echo $$?),0)
+KERNEL_TYPE := GKI 2.0
+else ifeq ($(shell test $(VERSION) -eq 5 -a $(PATCHLEVEL) -eq 4; echo $$?),0)
+KERNEL_TYPE := GKI 1.0
+else
+KERNEL_TYPE := Non-GKI
+endif
 $(info -- KERNEL_VERSION: $(KERNEL_VERSION))
+$(info -- KERNEL_TYPE：$(KERNEL_TYPE))
 
 ifeq ($(strip $(CONFIG_KSU_HOOK_KPROBES)),y)
 $(info -- SukiSU: KPROBES hooking enabled!)
