@@ -1,6 +1,6 @@
 # SukiSU
 
-**Enlish** | [简体中文](README.md)
+**English** | [简体中文](README.md) | [日本語](README-ja.md)
 
 
 Android device root solution based on [KernelSU](https://github.com/tiann/KernelSU)
