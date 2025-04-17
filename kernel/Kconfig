@@ -16,6 +16,38 @@ config KSU_DEBUG
 	help
 	  Enable KernelSU debug mode.
 
+config KSU_MANUAL_HOOK
+	bool "Manual hooking GKI kernels without kprobes"
+	depends on KSU && KSU != m
+	depends on KPROBES
+	default y if KSU_GKI_KERNEL
+	default n
+	help
+	  Keep KPROBES enabled but do not use KPROBES to implement
+	  the hooks required by KernelSU, but instead hook them manually.
+	  This function is automatically enabled for GKI kernels.
+
+config KSU_GKI_KERNEL
+	bool
+	default y if (VERSION >= 5 && PATCHLEVEL >= 10)
+	help
+	  Internal flag to indicate whether the kernel is GKI.
+
+config KSU_HOOK_KPROBES
+	bool
+	default y if !KSU_MANUAL_HOOK
+	default n
+	help
+	  Internal flag to indicate whether KPROBES should be used for hooking.
+
+config KSU_ALLOWLIST_WORKAROUND
+  bool "KernelSU Session Keyring Init workaround"
+  depends on KSU
+  default n
+  help
+    Enable session keyring init workaround for problematic devices.
+    Useful for situations where the SU allowlist is not kept after a reboot
+
 config KPM
 	bool "Enable SukiSU KPM"
 	default n
@@ -23,25 +55,6 @@ config KPM
 	  Enabling this option will activate the KPM feature of SukiSU.
 	  This option is suitable for scenarios where you need to force KPM to be enabled.
 	  but it may affect system stability.
-
-config KSU_ALLOWLIST_WORKAROUND
-        bool "KernelSU Session Keyring Init workaround"
-        depends on KSU
-        default n
-        help
-          Enable session keyring init workaround for problematic devices.
-          Useful for situations where the SU allowlist is not kept after a reboot
-
-config KSU_MANUAL_HOOK
-	bool "Manual hooking GKI kernels without kprobes"
-	depends on KSU && KSU != m
-	depends on KPROBES
-	default n
-	help
-	  Keep KPROBES enabled but do not use KPROBES to implement
-	  the hooks required by KernelSU, but instead hook them manually.
-	  This function only available on GKI kernels, non-GKI are not
-	  affected.
 
 menu "KernelSU - SUSFS"
 config KSU_SUSFS
