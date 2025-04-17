@@ -22,16 +22,6 @@ obj-$(CONFIG_KSU) += kernelsu.o
 
 obj-$(CONFIG_KPM) += kpm/
 
-
-ifeq ($(strip $(CONFIG_KSU_HOOK_KPROBES)),y)
-$(info -- SukiSU: KPROBES hooking enabled!)
-else
-$(info -- SukiSU: Manual hooking enabled!)
-ifeq ($(strip $(CONFIG_KSU)),m)
-$(error CONFIG_KSU_MANUAL_HOOK cannot be enabled when compiling SukiSU as LKM!)
-endif
-endif
-
 # .git is a text file while the module is imported by 'git submodule add'.
 ifeq ($(shell test -e $(srctree)/$(src)/../.git; echo $$?),0)
 $(shell cd $(srctree)/$(src); /usr/bin/env PATH="$$PATH":/usr/bin:/usr/local/bin [ -f ../.git/shallow ] && git fetch --unshallow)
@@ -63,6 +53,15 @@ $(info -- SukiSU Manager signature hash: $(KSU_EXPECTED_HASH))
 $(info -- Supported Unofficial Manager: 5ec1cff (GKI) rsuntk (Non-GKI) ShirkNeko udochina (GKI and non-GKI and KPM)) 
 KERNEL_VERSION := $(VERSION).$(PATCHLEVEL)
 $(info -- KERNEL_VERSION: $(KERNEL_VERSION))
+
+ifeq ($(strip $(CONFIG_KSU_HOOK_KPROBES)),y)
+$(info -- SukiSU: KPROBES hooking enabled!)
+else
+$(info -- SukiSU: Manual hooking enabled!)
+ifeq ($(strip $(CONFIG_KSU)),m)
+$(error CONFIG_KSU_MANUAL_HOOK cannot be enabled when compiling SukiSU as LKM!)
+endif
+endif
 
 # Check if KPM is enabled
 ifeq ($(CONFIG_KPM),y)
