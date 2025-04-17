@@ -62,25 +62,7 @@ $(info -- SukiSU Manager signature size: $(KSU_EXPECTED_SIZE))
 $(info -- SukiSU Manager signature hash: $(KSU_EXPECTED_HASH))
 $(info -- Supported Unofficial Manager: 5ec1cff (GKI) rsuntk (Non-GKI) ShirkNeko udochina (GKI and non-GKI and KPM)) 
 KERNEL_VERSION := $(VERSION).$(PATCHLEVEL)
-KERNEL_MAJOR_VERSION := $(word 1, $(subst ., , $(KERNEL_VERSION)))
-KERNEL_MINOR_VERSION := $(word 2, $(subst ., , $(KERNEL_VERSION)))
-ifeq ($(KERNEL_MAJOR_VERSION),5)
-    ifeq ($(KERNEL_MINOR_VERSION),4)
-        KSU_KERNEL_TYPE := GKI 1.0
-    else ifeq ($(findstring $(KERNEL_MINOR_VERSION),$(filter $(KERNEL_MINOR_VERSION),10 11 12 13 14 15 16 17 18 19 20)),1)
-        KSU_KERNEL_TYPE := GKI 2.0
-    else
-        KSU_KERNEL_TYPE := Non-GKI
-    endif
-else ifeq ($(KERNEL_MAJOR_VERSION),4)
-    KSU_KERNEL_TYPE := Non-GKI
-else ifeq ($(KERNEL_MAJOR_VERSION),6)
-    KSU_KERNEL_TYPE := GKI 2.0
-else
-    KSU_KERNEL_TYPE := Non-GKI
-endif
 $(info -- KERNEL_VERSION: $(KERNEL_VERSION))
-$(info -- KERNEL_TYPE: $(KSU_KERNEL_TYPE))
 
 # Check if KPM is enabled
 ifeq ($(CONFIG_KPM),y)
