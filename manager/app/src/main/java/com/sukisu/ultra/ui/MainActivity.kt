@@ -14,7 +14,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
@@ -34,6 +33,7 @@ import com.sukisu.ultra.ui.theme.CardConfig.cardAlpha
 import com.sukisu.ultra.ui.util.*
 import androidx.core.content.edit
 import com.sukisu.ultra.ui.theme.CardConfig.cardElevation
+import com.sukisu.ultra.ui.webui.initPlatform
 
 class MainActivity : ComponentActivity() {
     private inner class ThemeChangeContentObserver(
@@ -104,6 +104,11 @@ class MainActivity : ComponentActivity() {
                 val navController = rememberNavController()
                 val snackBarHostState = remember { SnackbarHostState() }
 
+                // pre-init platform to faster start WebUI X activities
+                LaunchedEffect(Unit) {
+                    initPlatform()
+                }
+
                 Scaffold(
                     bottomBar = { BottomBar(navController) },
                     contentWindowInsets = WindowInsets(0, 0, 0, 0)
@@ -131,7 +136,7 @@ class MainActivity : ComponentActivity() {
     override fun onPause() {
         super.onPause()
         CardConfig.save(applicationContext)
-        getSharedPreferences("theme_prefs", MODE_PRIVATE).edit() {
+        getSharedPreferences("theme_prefs", MODE_PRIVATE).edit {
             putBoolean("prevent_background_refresh", true)
         }
         ThemeConfig.preventBackgroundRefresh = true

@@ -320,4 +320,8 @@
     <string name="background_set_success">背景设置成功</string>
     <string name="background_removed">已移除自定义背景</string>
     <string name="root_require_for_install">需要 root 权限</string>
+    <string name="use_webuix">使用 WebUI X</string>
+    <string name="use_webuix_summary">使用支持更多 API 的 WebUI X 而不是 WebUI</string>
+    <string name="use_webuix_eruda">将 Eruda 注入 WebUI X</string>
+    <string name="use_webuix_eruda_summary">在 WebUI X 中注入调试控制台，使调试更容易,需要启用 WebView 调试</string>
 </resources>

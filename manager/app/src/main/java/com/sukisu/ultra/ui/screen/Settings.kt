@@ -58,6 +58,7 @@ import com.sukisu.ultra.ui.util.getBugreportFile
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import com.sukisu.ultra.ui.component.KsuIsValid
+import com.dergoogler.mmrl.platform.Platform
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -237,6 +238,43 @@ fun SettingScreen(navigator: DestinationsNavigator) {
                                 enableWebDebugging = it
                             }
                         )
+                    }
+
+                    var useWebUIX by rememberSaveable {
+                        mutableStateOf(
+                            prefs.getBoolean("use_webuix", false)
+                        )
+                    }
+                    KsuIsValid {
+                        SwitchItem(
+                            beta = true,
+                            enabled = Platform.isAlive,
+                            icon = Icons.Filled.WebAsset,
+                            title = stringResource(id = R.string.use_webuix),
+                            summary = stringResource(id = R.string.use_webuix_summary),
+                            checked = useWebUIX
+                        ) {
+                            prefs.edit { putBoolean("use_webuix", it) }
+                            useWebUIX = it
+                        }
+                    }
+                    var useWebUIXEruda by rememberSaveable {
+                        mutableStateOf(
+                            prefs.getBoolean("use_webuix_eruda", false)
+                        )
+                    }
+                    KsuIsValid {
+                        SwitchItem(
+                            beta = true,
+                            enabled = Platform.isAlive && useWebUIX && enableWebDebugging,
+                            icon = Icons.Filled.FormatListNumbered,
+                            title = stringResource(id = R.string.use_webuix_eruda),
+                            summary = stringResource(id = R.string.use_webuix_eruda_summary),
+                            checked = useWebUIXEruda
+                        ) {
+                            prefs.edit().putBoolean("use_webuix_eruda", it).apply()
+                            useWebUIXEruda = it
+                        }
                     }
 
                     // 更多设置

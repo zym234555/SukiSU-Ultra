@@ -68,9 +68,11 @@ import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.util.zip.ZipInputStream
 import androidx.core.content.edit
-import androidx.core.net.toUri
 import com.sukisu.ultra.R
 import com.sukisu.ultra.ui.theme.CardConfig.cardElevation
+import com.sukisu.ultra.ui.webui.WebUIXActivity
+import com.dergoogler.mmrl.platform.Platform
+import androidx.core.net.toUri
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -394,10 +396,17 @@ fun ModuleScreen(navigator: DestinationsNavigator) {
                     onClickModule = { id, name, hasWebUi ->
                         if (hasWebUi) {
                             webUILauncher.launch(
-                                Intent(context, WebUIActivity::class.java)
-                                    .setData("kernelsu://webui/$id".toUri())
-                                    .putExtra("id", id)
-                                    .putExtra("name", name)
+                                if (prefs.getBoolean("use_webuix", false) && Platform.isAlive) {
+                                    Intent(context, WebUIXActivity::class.java)
+                                        .setData("kernelsu://webuix/$id".toUri())
+                                        .putExtra("id", id)
+                                        .putExtra("name", name)
+                                } else {
+                                    Intent(context, WebUIActivity::class.java)
+                                        .setData("kernelsu://webui/$id".toUri())
+                                        .putExtra("id", id)
+                                        .putExtra("name", name)
+                                }
                             )
                         }
                     },
