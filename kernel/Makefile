@@ -54,6 +54,8 @@ $(info -- Supported Unofficial Manager: 5ec1cff (GKI) rsuntk (Non-GKI) ShirkNeko
 KERNEL_VERSION := $(VERSION).$(PATCHLEVEL)
 ifeq ($(shell test $(VERSION) -ge 5 -a $(PATCHLEVEL) -ge 10; echo $$?),0)
 KERNEL_TYPE := GKI 2.0
+else ifeq ($(shell test $(VERSION) -ge 6; echo $$?),0)
+KERNEL_TYPE := GKI 2.0
 else ifeq ($(shell test $(VERSION) -eq 5 -a $(PATCHLEVEL) -eq 4; echo $$?),0)
 KERNEL_TYPE := GKI 1.0
 else
