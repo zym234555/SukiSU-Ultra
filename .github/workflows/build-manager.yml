@@ -17,7 +17,7 @@ on:
   workflow_call:
   workflow_dispatch:
 jobs:
-  build-susfsd:
+  build-susfs:
     strategy:
       matrix:
         include:
@@ -28,12 +28,26 @@ jobs:
       target: ${{ matrix.target }}
       os: ${{ matrix.os }}
 
-  build-ksud:
-    needs: build-susfsd
+  build-kpmmgr:
+    needs: build-susfs
     strategy:
       matrix:
         include:
           - target: aarch64-linux-android
+            os: ubuntu-latest
+    uses: ./.github/workflows/kpmmgr.yml
+    with:
+      target: ${{ matrix.target }}
+      os: ${{ matrix.os }}
+
+  build-ksud:
+    needs: build-kpmmgr
+    strategy:
+      matrix:
+        include:
+          - target: aarch64-linux-android
+            os: ubuntu-latest
+          - target: x86_64-linux-android
             os: ubuntu-latest
     uses: ./.github/workflows/ksud.yml
     with:
