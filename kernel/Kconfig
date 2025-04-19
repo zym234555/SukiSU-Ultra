@@ -2,7 +2,6 @@ menu "KernelSU"
 
 config KSU
 	  tristate "KernelSU function support"
-	  depends on OVERLAY_FS
 	  default y
 	  help
 	    Enable kernel-level root privileges on Android System.
@@ -17,27 +16,27 @@ config KSU_DEBUG
 	    Enable KernelSU debug mode.
 
 config KSU_MANUAL_HOOK
-	  bool "Manual hooking GKI kernels without kprobes"
-	  depends on KSU && KSU != m
-	  default n
-	  help
-	    Keep KPROBES enabled but do not use KPROBES to implement
-	    the hooks required by KernelSU, but instead hook them manually.
-	    This function is automatically enabled for GKI kernels.
+    bool "Manual hooking GKI kernels without kprobes"
+    depends on KSU && KSU != m
+    default n
+    help
+      Using manual hooks instead of KSU KPROBES hooks.
+      By default the GKI kernel should use the KSU KPROBES hook.
+      Non-GKI kernels should prioritize the use of manual hooks.
 
 config KSU_GKI_KERNEL
-	  bool
-	  default y if (VERSION >= 5 && PATCHLEVEL >= 10)
-	  help
-	    Internal flag to indicate whether the kernel is GKI.
+    bool
+    default y if VERSION >= 5 && PATCHLEVEL >= 10 || \
+               VERSION >= 6
+    help
+      Internal flag for GKI kernel detection.
 
 config KSU_HOOK_KPROBES
-	  bool
-    depends on KPROBES
-    depends on KSU_GKI_KERNEL
-	  default y if !KSU_MANUAL_HOOK
-	  help
-	    Internal flag to indicate whether KPROBES should be used for hooking.
+    bool
+    depends on KSU && KPROBES && KSU_GKI_KERNEL
+    default y if !KSU_MANUAL_HOOK
+    help
+      Internal flags for hooks based on KSU kprobes.
 
 config KSU_ALLOWLIST_WORKAROUND
     bool "KernelSU Session Keyring Init workaround"
