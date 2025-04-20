@@ -40,6 +40,7 @@ import zako.zako.zako.ui.theme.*
 import zako.zako.zako.ui.util.*
 import androidx.core.content.edit
 import zako.zako.zako.R
+import zako.zako.zako.*
 
 
 fun saveCardConfig(context: Context) {
@@ -175,6 +176,7 @@ fun MoreSettingsScreen(navigator: DestinationsNavigator) {
     )
 
     var showThemeColorDialog by remember { mutableStateOf(false) }
+    val ksuIsValid = Natives.isKsuValid(ksuApp.packageName)
 
     // 图片选择器
     val pickImageLauncher = rememberLauncherForActivityResult(
@@ -208,17 +210,19 @@ fun MoreSettingsScreen(navigator: DestinationsNavigator) {
                 .padding(top = 12.dp)
         ) {
             // SELinux 开关
-            SwitchItem(
-                icon = Icons.Filled.Security,
-                title = stringResource(R.string.selinux),
-                summary = if (selinuxEnabled)
-                    stringResource(R.string.selinux_enabled) else
-                    stringResource(R.string.selinux_disabled),
-                checked = selinuxEnabled
-            ) { enabled ->
-                val command = if (enabled) "setenforce 1" else "setenforce 0"
-                Shell.getShell().newJob().add(command).exec().let { result ->
-                    if (result.isSuccess) selinuxEnabled = enabled
+            if (ksuIsValid) {
+                SwitchItem(
+                    icon = Icons.Filled.Security,
+                    title = stringResource(R.string.selinux),
+                    summary = if (selinuxEnabled)
+                        stringResource(R.string.selinux_enabled) else
+                        stringResource(R.string.selinux_disabled),
+                    checked = selinuxEnabled
+                ) { enabled ->
+                    val command = if (enabled) "setenforce 1" else "setenforce 0"
+                    Shell.getShell().newJob().add(command).exec().let { result ->
+                        if (result.isSuccess) selinuxEnabled = enabled
+                    }
                 }
             }
 

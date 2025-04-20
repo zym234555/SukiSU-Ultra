@@ -49,6 +49,7 @@ import kotlinx.coroutines.withContext
 import zako.zako.zako.BuildConfig
 import zako.zako.zako.Natives
 import zako.zako.zako.R
+import zako.zako.zako.*
 import zako.zako.zako.ui.component.*
 import zako.zako.zako.ui.theme.*
 import zako.zako.zako.ui.util.LocalSnackbarHost
@@ -68,6 +69,7 @@ fun SettingScreen(navigator: DestinationsNavigator) {
     // region 界面基础设置
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
     val snackBarHost = LocalSnackbarHost.current
+    val ksuIsValid = Natives.isKsuValid(ksuApp.packageName)
     // endregion
 
     Scaffold(
@@ -115,6 +117,7 @@ fun SettingScreen(navigator: DestinationsNavigator) {
             // region 配置项列表
             // 配置文件模板入口
             val profileTemplate = stringResource(id = R.string.settings_profile_template)
+            if (ksuIsValid) {
             ListItem(
                 leadingContent = { Icon(Icons.Filled.Fence, profileTemplate) },
                 headlineContent = { Text(profileTemplate) },
@@ -123,34 +126,40 @@ fun SettingScreen(navigator: DestinationsNavigator) {
                     navigator.navigate(AppProfileTemplateScreenDestination)
                 }
             )
+            }
             // 卸载模块开关
             var umountChecked by rememberSaveable {
                 mutableStateOf(Natives.isDefaultUmountModules())
             }
-            SwitchItem(
-                icon = Icons.Filled.FolderDelete,
-                title = stringResource(id = R.string.settings_umount_modules_default),
-                summary = stringResource(id = R.string.settings_umount_modules_default_summary),
-                checked = umountChecked
-            ) {
-                if (Natives.setDefaultUmountModules(it)) {
-                    umountChecked = it
-                }
+            
+            if (ksuIsValid) {
+		    SwitchItem(
+		        icon = Icons.Filled.FolderDelete,
+		        title = stringResource(id = R.string.settings_umount_modules_default),
+		        summary = stringResource(id = R.string.settings_umount_modules_default_summary),
+		        checked = umountChecked
+		    ) {
+		        if (Natives.setDefaultUmountModules(it)) {
+		            umountChecked = it
+		        }
+		    }
             }
             // SU 禁用开关（仅在兼容版本显示）
-            if (Natives.version >= Natives.MINIMAL_SUPPORTED_SU_COMPAT) {
-                var isSuDisabled by rememberSaveable {
-                    mutableStateOf(!Natives.isSuEnabled())
-                }
-                SwitchItem(
-                    icon = Icons.Filled.RemoveModerator,
-                    title = stringResource(id = R.string.settings_disable_su),
-                    summary = stringResource(id = R.string.settings_disable_su_summary),
-                    checked = isSuDisabled,
-                ) { checked ->
-                    val shouldEnable = !checked
-                    if (Natives.setSuEnabled(shouldEnable)) {
-                        isSuDisabled = !shouldEnable
+            if (ksuIsValid) {
+                if (Natives.version >= Natives.MINIMAL_SUPPORTED_SU_COMPAT) {
+                    var isSuDisabled by rememberSaveable {
+                        mutableStateOf(!Natives.isSuEnabled())
+                    }
+                    SwitchItem(
+                        icon = Icons.Filled.RemoveModerator,
+                        title = stringResource(id = R.string.settings_disable_su),
+                        summary = stringResource(id = R.string.settings_disable_su_summary),
+                        checked = isSuDisabled,
+                    ) { checked ->
+                        val shouldEnable = !checked
+                        if (Natives.setSuEnabled(shouldEnable)) {
+                            isSuDisabled = !shouldEnable
+                        }
                     }
                 }
             }
@@ -179,14 +188,16 @@ fun SettingScreen(navigator: DestinationsNavigator) {
                     prefs.getBoolean("enable_web_debugging", false)
                 )
             }
-            SwitchItem(
-                icon = Icons.Filled.DeveloperMode,
-                title = stringResource(id = R.string.enable_web_debugging),
-                summary = stringResource(id = R.string.enable_web_debugging_summary),
-                checked = enableWebDebugging
-            ) {
-                prefs.edit { putBoolean("enable_web_debugging", it) }
-                enableWebDebugging = it
+            if (Natives.isKsuValid(ksuApp.packageName)) {
+                SwitchItem(
+                    icon = Icons.Filled.DeveloperMode,
+                    title = stringResource(id = R.string.enable_web_debugging),
+                    summary = stringResource(id = R.string.enable_web_debugging_summary),
+                    checked = enableWebDebugging
+                ) {
+                    prefs.edit { putBoolean("enable_web_debugging", it) }
+                    enableWebDebugging = it
+                }
             }
             // 更多设置
             val newButtonTitle = stringResource(id = R.string.more_settings)
