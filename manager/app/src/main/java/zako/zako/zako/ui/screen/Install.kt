@@ -381,6 +381,7 @@ sealed class InstallMethod {
 private fun SelectInstallMethod(onSelected: (InstallMethod) -> Unit = {}) {
     val rootAvailable = rootAvailable()
     val isAbDevice = isAbDevice()
+    val horizonKernelSummary = stringResource(R.string.horizon_kernel_summary)
     val selectFileTip = stringResource(
         id = R.string.select_file_tip,
         if (isInitBoot()) "init_boot" else "boot"
@@ -395,11 +396,12 @@ private fun SelectInstallMethod(onSelected: (InstallMethod) -> Unit = {}) {
         if (isAbDevice) {
             radioOptions.add(InstallMethod.DirectInstallToInactiveSlot)
         }
-        radioOptions.add(InstallMethod.HorizonKernel(summary = "Flashing the Anykernel3 Kernel"))
+        radioOptions.add(InstallMethod.HorizonKernel(summary = horizonKernelSummary))
     }
 
     var selectedOption by remember { mutableStateOf<InstallMethod?>(null) }
     var currentSelectingMethod by remember { mutableStateOf<InstallMethod?>(null) }
+
 
     val selectImageLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
@@ -408,7 +410,7 @@ private fun SelectInstallMethod(onSelected: (InstallMethod) -> Unit = {}) {
             it.data?.data?.let { uri ->
                 val option = when (currentSelectingMethod) {
                     is InstallMethod.SelectFile -> InstallMethod.SelectFile(uri, summary = selectFileTip)
-                    is InstallMethod.HorizonKernel -> InstallMethod.HorizonKernel(uri, summary = " Flashing the Anykernel3 Kernel")
+                    is InstallMethod.HorizonKernel -> InstallMethod.HorizonKernel(uri, summary = horizonKernelSummary)
                     else -> null
                 }
                 option?.let {

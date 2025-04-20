@@ -40,13 +40,6 @@ class ModuleViewModel : ViewModel() {
         val dirId: String, // real module id (dir name)
     )
 
-    data class ModuleUpdateInfo(
-        val version: String,
-        val versionCode: Int,
-        val zipUrl: String,
-        val changelog: String,
-    )
-
     var isRefreshing by mutableStateOf(false)
         private set
     var search by mutableStateOf("")

@@ -26,8 +26,6 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Slider
-import androidx.compose.material3.SliderDefaults
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import com.ramcosta.composedestinations.annotation.Destination
@@ -38,18 +36,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import zako.zako.zako.ui.component.SwitchItem
-import zako.zako.zako.ui.theme.CardConfig
-import zako.zako.zako.ui.theme.ThemeColors
-import zako.zako.zako.ui.theme.ThemeConfig
-import zako.zako.zako.ui.theme.saveCustomBackground
-import zako.zako.zako.ui.theme.saveThemeColors
-import zako.zako.zako.ui.theme.saveThemeMode
-import zako.zako.zako.ui.theme.saveDynamicColorState
-import zako.zako.zako.ui.util.getSuSFS
-import zako.zako.zako.ui.util.getSuSFSFeatures
-import zako.zako.zako.ui.util.susfsSUS_SU_0
-import zako.zako.zako.ui.util.susfsSUS_SU_2
-import zako.zako.zako.ui.util.susfsSUS_SU_Mode
+import zako.zako.zako.ui.theme.*
+import zako.zako.zako.ui.util.*
 import androidx.core.content.edit
 import zako.zako.zako.R
 

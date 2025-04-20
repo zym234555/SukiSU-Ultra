@@ -143,17 +143,6 @@ class KpmViewModel : ViewModel() {
         return result
     }
 
-    fun controlModule(moduleId: String, args: String? = null): Int {
-        return try {
-            val result = controlKpmModule(moduleId, args)
-            Log.d("KsuCli", "Control module $moduleId result: $result")
-            result
-        } catch (e: Exception) {
-            Log.e("KsuCli", "Failed to control module $moduleId", e)
-            -1
-        }
-    }
-
     data class ModuleInfo(
         val id: String,
         val name: String,

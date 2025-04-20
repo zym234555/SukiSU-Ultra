@@ -45,10 +45,6 @@ enum class FlashingStatus {
 
 private var currentFlashingStatus = mutableStateOf(FlashingStatus.FLASHING)
 
-fun getFlashingStatus(): FlashingStatus {
-    return currentFlashingStatus.value
-}
-
 fun setFlashingStatus(status: FlashingStatus) {
     currentFlashingStatus.value = status
 }

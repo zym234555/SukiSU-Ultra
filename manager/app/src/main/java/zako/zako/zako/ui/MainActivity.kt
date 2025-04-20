@@ -5,30 +5,13 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.animation.AnimatedContentTransitionScope
-import androidx.compose.animation.EnterTransition
-import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.WindowInsetsSides
-import androidx.compose.foundation.layout.displayCutout
-import androidx.compose.foundation.layout.only
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.systemBars
-import androidx.compose.foundation.layout.union
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavBackStackEntry
@@ -43,15 +26,8 @@ import io.zako.zako.UltraToolInstall
 import zako.zako.zako.Natives
 import zako.zako.zako.ksuApp
 import zako.zako.zako.ui.screen.BottomBarDestination
-import zako.zako.zako.ui.theme.CardConfig
-import zako.zako.zako.ui.theme.KernelSUTheme
-import zako.zako.zako.ui.theme.loadCustomBackground
-import zako.zako.zako.ui.theme.loadThemeMode
-import zako.zako.zako.ui.util.LocalSnackbarHost
-import zako.zako.zako.ui.util.getKpmVersion
-import zako.zako.zako.ui.util.rootAvailable
-import zako.zako.zako.ui.util.install
-
+import zako.zako.zako.ui.theme.*
+import zako.zako.zako.ui.util.*
 class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {

@@ -214,6 +214,7 @@
     <string name="flash_option">刷入选项</string>
     <string name="flash_option_tip">选择要刷入的文件</string>
     <string name="horizon_kernel">刷写 AnyKernel3 压缩包</string>
+    <string name="horizon_kernel_summary">刷入 Anykernel3 内核</string>
     <string name="root_required">需要 root 权限</string>
     <string name="copy_failed">文件复制失败</string>
     <string name="reboot_complete_title">刷写完成</string>
@@ -262,4 +263,5 @@
     <string name="invalid_file_type">文件类型不正确，请选择 .kpm 文件</string>
     <string name="confirm_uninstall_title_with_filename">卸载</string>
     <string name="confirm_uninstall_content">将卸载以下 kpm 模块：\n%s</string>
+
 </resources>

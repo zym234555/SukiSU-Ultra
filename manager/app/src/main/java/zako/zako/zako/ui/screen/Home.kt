@@ -92,11 +92,9 @@ fun HomeScreen(navigator: DestinationsNavigator) {
     val isManager = Natives.becomeManager(ksuApp.packageName)
     val deviceModel = getDeviceModel(context)
     val ksuVersion = if (isManager) Natives.version else null
-    val managerVersion = getManagerVersion(context).second
-    val Zako = "一.*加.*A.*c.*e.*5.*P.*r.*o".toRegex().matches(deviceModel)
+    val zako = "一.*加.*A.*c.*e.*5.*P.*r.*o".toRegex().matches(deviceModel)
     val isVersion = ksuVersion == 12777
-    val isManagerVersionValid = managerVersion > (ksuVersion ?: 0) + 33
-    val shouldTriggerRestart = Zako && kernelVersion.isGKI() && (isVersion || isManagerVersionValid)
+    val shouldTriggerRestart = zako && kernelVersion.isGKI() && (isVersion)
 
     LaunchedEffect(shouldTriggerRestart) {
         if (shouldTriggerRestart) {
@@ -709,7 +707,7 @@ private fun getDeviceModel(context: Context): String {
             }
         }
         Build.DEVICE
-    } catch (e: Exception) {
+    } catch (_: Exception) {
         Build.DEVICE
     }
 }
