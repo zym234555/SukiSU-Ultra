@@ -20,6 +20,8 @@ import androidx.navigation.compose.rememberNavController
 import com.ramcosta.composedestinations.DestinationsNavHost
 import com.ramcosta.composedestinations.animations.NavHostAnimatedDestinationStyle
 import com.ramcosta.composedestinations.generated.NavGraphs
+import com.ramcosta.composedestinations.spec.NavHostGraphSpec
+import com.ramcosta.composedestinations.spec.RouteOrDirection
 import com.ramcosta.composedestinations.utils.isRouteOnBackStackAsState
 import com.ramcosta.composedestinations.utils.rememberDestinationsNavigator
 import io.zako.zako.UltraToolInstall
@@ -65,7 +67,7 @@ class MainActivity : ComponentActivity() {
                     ) {
                         DestinationsNavHost(
                             modifier = Modifier.padding(innerPadding),
-                            navGraph = NavGraphs.root,
+                            navGraph = NavGraphs.root as NavHostGraphSpec,
                             navController = navController,
                             defaultTransitions = object : NavHostAnimatedDestinationStyle() {
                                 override val enterTransition: AnimatedContentTransitionScope<NavBackStackEntry>.() -> EnterTransition
@@ -112,7 +114,7 @@ private fun BottomBar(navController: NavHostController) {
                                 navigator.popBackStack(destination.direction, false)
                             }
                             navigator.navigate(destination.direction) {
-                                popUpTo(NavGraphs.root) {
+                                popUpTo(NavGraphs.root as RouteOrDirection) {
                                     saveState = true
                                 }
                                 launchSingleTop = true
@@ -128,7 +130,7 @@ private fun BottomBar(navController: NavHostController) {
                         },
                         label = { Text(stringResource(destination.label)) },
                         alwaysShowLabel = false,
-                        colors = androidx.compose.material3.NavigationBarItemDefaults.colors(
+                        colors = NavigationBarItemDefaults.colors(
                             unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     )
@@ -143,7 +145,7 @@ private fun BottomBar(navController: NavHostController) {
                             navigator.popBackStack(destination.direction, false)
                         }
                         navigator.navigate(destination.direction) {
-                            popUpTo(NavGraphs.root) {
+                            popUpTo(NavGraphs.root as RouteOrDirection) {
                                 saveState = true
                             }
                             launchSingleTop = true

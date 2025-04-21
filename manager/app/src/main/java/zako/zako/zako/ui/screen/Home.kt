@@ -561,6 +561,7 @@ fun DonateCard() {
 
 @Composable
 private fun InfoCard() {
+    val lkmMode = Natives.isLkmMode
     val context = LocalContext.current
     val isSimpleMode = LocalContext.current.getSharedPreferences("settings", Context.MODE_PRIVATE)
         .getBoolean("is_simple_mode", false)
@@ -617,22 +618,24 @@ private fun InfoCard() {
 
 
             if (!isSimpleMode) {
-                val kpmVersion = getKpmVersion()
-                var displayVersion: String
-                val isKpmConfigured = checkKpmConfigured()
+                if (lkmMode != true) {
+                    val kpmVersion = getKpmVersion()
+                    var displayVersion: String
+                    val isKpmConfigured = checkKpmConfigured()
 
-                if (kpmVersion.isEmpty() || kpmVersion.startsWith("Error")) {
-                    val statusText = if (isKpmConfigured) {
-                        stringResource(R.string.kernel_patched)
+                    if (kpmVersion.isEmpty() || kpmVersion.startsWith("Error")) {
+                        val statusText = if (isKpmConfigured) {
+                            stringResource(R.string.kernel_patched)
+                        } else {
+                            stringResource(R.string.kernel_not_enabled)
+                        }
+                        displayVersion = "${stringResource(R.string.not_supported)} ($statusText)"
                     } else {
-                        stringResource(R.string.kernel_not_enabled)
+                        displayVersion = "${stringResource(R.string.supported)} ($kpmVersion)"
                     }
-                    displayVersion = "${stringResource(R.string.not_supported)} ($statusText)"
-                } else {
-                    displayVersion = "${stringResource(R.string.supported)} ($kpmVersion)"
+                    Spacer(Modifier.height(16.dp))
+                    InfoCardItem(stringResource(R.string.home_kpm_version), displayVersion)
                 }
-                Spacer(Modifier.height(16.dp))
-                InfoCardItem(stringResource(R.string.home_kpm_version), displayVersion)
             }
 
             val isHideSusfsStatus = LocalContext.current.getSharedPreferences("settings", Context.MODE_PRIVATE)
