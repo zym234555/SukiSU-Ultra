@@ -25,7 +25,7 @@ apksign {
 }
 
 android {
-    namespace = "zako.zako.zako"
+    namespace = "com.sukisu.ultra"
 
     buildTypes {
         release {
