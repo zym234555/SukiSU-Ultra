@@ -162,15 +162,45 @@ fun KpmScreen(
                 }
             }
 
-            if (!tempFile.name.endsWith(".kpm")) {
-                snackBarHost.showSnackbar(
-                    message = invalidFileTypeMessage,
-                    duration = SnackbarDuration.Short
-                )
+            val mimeType = context.contentResolver.getType(uri)
+            val isCorrectMimeType = mimeType == null || mimeType.contains("application/octet-stream")
+
+            if (!isCorrectMimeType) {
+                var shouldShowSnackbar = true
+                try {
+                    val command = arrayOf("su", "-c", "strings ${tempFile.absolutePath} | grep -E 'name=|version=|license=|author='")
+                    val process = Runtime.getRuntime().exec(command)
+                    val inputStream = process.inputStream
+                    val reader = java.io.BufferedReader(java.io.InputStreamReader(inputStream))
+                    var line: String?
+                    var matchCount = 0
+                    val keywords = listOf("name=", "version=", "license=", "author=")
+                    while (reader.readLine().also { line = it } != null) {
+                        for (keyword in keywords) {
+                            if (line!!.startsWith(keyword)) {
+                                matchCount++
+                                break
+                            }
+                        }
+                    }
+                    process.waitFor()
+                    if (matchCount < 2) {
+                        shouldShowSnackbar = true
+                    } else {
+                        shouldShowSnackbar = false
+                    }
+                } catch (e: Exception) {
+                    Log.e("KsuCli", "Failed to execute strings command: ${e.message}", e)
+                }
+                if (shouldShowSnackbar) {
+                    snackBarHost.showSnackbar(
+                        message = invalidFileTypeMessage,
+                        duration = SnackbarDuration.Short
+                    )
+                }
                 tempFile.delete()
                 return@launch
             }
-
             tempFileForInstall = tempFile
             installModeDialog.show()
         }
@@ -209,7 +239,7 @@ fun KpmScreen(
                 onClick = {
                     selectPatchLauncher.launch(
                         Intent(Intent.ACTION_GET_CONTENT).apply {
-                            type = "*/*"
+                            type = "application/octet-stream"
                         }
                     )
                 },
@@ -307,8 +337,25 @@ private suspend fun handleModuleInstall(
     kpmInstallSuccess: String,
     kpmInstallFailed: String
 ) {
-    val moduleId = extractModuleId(tempFile.name)
-    if (moduleId == null) {
+    var moduleId: String? = null
+    try {
+        val command = arrayOf("su", "-c", "strings ${tempFile.absolutePath} | grep 'name='")
+        val process = Runtime.getRuntime().exec(command)
+        val inputStream = process.inputStream
+        val reader = java.io.BufferedReader(java.io.InputStreamReader(inputStream))
+        var line: String?
+        while (reader.readLine().also { line = it } != null) {
+            if (line!!.startsWith("name=")) {
+                moduleId = line.substringAfter("name=").trim()
+                break
+            }
+        }
+        process.waitFor()
+    } catch (e: Exception) {
+        Log.e("KsuCli", "Failed to get module ID from strings command: ${e.message}", e)
+    }
+
+    if (moduleId == null || moduleId.isEmpty()) {
         Log.e("KsuCli", "Failed to extract module ID from file: ${tempFile.name}")
         snackBarHost.showSnackbar(
             message = kpmInstallFailed,
@@ -348,18 +395,6 @@ private suspend fun handleModuleInstall(
         )
     }
     tempFile.delete()
-}
-
-private fun extractModuleId(fileName: String): String? {
-    return try {
-        val decodedFileName = URLDecoder.decode(fileName, "UTF-8")
-        val pattern = "([^/]*?)\\.kpm$".toRegex()
-        val matchResult = pattern.find(decodedFileName)
-        matchResult?.groupValues?.get(1)
-    } catch (e: Exception) {
-        Log.e("KsuCli", "Failed to extract module ID: ${e.message}", e)
-        null
-    }
 }
 
 private suspend fun handleModuleUninstall(
