@@ -412,7 +412,8 @@ void ksu_sucompat_init()
 void ksu_sucompat_exit()
 {
 #ifdef CONFIG_KSU_HOOK_KPROBES
-	for (int i = 0; i < ARRAY_SIZE(su_kps); i++) {
+	int i;
+	for (i = 0; i < ARRAY_SIZE(su_kps); i++) {
 		destroy_kprobe(&su_kps[i]);
 	}
 #else
@@ -432,7 +433,8 @@ bool susfs_is_sus_su_hooks_enabled __read_mostly = false;
 int susfs_sus_su_working_mode = 0;
 
 static bool ksu_is_su_kps_enabled(void) {
-	for (int i = 0; i < ARRAY_SIZE(su_kps); i++) {
+	int i;
+	for (i = 0; i < ARRAY_SIZE(su_kps); i++) {
 		if (su_kps[i]) {
 			return true;
 		}
