@@ -32,6 +32,7 @@ import com.sukisu.ultra.ui.util.*
 import java.io.File
 import androidx.core.content.edit
 import com.sukisu.ultra.R
+import java.io.FileInputStream
 import java.net.*
 
 /**
@@ -40,7 +41,6 @@ import java.net.*
  * 开发者：zako, Liaokong
  */
 var globalModuleFileName: String = ""
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Destination<RootGraph>
 @Composable
@@ -168,29 +168,14 @@ fun KpmScreen(
             if (!isCorrectMimeType) {
                 var shouldShowSnackbar = true
                 try {
-                    val command = arrayOf("su", "-c", "strings ${tempFile.absolutePath} | grep -E 'name=|version=|license=|author='")
-                    val process = Runtime.getRuntime().exec(command)
-                    val inputStream = process.inputStream
-                    val reader = java.io.BufferedReader(java.io.InputStreamReader(inputStream))
-                    var line: String?
-                    var matchCount = 0
-                    val keywords = listOf("name=", "version=", "license=", "author=")
-                    while (reader.readLine().also { line = it } != null) {
-                        for (keyword in keywords) {
-                            if (line!!.startsWith(keyword)) {
-                                matchCount++
-                                break
-                            }
-                        }
-                    }
-                    process.waitFor()
-                    if (matchCount < 2) {
-                        shouldShowSnackbar = true
-                    } else {
+                    val matchCount = checkStringsCommand(tempFile)
+                    val isElf = isElfFile(tempFile)
+
+                    if (matchCount >= 1 || isElf) {
                         shouldShowSnackbar = false
                     }
                 } catch (e: Exception) {
-                    Log.e("KsuCli", "Failed to execute strings command: ${e.message}", e)
+                    Log.e("KsuCli", "Failed to execute checks: ${e.message}", e)
                 }
                 if (shouldShowSnackbar) {
                     snackBarHost.showSnackbar(
@@ -580,4 +565,41 @@ private fun KpmModuleItem(
             }
         }
     }
+}
+
+private fun checkStringsCommand(tempFile: File): Int {
+    val command = arrayOf("su", "-c", "strings ${tempFile.absolutePath} | grep -E 'name=|version=|license=|author='")
+    val process = Runtime.getRuntime().exec(command)
+    val inputStream = process.inputStream
+    val reader = java.io.BufferedReader(java.io.InputStreamReader(inputStream))
+    var line: String?
+    var matchCount = 0
+    val keywords = listOf("name=", "version=", "license=", "author=")
+    var nameExists = false
+
+    while (reader.readLine().also { line = it } != null) {
+        if (!nameExists && line!!.startsWith("name=")) {
+            nameExists = true
+            matchCount++
+        } else if (nameExists) {
+            for (keyword in keywords) {
+                if (line!!.startsWith(keyword)) {
+                    matchCount++
+                    break
+                }
+            }
+        }
+    }
+    process.waitFor()
+
+    return if (nameExists) matchCount else 0
+}
+
+private fun isElfFile(tempFile: File): Boolean {
+    val elfMagic = byteArrayOf(0x7F, 'E'.code.toByte(), 'L'.code.toByte(), 'F'.code.toByte())
+    val fileBytes = ByteArray(4)
+    FileInputStream(tempFile).use { input ->
+        input.read(fileBytes)
+    }
+    return fileBytes.contentEquals(elfMagic)
 }
