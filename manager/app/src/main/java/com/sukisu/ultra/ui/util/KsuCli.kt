@@ -436,7 +436,7 @@ fun restartApp(packageName: String) {
     launchApp(packageName)
 }
 
-private fun getSuSFSDaemonPath(): String {
+fun getSuSFSDaemonPath(): String {
     return ksuApp.applicationInfo.nativeLibraryDir + File.separator + "libzakozakozako.so"
 }
 
