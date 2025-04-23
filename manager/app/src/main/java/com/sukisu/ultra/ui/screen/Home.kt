@@ -49,6 +49,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.graphics.vector.ImageVector
 import com.sukisu.ultra.ui.theme.CardConfig
 import androidx.core.content.edit
 import java.io.BufferedReader
@@ -573,7 +574,7 @@ private fun InfoCard() {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 24.dp, top = 24.dp, end = 24.dp, bottom = 16.dp)
+                .padding(start = 24.dp, top = 24.dp, end = 24.dp, bottom = 16.dp),
         ) withContext@{
             val contents = StringBuilder()
             val uname = Os.uname()
@@ -582,40 +583,41 @@ private fun InfoCard() {
             fun InfoCardItem(
                 label: String,
                 content: String,
+                icon: ImageVector = Icons.Default.Info
             ) {
                 contents.appendLine(label).appendLine(content).appendLine()
-                Text(text = label, style = MaterialTheme.typography.bodyLarge)
-                Text(text = content, style = MaterialTheme.typography.bodyMedium)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = label,
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Column {
+                        Text(text = label, style = MaterialTheme.typography.bodyLarge)
+                        Text(text = content, style = MaterialTheme.typography.bodyMedium)
+                    }
+                }
             }
 
-            InfoCardItem(stringResource(R.string.home_kernel), uname.release)
+            InfoCardItem(stringResource(R.string.home_kernel), uname.release, icon = Icons.Default.Memory)
 
             if (!isSimpleMode) {
                 Spacer(Modifier.height(16.dp))
                 val androidVersion = Build.VERSION.RELEASE
-                InfoCardItem(stringResource(R.string.home_android_version), androidVersion)
+                InfoCardItem(stringResource(R.string.home_android_version), androidVersion, icon = Icons.Default.Android)
             }
-
 
             Spacer(Modifier.height(16.dp))
             val deviceModel = getDeviceModel(context)
-            InfoCardItem(stringResource(R.string.home_device_model), deviceModel)
-
-
+            InfoCardItem(stringResource(R.string.home_device_model), deviceModel, icon = Icons.Default.PhoneAndroid)
 
             Spacer(Modifier.height(16.dp))
             val managerVersion = getManagerVersion(context)
-            InfoCardItem(
-                stringResource(R.string.home_manager_version),
-                "${managerVersion.first} (${managerVersion.second})"
-            )
-
-
+            InfoCardItem(stringResource(R.string.home_manager_version), "${managerVersion.first} (${managerVersion.second})", icon = Icons.Default.Settings)
 
             Spacer(Modifier.height(16.dp))
-            InfoCardItem(stringResource(R.string.home_selinux_status), getSELinuxStatus())
-
-
+            InfoCardItem(stringResource(R.string.home_selinux_status), getSELinuxStatus(), icon = Icons.Default.Security)
 
             if (!isSimpleMode) {
                 if (lkmMode != true) {
@@ -634,7 +636,7 @@ private fun InfoCard() {
                         displayVersion = "${stringResource(R.string.supported)} ($kpmVersion)"
                     }
                     Spacer(Modifier.height(16.dp))
-                    InfoCardItem(stringResource(R.string.home_kpm_version), displayVersion)
+                    InfoCardItem(stringResource(R.string.home_kpm_version), displayVersion, icon = Icons.Default.Code)
                 }
             }
 
@@ -660,9 +662,7 @@ private fun InfoCard() {
                         }
                     }
                     InfoCardItem(
-                        stringResource(R.string.home_susfs_version),
-                        infoText
-                    )
+                        stringResource(R.string.home_susfs_version), infoText, icon = Icons.Default.Storage)
                 }
             }
         }
