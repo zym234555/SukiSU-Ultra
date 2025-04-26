@@ -266,4 +266,7 @@
     <string name="confirm_uninstall_title_with_filename">Uninstall</string>
     <string name="confirm_uninstall_content">The following KPM will be uninstalled: %s</string>
     <string name="settings_susfs_toggle_summary">Disable kprobe hooks created by KernelSU, using inline hooks instead, which is similar to non-GKI kernel hooking method.</string>
+    <string name="image_editor_title">Adjust background image</string>
+    <string name="image_editor_hint">Use two fingers to zoom the image, and one finger to drag it to adjust the position</string>
+    <string name="background_image_error">Could not load image</string>
 </resources>

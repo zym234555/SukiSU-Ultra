@@ -262,4 +262,7 @@
     <string name="invalid_file_type">文件类型不正确，请选择 .kpm 文件</string>
     <string name="confirm_uninstall_title_with_filename">卸载</string>
     <string name="confirm_uninstall_content">将卸载以下 kpm 模块：\n%s</string>
+    <string name="image_editor_title">调整背景图片</string>
+    <string name="image_editor_hint">使用双指缩放图片，单指拖动调整位置</string>
+    <string name="background_image_error">无法加载图片</string>
 </resources>

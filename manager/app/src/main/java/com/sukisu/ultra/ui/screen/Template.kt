@@ -1,5 +1,7 @@
 package com.sukisu.ultra.ui.screen
 
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -44,11 +46,10 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
+import androidx.core.content.getSystemService
 import androidx.lifecycle.compose.dropUnlessResumed
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.ramcosta.composedestinations.annotation.Destination
@@ -99,8 +100,8 @@ fun AppProfileTemplateScreen(
 
     Scaffold(
         topBar = {
-            val clipboardManager = LocalClipboardManager.current
             val context = LocalContext.current
+            val clipboardManager = context.getSystemService<ClipboardManager>()
             val showToast = fun(msg: String) {
                 scope.launch(Dispatchers.Main) {
                     Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
@@ -112,20 +113,20 @@ fun AppProfileTemplateScreen(
                     scope.launch { viewModel.fetchTemplates(true) }
                 },
                 onImport = {
-                    clipboardManager.getText()?.text?.let {
-                        if (it.isEmpty()) {
+                    scope.launch {
+                        val clipboardText = clipboardManager?.primaryClip?.getItemAt(0)?.text?.toString()
+                        if (clipboardText.isNullOrEmpty()) {
                             showToast(context.getString(R.string.app_profile_template_import_empty))
-                            return@let
+                            return@launch
                         }
-                        scope.launch {
-                            viewModel.importTemplates(
-                                it, {
-                                    showToast(context.getString(R.string.app_profile_template_import_success))
-                                    viewModel.fetchTemplates(false)
-                                },
-                                showToast
-                            )
-                        }
+                        viewModel.importTemplates(
+                            clipboardText,
+                            {
+                                showToast(context.getString(R.string.app_profile_template_import_success))
+                                viewModel.fetchTemplates(false)
+                            },
+                            showToast
+                        )
                     }
                 },
                 onExport = {
@@ -134,8 +135,8 @@ fun AppProfileTemplateScreen(
                             {
                                 showToast(context.getString(R.string.app_profile_template_export_empty))
                             }
-                        ) {
-                            clipboardManager.setText(AnnotatedString(it))
+                        ) { text ->
+                            clipboardManager?.setPrimaryClip(ClipData.newPlainText("", text))
                         }
                     }
                 },

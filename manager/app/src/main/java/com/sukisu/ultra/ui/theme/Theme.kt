@@ -27,11 +27,14 @@ import androidx.compose.ui.zIndex
 import coil.compose.rememberAsyncImagePainter
 import androidx.compose.foundation.background
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.unit.dp
 import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStream
 import androidx.core.content.edit
 import androidx.core.net.toUri
+import com.sukisu.ultra.ui.util.BackgroundTransformation
+import com.sukisu.ultra.ui.util.saveTransformedBackground
 
 object ThemeConfig {
     var customBackgroundUri by mutableStateOf<Uri?>(null)
@@ -88,29 +91,6 @@ private fun getLightColorScheme() = lightColorScheme(
     outlineVariant = Color.Black.copy(alpha = 0.12f)
 )
 
-// 复制图片到应用内部存储
-fun Context.copyImageToInternalStorage(uri: Uri): Uri? {
-    try {
-        val contentResolver: ContentResolver = contentResolver
-        val inputStream: InputStream = contentResolver.openInputStream(uri)!!
-        val fileName = "custom_background.jpg"
-        val file = File(filesDir, fileName)
-        val outputStream = FileOutputStream(file)
-        val buffer = ByteArray(4 * 1024)
-        var read: Int
-        while (inputStream.read(buffer).also { read = it } != -1) {
-            outputStream.write(buffer, 0, read)
-        }
-        outputStream.flush()
-        outputStream.close()
-        inputStream.close()
-        return Uri.fromFile(file)
-    } catch (e: Exception) {
-        Log.e("ImageCopy", "Failed to copy image: ${e.message}")
-        return null
-    }
-}
-
 @Composable
 fun KernelSUTheme(
     darkTheme: Boolean = when(ThemeConfig.forceDarkMode) {
@@ -131,7 +111,6 @@ fun KernelSUTheme(
             if (darkTheme) {
                 val originalScheme = dynamicDarkColorScheme(context)
                 originalScheme.copy(
-                    // 调整按钮相关颜色
                     primary = adjustColor(originalScheme.primary),
                     onPrimary = adjustColor(originalScheme.onPrimary),
                     primaryContainer = adjustColor(originalScheme.primaryContainer),
@@ -242,6 +221,48 @@ fun KernelSUTheme(
     }
 }
 
+// 复制图片到应用内部存储
+private fun Context.copyImageToInternalStorage(uri: Uri): Uri? {
+    try {
+        val contentResolver: ContentResolver = contentResolver
+        val inputStream: InputStream = contentResolver.openInputStream(uri)!!
+        val fileName = "custom_background.jpg"
+        val file = File(filesDir, fileName)
+        val outputStream = FileOutputStream(file)
+        val buffer = ByteArray(4 * 1024)
+        var read: Int
+        while (inputStream.read(buffer).also { read = it } != -1) {
+            outputStream.write(buffer, 0, read)
+        }
+        outputStream.flush()
+        outputStream.close()
+        inputStream.close()
+        return Uri.fromFile(file)
+    } catch (e: Exception) {
+        Log.e("ImageCopy", "Failed to copy image: ${e.message}")
+        return null
+    }
+}
+
+// 保存变换后的背景图片到应用内部存储并更新配置
+fun Context.saveAndApplyCustomBackground(uri: Uri, transformation: BackgroundTransformation? = null) {
+    val finalUri = if (transformation != null) {
+        saveTransformedBackground(uri, transformation)
+    } else {
+        copyImageToInternalStorage(uri)
+    }
+
+    getSharedPreferences("theme_prefs", Context.MODE_PRIVATE)
+        .edit {
+            putString("custom_background", finalUri?.toString())
+        }
+
+    ThemeConfig.customBackgroundUri = finalUri
+    CardConfig.cardElevation = 0.dp
+    CardConfig.isCustomBackgroundEnabled = true
+}
+
+// 保存背景图片到应用内部存储并更新配置
 fun Context.saveCustomBackground(uri: Uri?) {
     val newUri = uri?.let { copyImageToInternalStorage(it) }
     getSharedPreferences("theme_prefs", Context.MODE_PRIVATE)
@@ -249,6 +270,10 @@ fun Context.saveCustomBackground(uri: Uri?) {
             putString("custom_background", newUri?.toString())
         }
     ThemeConfig.customBackgroundUri = newUri
+    if (uri != null) {
+        CardConfig.cardElevation = 0.dp
+        CardConfig.isCustomBackgroundEnabled = true
+    }
 }
 
 fun Context.loadCustomBackground() {
