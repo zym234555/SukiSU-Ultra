@@ -101,6 +101,7 @@ KPM模板地址: https://github.com/udochina/KPM-Build-Anywhere
 - [zaoqi123](https://github.com/zaoqi123) 请我喝奶茶也不错
 - [wswzgdg](https://github.com/wswzgdg) 非常感谢对此项目的支持
 - [yspbwx2010](https://github.com/yspbwx2010) 非常感谢
+- [DARKWWEE](https://github.com/DARKWWEE) 感谢老哥的 100 USDT
 
 
 

@@ -93,6 +93,7 @@ SukiSU と susfs をベースにコンパイルされたプロジェクトです
 - [zaoqi123](https://github.com/zaoqi123) ミルクティーを買ってあげるのも良い考えですね。
 - [wswzgdg](https://github.com/wswzgdg) このプロジェクトを支援していただき、ありがとうございます。
 - [yspbwx2010](https://github.com/yspbwx2010) どうもありがとう。
+- [DARKWWEE](https://github.com/DARKWWEE) ラオウ100USDTありがとう！
 
 
 
