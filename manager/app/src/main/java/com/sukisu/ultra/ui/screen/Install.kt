@@ -46,6 +46,7 @@ import com.sukisu.ultra.ui.component.rememberCustomDialog
 import com.sukisu.ultra.flash.HorizonKernelFlashProgress
 import com.sukisu.ultra.flash.HorizonKernelState
 import com.sukisu.ultra.flash.HorizonKernelWorker
+import com.sukisu.ultra.ui.theme.CardConfig
 import com.sukisu.ultra.ui.theme.ThemeConfig
 import com.sukisu.ultra.ui.theme.getCardColors
 import com.sukisu.ultra.ui.theme.getCardElevation
@@ -507,8 +508,15 @@ private fun TopBar(
     onLkmUpload: () -> Unit = {},
     scrollBehavior: TopAppBarScrollBehavior? = null
 ) {
+    val cardColor = MaterialTheme.colorScheme.secondaryContainer
+    val cardAlpha = CardConfig.cardAlpha
+
     TopAppBar(
         title = { Text(stringResource(R.string.install)) },
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = cardColor.copy(alpha = cardAlpha),
+            scrolledContainerColor = cardColor.copy(alpha = cardAlpha)
+        ),
         navigationIcon = {
             IconButton(onClick = onBack) {
                 Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
