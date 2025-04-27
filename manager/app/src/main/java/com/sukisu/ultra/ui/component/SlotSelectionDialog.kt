@@ -1,10 +1,12 @@
 package com.sukisu.ultra.ui.component
 
+import android.content.Context
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -24,6 +26,20 @@ fun SlotSelectionDialog(
     onDismiss: () -> Unit,
     onSlotSelected: (String) -> Unit
 ) {
+    val context = LocalContext.current
+    var currentSlot by remember { mutableStateOf<String?>(null) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+    
+    LaunchedEffect(Unit) {
+        try {
+            currentSlot = getCurrentSlot(context)
+            errorMessage = null
+        } catch (e: Exception) {
+            errorMessage = e.message
+            currentSlot = null
+        }
+    }
+
     if (show) {
         val cardColor = if (!ThemeConfig.useDynamicColor) {
             ThemeConfig.currentTheme.ButtonContrast
@@ -44,6 +60,27 @@ fun SlotSelectionDialog(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
+                    if (errorMessage != null) {
+                        Text(
+                            text = "Error: $errorMessage",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.error,
+                            textAlign = TextAlign.Center
+                        )
+                    } else {
+                        Text(
+                            text = stringResource(
+                                id = R.string.current_slot,
+                                currentSlot ?: "Unknown"
+                            ),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
                     Text(
                         text = stringResource(id = R.string.select_slot_description),
                         style = MaterialTheme.typography.bodyMedium,
@@ -97,5 +134,26 @@ fun SlotSelectionDialog(
             shape = MaterialTheme.shapes.medium,
             tonalElevation = getCardElevation()
         )
+    }
+}
+
+// 获取当前槽位信息
+private fun getCurrentSlot(context: Context): String? {
+    return runCommandGetOutput(true, "getprop ro.boot.slot_suffix")
+}
+
+private fun runCommandGetOutput(su: Boolean, cmd: String): String? {
+    return try {
+        val process = ProcessBuilder(if (su) "su" else "sh").start()
+        process.outputStream.bufferedWriter().use { writer ->
+            writer.write("$cmd\n")
+            writer.write("exit\n")
+            writer.flush()
+        }
+        process.inputStream.bufferedReader().use { reader ->
+            reader.readText().trim()
+        }
+    } catch (_: Exception) {
+        null
     }
 }

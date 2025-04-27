@@ -90,6 +90,7 @@ class HorizonKernelWorker(
     private lateinit var binaryPath: String
 
     private var onFlashComplete: (() -> Unit)? = null
+    private var originalSlot: String? = null
 
     fun setOnFlashCompleteListener(listener: () -> Unit) {
         onFlashComplete = listener
@@ -131,7 +132,29 @@ class HorizonKernelWorker(
 
             state.updateStep(context.getString(R.string.horizon_flashing))
             state.updateProgress(0.7f)
+
+            // 获取原始槽位信息
+            if (slot != null) {
+                state.updateStep(context.getString(R.string.horizon_getting_original_slot))
+                state.updateProgress(0.72f)
+                originalSlot = runCommandGetOutput(true, "getprop ro.boot.slot_suffix")
+            }
+
+            // 设置目标槽位
+            if (!slot.isNullOrEmpty()) {
+                state.updateStep(context.getString(R.string.horizon_setting_target_slot))
+                state.updateProgress(0.74f)
+                runCommand(true, "resetprop -n ro.boot.slot_suffix _$slot")
+            }
+
             flash()
+
+            // 恢复原始槽位
+            if (!originalSlot.isNullOrEmpty()) {
+                state.updateStep(context.getString(R.string.horizon_restoring_original_slot))
+                state.updateProgress(0.8f)
+                runCommand(true, "resetprop ro.boot.slot_suffix $originalSlot")
+            }
 
             state.updateStep(context.getString(R.string.horizon_flash_complete_status))
             state.completeFlashing()
@@ -141,6 +164,13 @@ class HorizonKernelWorker(
             }
         } catch (e: Exception) {
             state.setError(e.message ?: context.getString(R.string.horizon_unknown_error))
+
+            // 恢复原始槽位
+            if (!originalSlot.isNullOrEmpty()) {
+                state.updateStep(context.getString(R.string.horizon_restoring_original_slot))
+                state.updateProgress(0.8f)
+                runCommand(true, "resetprop ro.boot.slot_suffix $originalSlot")
+            }
         }
     }
 
@@ -245,12 +275,33 @@ class HorizonKernelWorker(
         }
     }
 
+    private fun runCommandGetOutput(su: Boolean, cmd: String): String {
+        val process = ProcessBuilder(if (su) "su" else "sh")
+            .redirectErrorStream(true)
+            .start()
+
+        return try {
+            process.outputStream.bufferedWriter().use { writer ->
+                writer.write("$cmd\n")
+                writer.write("exit\n")
+                writer.flush()
+            }
+            process.inputStream.bufferedReader().use { reader ->
+                reader.readText().trim()
+            }
+        } catch (_: Exception) {
+            ""
+        } finally {
+            process.destroy()
+        }
+    }
+
     private fun rootAvailable(): Boolean {
         return try {
             val process = Runtime.getRuntime().exec("su -c id")
             val exitValue = process.waitFor()
             exitValue == 0
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             false
         }
     }

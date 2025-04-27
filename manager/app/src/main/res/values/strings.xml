@@ -291,4 +291,8 @@
     <!-- Error Messages -->
     <string name="horizon_copy_failed">Copy failed</string>
     <string name="horizon_unknown_error">Unknown error</string>
+    <string name="horizon_getting_original_slot">Getting the original slot</string>
+    <string name="horizon_setting_target_slot">Setting the specified slot</string>
+    <string name="horizon_restoring_original_slot">Restore Default Slot</string>
+    <string name="current_slot">Current Slot：%1$s </string>
 </resources>

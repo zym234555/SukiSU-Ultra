@@ -287,4 +287,8 @@
     <!-- 错误信息 -->
     <string name="horizon_copy_failed">复制失败</string>
     <string name="horizon_unknown_error">未知错误</string>
+    <string name="horizon_getting_original_slot">获取原有槽位</string>
+    <string name="horizon_setting_target_slot">设置指定槽位</string>
+    <string name="horizon_restoring_original_slot">恢复默认槽位</string>
+    <string name="current_slot">当前槽位：%1$s </string>
 </resources>
