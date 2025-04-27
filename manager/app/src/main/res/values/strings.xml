@@ -270,8 +270,8 @@
     <string name="image_editor_hint">Use two fingers to zoom the image, and one finger to drag it to adjust the position</string>
     <string name="background_image_error">Could not load image</string>
     <string name="reprovision">Reprovision</string>
-    <!-- Anykernel3 Kernel Flash Progress Related -->
-    <string name="horizon_flash_title">Anykernel3 Flashing</string>
+    <!-- Kernel Flash Progress Related -->
+    <string name="horizon_flash_title">Kernel Flashing</string>
     <string name="horizon_logs_label">Logs:</string>
     <string name="horizon_flash_complete">Flash Complete</string>
     <!-- Flash Status Related -->
@@ -284,7 +284,7 @@
     <string name="horizon_flash_complete_status">Flash completed</string>
     <!-- Slot selection related strings -->
     <string name="select_slot_title">Select Flash Slot</string>
-    <string name="select_slot_description">Please select the target slot for flashing HorizonKernel</string>
+    <string name="select_slot_description">Please select the target slot for flashing boot</string>
     <string name="slot_a">Slot A</string>
     <string name="slot_b">Slot B</string>
     <string name="selected_slot">Selected slot: %1$s</string>
