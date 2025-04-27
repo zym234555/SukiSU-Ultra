@@ -59,17 +59,33 @@ fun Context.applyTransformationToBitmap(bitmap: Bitmap, transformation: Backgrou
 
     val matrix = Matrix()
 
-    matrix.postScale(transformation.scale, transformation.scale)
+    // 确保缩放值有效
+    val safeScale = maxOf(0.1f, transformation.scale)
+    matrix.postScale(safeScale, safeScale)
 
     // 计算中心点
     val centerX = targetWidth / 2f
     val centerY = targetHeight / 2f
 
-    // 缩放围绕中心点
-    matrix.postTranslate(
-        -((bitmap.width * transformation.scale - targetWidth) / 2) + transformation.offsetX,
-        -((bitmap.height * transformation.scale - targetHeight) / 2) + transformation.offsetY
-    )
+    // 计算偏移量，确保不会出现负最大值的问题
+    val widthDiff = (bitmap.width * safeScale - targetWidth)
+    val heightDiff = (bitmap.height * safeScale - targetHeight)
+
+    // 安全计算偏移量边界
+    val maxOffsetX = maxOf(0f, widthDiff / 2)
+    val maxOffsetY = maxOf(0f, heightDiff / 2)
+
+    // 限制偏移范围
+    val safeOffsetX = if (maxOffsetX > 0)
+        transformation.offsetX.coerceIn(-maxOffsetX, maxOffsetX) else 0f
+    val safeOffsetY = if (maxOffsetY > 0)
+        transformation.offsetY.coerceIn(-maxOffsetY, maxOffsetY) else 0f
+
+    // 应用偏移量到矩阵
+    val translationX = -widthDiff / 2 + safeOffsetX
+    val translationY = -heightDiff / 2 + safeOffsetY
+
+    matrix.postTranslate(translationX, translationY)
 
     // 将原始位图绘制到新位图上
     canvas.drawBitmap(bitmap, matrix, null)
@@ -92,7 +108,7 @@ fun Context.saveTransformedBackground(uri: Uri, transformation: BackgroundTransf
 
         return Uri.fromFile(file)
     } catch (e: Exception) {
-        Log.e("BackgroundUtils", "Failed to save transformed image: ${e.message}")
+        Log.e("BackgroundUtils", "Failed to save transformed image: ${e.message}", e)
         return null
     }
 }
