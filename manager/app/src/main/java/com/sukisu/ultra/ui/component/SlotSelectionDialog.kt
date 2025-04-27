@@ -3,6 +3,7 @@ package com.sukisu.ultra.ui.component
 import android.content.Context
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -10,10 +11,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import com.sukisu.ultra.R
 import com.sukisu.ultra.ui.theme.ThemeConfig
-import com.sukisu.ultra.ui.theme.getCardColors
 import com.sukisu.ultra.ui.theme.getCardElevation
+import androidx.compose.foundation.shape.CornerSize
 
 /**
  * 槽位选择对话框组件
@@ -29,7 +31,7 @@ fun SlotSelectionDialog(
     val context = LocalContext.current
     var currentSlot by remember { mutableStateOf<String?>(null) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
-    
+
     LaunchedEffect(Unit) {
         try {
             currentSlot = getCurrentSlot(context)
@@ -41,25 +43,38 @@ fun SlotSelectionDialog(
     }
 
     if (show) {
-        val cardColor = if (!ThemeConfig.useDynamicColor) {
-            ThemeConfig.currentTheme.ButtonContrast
+        val backgroundColor = if (!ThemeConfig.useDynamicColor) {
+            ThemeConfig.currentTheme.ButtonContrast.copy(alpha = 1.0f)
         } else {
-            MaterialTheme.colorScheme.secondaryContainer
+            MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 1.0f)
         }
 
-        AlertDialog(
-            onDismissRequest = onDismiss,
-            title = {
-                Text(
-                    text = stringResource(id = R.string.select_slot_title),
-                    style = MaterialTheme.typography.headlineSmall
-                )
-            },
-            text = {
+        Dialog(onDismissRequest = onDismiss) {
+            Card(
+                shape = MaterialTheme.shapes.medium.copy(
+                    topStart = CornerSize(16.dp),
+                    topEnd = CornerSize(16.dp),
+                    bottomEnd = CornerSize(16.dp),
+                    bottomStart = CornerSize(16.dp)
+                ),
+                colors = CardDefaults.cardColors(
+                    containerColor = backgroundColor
+                ),
+                elevation = CardDefaults.cardElevation(defaultElevation = getCardElevation())
+            ) {
                 Column(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .padding(24.dp)
+                        .fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
+                    Text(
+                        text = stringResource(id = R.string.select_slot_title),
+                        style = MaterialTheme.typography.headlineSmall,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+
                     if (errorMessage != null) {
                         Text(
                             text = "Error: $errorMessage",
@@ -88,18 +103,25 @@ fun SlotSelectionDialog(
                         textAlign = TextAlign.Center
                     )
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(24.dp))
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
+                        val isDefaultSlotA = currentSlot == "_a" || currentSlot == "a"
                         Button(
                             onClick = { onSlotSelected("a") },
                             modifier = Modifier.weight(1f),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                                containerColor = if (isDefaultSlotA)
+                                    MaterialTheme.colorScheme.primary
+                                else
+                                    MaterialTheme.colorScheme.primaryContainer,
+                                contentColor = if (isDefaultSlotA)
+                                    MaterialTheme.colorScheme.onPrimary
+                                else
+                                    MaterialTheme.colorScheme.onPrimaryContainer
                             )
                         ) {
                             Text(
@@ -108,12 +130,19 @@ fun SlotSelectionDialog(
                             )
                         }
 
+                        val isDefaultSlotB = currentSlot == "_b" || currentSlot == "b"
                         Button(
                             onClick = { onSlotSelected("b") },
                             modifier = Modifier.weight(1f),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                                contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                                containerColor = if (isDefaultSlotB)
+                                    MaterialTheme.colorScheme.secondary
+                                else
+                                    MaterialTheme.colorScheme.secondaryContainer,
+                                contentColor = if (isDefaultSlotB)
+                                    MaterialTheme.colorScheme.onSecondary
+                                else
+                                    MaterialTheme.colorScheme.onSecondaryContainer
                             )
                         ) {
                             Text(
@@ -122,24 +151,46 @@ fun SlotSelectionDialog(
                             )
                         }
                     }
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    HorizontalDivider(
+                        modifier = Modifier.fillMaxWidth(),
+                        thickness = 1.dp,
+                        color = MaterialTheme.colorScheme.outline
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        TextButton(
+                            onClick = onDismiss,
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(text = stringResource(id = android.R.string.cancel))
+                        }
+                        TextButton(
+                            onClick = {
+                                currentSlot?.let { onSlotSelected(it) }
+                                onDismiss()
+                            },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(text = stringResource(id = android.R.string.ok))
+                        }
+                    }
                 }
-            },
-            confirmButton = {},
-            dismissButton = {
-                TextButton(onClick = onDismiss) {
-                    Text(text = stringResource(id = android.R.string.cancel))
-                }
-            },
-            containerColor = getCardColors(cardColor.copy(alpha = 0.9f)).containerColor.copy(alpha = 0.9f),
-            shape = MaterialTheme.shapes.medium,
-            tonalElevation = getCardElevation()
-        )
+            }
+        }
     }
 }
 
 // 获取当前槽位信息
 private fun getCurrentSlot(context: Context): String? {
-    return runCommandGetOutput(true, "getprop ro.boot.slot_suffix")
+    return runCommandGetOutput(true, "getprop ro.boot.slot_suffix")?.let {
+        if (it.startsWith("_")) it.substring(1) else it
+    }
 }
 
 private fun runCommandGetOutput(su: Boolean, cmd: String): String? {
