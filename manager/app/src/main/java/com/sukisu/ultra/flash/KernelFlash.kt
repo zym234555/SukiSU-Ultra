@@ -254,7 +254,7 @@ class HorizonKernelWorker(
         }
 
         if (!File("${context.filesDir.absolutePath}/done").exists()) {
-            throw IOException("Flash failed")
+            throw IOException(context.getString(R.string.flash_failed_message))
         }
     }
 

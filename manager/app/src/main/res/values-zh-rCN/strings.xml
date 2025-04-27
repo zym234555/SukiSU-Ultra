@@ -291,4 +291,5 @@
     <string name="horizon_setting_target_slot">设置指定槽位</string>
     <string name="horizon_restoring_original_slot">恢复默认槽位</string>
     <string name="current_slot">当前槽位：%1$s </string>
+    <string name="flash_failed_message">刷写失败</string>
 </resources>
