@@ -266,4 +266,25 @@
     <string name="image_editor_hint">使用双指缩放图片，单指拖动调整位置</string>
     <string name="background_image_error">无法加载图片</string>
     <string name="reprovision">重置</string>
+    <!-- Anykernel3 Kernel刷写进度相关 -->
+    <string name="horizon_flash_title">刷写Anykernel3</string>
+    <string name="horizon_logs_label">日志:</string>
+    <string name="horizon_flash_complete">刷写完成</string>
+    <!-- 刷写状态相关 -->
+    <string name="horizon_preparing">准备中…</string>
+    <string name="horizon_cleaning_files">清理文件…</string>
+    <string name="horizon_copying_files">复制文件…</string>
+    <string name="horizon_extracting_tool">提取刷写工具…</string>
+    <string name="horizon_patching_script">修补刷写脚本…</string>
+    <string name="horizon_flashing">刷写内核中…</string>
+    <string name="horizon_flash_complete_status">刷写完成</string>
+    <!-- 槽位选择相关字符串 -->
+    <string name="select_slot_title">选择刷写槽位</string>
+    <string name="select_slot_description">请选择要刷写HorizonKernel的目标槽位</string>
+    <string name="slot_a">A槽位</string>
+    <string name="slot_b">B槽位</string>
+    <string name="selected_slot">已选择槽位: %1$s</string>
+    <!-- 错误信息 -->
+    <string name="horizon_copy_failed">复制失败</string>
+    <string name="horizon_unknown_error">未知错误</string>
 </resources>
