@@ -295,4 +295,6 @@
     <!-- lkm/gki install -->
     <string name="Lkm_install_methods">LKM修补/安装</string>
     <string name="GKI_install_methods">GKI安装</string>
+    <string name="kernel_version_log">内核版本：%1$s</string>
+    <string name="tool_version_log">使用修补工具：%1$s</string>
 </resources>

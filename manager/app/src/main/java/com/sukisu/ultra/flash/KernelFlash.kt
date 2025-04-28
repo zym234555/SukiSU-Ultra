@@ -196,9 +196,17 @@ class HorizonKernelWorker(
     }
 
     private fun patch() {
-        val mkbootfsPath = "${context.filesDir.absolutePath}/mkbootfs"
-        AssetsUtil.exportFiles(context, "mkbootfs", mkbootfsPath)
-        runCommand(false, "sed -i '/chmod -R 755 tools bin;/i cp -f $mkbootfsPath \$AKHOME/tools;' $binaryPath")
+        val kernelVersion = runCommandGetOutput(true, "cat /proc/version")
+        val versionRegex = """\d+\.\d+\.\d+""".toRegex()
+        val version = versionRegex.find(kernelVersion)?.value ?: ""
+        val toolName = when {
+            version.startsWith("5.10.") -> "5_10"
+            else -> "5_15+"
+        }
+        val toolPath = "${context.filesDir.absolutePath}/mkbootfs"
+        AssetsUtil.exportFiles(context, "$toolName-mkbootfs", toolPath)
+        state.addLog("${context.getString(R.string.kernel_version_log, version)} ${context.getString(R.string.tool_version_log, toolName)}")
+        runCommand(false, "sed -i '/chmod -R 755 tools bin;/i cp -f $toolPath \$AKHOME/tools;' $binaryPath")
     }
 
     private fun flash() {
