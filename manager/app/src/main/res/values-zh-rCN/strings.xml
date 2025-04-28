@@ -117,7 +117,7 @@
     <string name="enable_web_debugging">启用 WebView 调试</string>
     <string name="enable_web_debugging_summary">可用于调试 WebUI 。请仅在需要时启用。</string>
     <string name="direct_install">直接安装（推荐）</string>
-    <string name="select_file">选择一个文件</string>
+    <string name="select_file">选择一个需要修补的镜像</string>
     <string name="install_inactive_slot">安装到未使用的槽位（OTA 后）</string>
     <string name="install_inactive_slot_warning">将在重启后强制切换到另一个槽位！\n注意只能在 OTA 更新完成后的重启之前使用。\n确认？</string>
     <string name="install_next">下一步</string>
@@ -284,12 +284,15 @@
     <string name="slot_a">A槽位</string>
     <string name="slot_b">B槽位</string>
     <string name="selected_slot">已选择槽位: %1$s</string>
-    <!-- 错误信息 -->
-    <string name="horizon_copy_failed">复制失败</string>
-    <string name="horizon_unknown_error">未知错误</string>
     <string name="horizon_getting_original_slot">获取原有槽位</string>
     <string name="horizon_setting_target_slot">设置指定槽位</string>
     <string name="horizon_restoring_original_slot">恢复默认槽位</string>
     <string name="current_slot">当前槽位：%1$s </string>
+    <!-- 错误信息 -->
+    <string name="horizon_copy_failed">复制失败</string>
+    <string name="horizon_unknown_error">未知错误</string>
     <string name="flash_failed_message">刷写失败</string>
+    <!-- lkm/gki install -->
+    <string name="Lkm_install_methods">LKM修补/安装</string>
+    <string name="GKI_install_methods">GKI安装</string>
 </resources>

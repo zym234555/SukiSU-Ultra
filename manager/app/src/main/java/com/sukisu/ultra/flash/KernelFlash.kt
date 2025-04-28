@@ -354,7 +354,7 @@ fun HorizonKernelFlashProgress(state: FlashState) {
                 Surface(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .heightIn(max = 150.dp)
+                        .heightIn(max = 230.dp)
                         .padding(vertical = 4.dp),
                     color = MaterialTheme.colorScheme.surface,
                     tonalElevation = 1.dp,

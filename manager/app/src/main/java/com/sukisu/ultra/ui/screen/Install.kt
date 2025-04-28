@@ -21,6 +21,7 @@ import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.AutoFixHigh
 import androidx.compose.material.icons.filled.FileUpload
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -335,8 +336,16 @@ private fun SelectInstallMethod(onSelected: (InstallMethod) -> Unit = {}) {
         if (it.resultCode == Activity.RESULT_OK) {
             it.data?.data?.let { uri ->
                 val option = when (currentSelectingMethod) {
-                    is InstallMethod.SelectFile -> InstallMethod.SelectFile(uri, summary = selectFileTip)
-                    is InstallMethod.HorizonKernel -> InstallMethod.HorizonKernel(uri, summary = horizonKernelSummary)
+                    is InstallMethod.SelectFile -> InstallMethod.SelectFile(
+                        uri,
+                        summary = selectFileTip
+                    )
+
+                    is InstallMethod.HorizonKernel -> InstallMethod.HorizonKernel(
+                        uri,
+                        summary = horizonKernelSummary
+                    )
+
                     else -> null
                 }
                 option?.let {
@@ -364,56 +373,135 @@ private fun SelectInstallMethod(onSelected: (InstallMethod) -> Unit = {}) {
             is InstallMethod.SelectFile, is InstallMethod.HorizonKernel -> {
                 selectImageLauncher.launch(Intent(Intent.ACTION_GET_CONTENT).apply {
                     type = "application/*"
-                    putExtra(Intent.EXTRA_MIME_TYPES, arrayOf("application/octet-stream", "application/zip"))
+                    putExtra(
+                        Intent.EXTRA_MIME_TYPES,
+                        arrayOf("application/octet-stream", "application/zip")
+                    )
                 })
             }
+
             is InstallMethod.DirectInstall -> {
                 selectedOption = option
                 onSelected(option)
             }
+
             is InstallMethod.DirectInstallToInactiveSlot -> {
                 confirmDialog.showConfirm(dialogTitle, dialogContent)
             }
         }
     }
 
+    var LKMExpanded by remember { mutableStateOf(false) }
+    var GKIExpanded by remember { mutableStateOf(false) }
+
     Column {
-        radioOptions.forEach { option ->
-            val interactionSource = remember { MutableInteractionSource() }
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .toggleable(
-                        value = option.javaClass == selectedOption?.javaClass,
-                        onValueChange = { onClick(option) },
-                        role = Role.RadioButton,
-                        indication = LocalIndication.current,
-                        interactionSource = interactionSource
-                    )
+        ListItem(
+            leadingContent = { Icon(Icons.Filled.AutoFixHigh, null) },
+            headlineContent = { Text(stringResource(R.string.Lkm_install_methods)) },
+            modifier = Modifier.clickable {
+                LKMExpanded = !LKMExpanded
+            }
+        )
+        radioOptions.take(3).forEach { option ->
+            AnimatedVisibility(
+                visible = LKMExpanded,
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp)
             ) {
-                RadioButton(
-                    selected = option.javaClass == selectedOption?.javaClass,
-                    onClick = { onClick(option) },
-                    interactionSource = interactionSource
-                )
-                Column(
-                    modifier = Modifier.padding(vertical = 12.dp)
-                ) {
-                    Text(
-                        text = stringResource(id = option.label),
-                        fontSize = MaterialTheme.typography.titleMedium.fontSize,
-                        fontFamily = MaterialTheme.typography.titleMedium.fontFamily,
-                        fontStyle = MaterialTheme.typography.titleMedium.fontStyle
-                    )
-                    option.summary?.let {
-                        Text(
-                            text = it,
-                            fontSize = MaterialTheme.typography.bodySmall.fontSize,
-                            fontFamily = MaterialTheme.typography.bodySmall.fontFamily,
-                            fontStyle = MaterialTheme.typography.bodySmall.fontStyle
+                Column {
+                    val interactionSource = remember { MutableInteractionSource() }
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .toggleable(
+                                value = option.javaClass == selectedOption?.javaClass,
+                                onValueChange = { onClick(option) },
+                                role = Role.RadioButton,
+                                indication = LocalIndication.current,
+                                interactionSource = interactionSource
+                            )
+                    ) {
+                        RadioButton(
+                            selected = option.javaClass == selectedOption?.javaClass,
+                            onClick = { onClick(option) },
+                            interactionSource = interactionSource
                         )
+                        Column(
+                            modifier = Modifier.padding(vertical = 12.dp)
+                        ) {
+                            Text(
+                                text = stringResource(id = option.label),
+                                fontSize = MaterialTheme.typography.titleMedium.fontSize,
+                                fontFamily = MaterialTheme.typography.titleMedium.fontFamily,
+                                fontStyle = MaterialTheme.typography.titleMedium.fontStyle
+                            )
+                            option.summary?.let {
+                                Text(
+                                    text = it,
+                                    fontSize = MaterialTheme.typography.bodySmall.fontSize,
+                                    fontFamily = MaterialTheme.typography.bodySmall.fontFamily,
+                                    fontStyle = MaterialTheme.typography.bodySmall.fontStyle
+                                )
+                            }
+                        }
                     }
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+        }
+    }
+    Column {
+        ListItem(
+            leadingContent = { Icon(Icons.Filled.FileUpload, null) },
+            headlineContent = { Text(stringResource(R.string.GKI_install_methods)) },
+            modifier = Modifier.clickable {
+                GKIExpanded = !GKIExpanded
+            }
+        )
+        AnimatedVisibility(
+            visible = GKIExpanded,
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp)
+        ) {
+            Column {
+                radioOptions.drop(3).forEach { option ->
+                    val interactionSource = remember { MutableInteractionSource() }
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .toggleable(
+                                value = option.javaClass == selectedOption?.javaClass,
+                                onValueChange = { onClick(option) },
+                                role = Role.RadioButton,
+                                indication = LocalIndication.current,
+                                interactionSource = interactionSource
+                            )
+                    ) {
+                        RadioButton(
+                            selected = option.javaClass == selectedOption?.javaClass,
+                            onClick = { onClick(option) },
+                            interactionSource = interactionSource
+                        )
+                        Column(
+                            modifier = Modifier.padding(vertical = 12.dp)
+                        ) {
+                            Text(
+                                text = stringResource(id = option.label),
+                                fontSize = MaterialTheme.typography.titleMedium.fontSize,
+                                fontFamily = MaterialTheme.typography.titleMedium.fontFamily,
+                                fontStyle = MaterialTheme.typography.titleMedium.fontStyle
+                            )
+                            option.summary?.let {
+                                Text(
+                                    text = it,
+                                    fontSize = MaterialTheme.typography.bodySmall.fontSize,
+                                    fontFamily = MaterialTheme.typography.bodySmall.fontFamily,
+                                    fontStyle = MaterialTheme.typography.bodySmall.fontStyle
+                                )
+                            }
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
                 }
             }
         }
@@ -520,11 +608,6 @@ private fun TopBar(
         navigationIcon = {
             IconButton(onClick = onBack) {
                 Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
-            }
-        },
-        actions = {
-            IconButton(onClick = onLkmUpload) {
-                Icon(Icons.Filled.FileUpload, contentDescription = null)
             }
         },
         windowInsets = WindowInsets.safeDrawing.only(
