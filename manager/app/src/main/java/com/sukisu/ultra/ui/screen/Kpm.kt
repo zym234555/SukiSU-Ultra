@@ -5,14 +5,11 @@ import android.content.Intent
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.*
-import androidx.compose.animation.core.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -123,88 +120,97 @@ fun KpmScreen(
                 )
             },
             text = {
-                moduleName?.let {
-                    Text(
-                        text = stringResource(R.string.kpm_install_mode_description, it),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                Column {
+                    moduleName?.let {
+                        Text(
+                            text = stringResource(R.string.kpm_install_mode_description, it),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Button(
+                            onClick = {
+                                scope.launch {
+                                    dismiss()
+                                    tempFileForInstall?.let { tempFile ->
+                                        handleModuleInstall(
+                                            tempFile = tempFile,
+                                            isEmbed = false,
+                                            viewModel = viewModel,
+                                            snackBarHost = snackBarHost,
+                                            kpmInstallSuccess = kpmInstallSuccess,
+                                            kpmInstallFailed = kpmInstallFailed
+                                        )
+                                    }
+                                    tempFileForInstall = null
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary
+                            )
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Download,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp).padding(end = 4.dp)
+                            )
+                            Text(kpmInstallModeLoad)
+                        }
+
+                        Button(
+                            onClick = {
+                                scope.launch {
+                                    dismiss()
+                                    tempFileForInstall?.let { tempFile ->
+                                        handleModuleInstall(
+                                            tempFile = tempFile,
+                                            isEmbed = true,
+                                            viewModel = viewModel,
+                                            snackBarHost = snackBarHost,
+                                            kpmInstallSuccess = kpmInstallSuccess,
+                                            kpmInstallFailed = kpmInstallFailed
+                                        )
+                                    }
+                                    tempFileForInstall = null
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.secondary
+                            )
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Inventory,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp).padding(end = 4.dp)
+                            )
+                            Text(kpmInstallModeEmbed)
+                        }
+                    }
                 }
             },
             confirmButton = {
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Button(
-                        onClick = {
-                            scope.launch {
-                                dismiss()
-                                tempFileForInstall?.let { tempFile ->
-                                    handleModuleInstall(
-                                        tempFile = tempFile,
-                                        isEmbed = false,
-                                        viewModel = viewModel,
-                                        snackBarHost = snackBarHost,
-                                        kpmInstallSuccess = kpmInstallSuccess,
-                                        kpmInstallFailed = kpmInstallFailed
-                                    )
-                                }
-                                tempFileForInstall = null
-                            }
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primary
-                        )
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.Download,
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp).padding(end = 4.dp)
-                        )
-                        Text(kpmInstallModeLoad)
-                    }
-
-                    Button(
-                        onClick = {
-                            scope.launch {
-                                dismiss()
-                                tempFileForInstall?.let { tempFile ->
-                                    handleModuleInstall(
-                                        tempFile = tempFile,
-                                        isEmbed = true,
-                                        viewModel = viewModel,
-                                        snackBarHost = snackBarHost,
-                                        kpmInstallSuccess = kpmInstallSuccess,
-                                        kpmInstallFailed = kpmInstallFailed
-                                    )
-                                }
-                                tempFileForInstall = null
-                            }
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.secondary
-                        )
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.Inventory,
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp).padding(end = 4.dp)
-                        )
-                        Text(kpmInstallModeEmbed)
-                    }
-                }
             },
             dismissButton = {
-                TextButton(
-                    onClick = {
-                        dismiss()
-                        tempFileForInstall?.delete()
-                        tempFileForInstall = null
-                    }
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text(cancel)
+                    Spacer(modifier = Modifier.height(16.dp))
+                    TextButton(
+                        onClick = {
+                            dismiss()
+                            tempFileForInstall?.delete()
+                            tempFileForInstall = null
+                        }
+                    ) {
+                        Text(cancel)
+                    }
                 }
             },
             containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
@@ -647,7 +653,7 @@ private fun KpmModuleItem(
     }
 
     Card(
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
+        colors = getCardColors(MaterialTheme.colorScheme.surfaceContainerHigh),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         modifier = Modifier
             .fillMaxWidth()
