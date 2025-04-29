@@ -23,8 +23,6 @@ object CardConfig {
     var isUserLightModeEnabled by mutableStateOf(false)
     var isCustomBackgroundEnabled by mutableStateOf(false)
 
-    private var lastSystemDarkMode: Boolean? = null
-
     /**
      * 保存卡片配置到SharedPreferences
      */
@@ -91,22 +89,14 @@ fun getCardColors(originalColor: Color) = CardDefaults.cardColors(
 @Composable
 private fun determineContentColor(originalColor: Color): Color {
     val isDarkTheme = isSystemInDarkTheme()
-
-    // 处理主题切换过程中的颜色
     if (ThemeConfig.isThemeChanging) {
         return if (isDarkTheme) Color.White else Color.Black
     }
 
     return when {
-        // 用户明确设置了浅色或深色模式
         CardConfig.isUserLightModeEnabled -> Color.Black
-        CardConfig.isUserDarkModeEnabled -> Color.White
-
-        // 根据系统主题和背景亮度自动确定
         !isDarkTheme && originalColor.luminance() > 0.5f -> Color.Black
         isDarkTheme -> Color.White
-
-        // 其他情况根据背景亮度确定
         else -> if (originalColor.luminance() > 0.5f) Color.Black else Color.White
     }
 }

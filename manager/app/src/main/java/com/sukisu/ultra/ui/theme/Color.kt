@@ -35,40 +35,8 @@ sealed class ThemeColors {
     abstract val Background: Color
     abstract val OnBackground: Color
 
-    // 默认主题 (白色)
+    // 默认主题 (蓝色)
     object Default : ThemeColors() {
-        override val Primary = Color(0xFFFFFFFF)
-        override val Secondary = Color(0xFF5F6368)
-        override val Tertiary = Color(0xFFFFFFFF)
-        override val OnPrimary = Color(0xFFFFFFFF)
-        override val OnSecondary = Color(0xFFFFFFFF)
-        override val OnTertiary = Color(0xFFFFFFFF)
-        override val PrimaryContainer = Color(0xFFD1E3FF)
-        override val SecondaryContainer = Color(0xFFE4E6E8)
-        override val TertiaryContainer = Color(0xFFD0E1FC)
-        override val OnPrimaryContainer = Color(0xFF0D2E5E)
-        override val OnSecondaryContainer = Color(0xFF24262A)
-        override val OnTertiaryContainer = Color(0xFF0A2E62)
-        override val ButtonContrast = Color(0xFF0A2E62)
-
-        override val Surface = Color(0xFFFCFCFC)
-        override val SurfaceVariant = Color(0xFFF2F2F2)
-        override val OnSurface = Color(0xFF202124)
-        override val OnSurfaceVariant = Color(0xFF5F6368)
-
-        override val Error = Color(0xFFD93025)
-        override val OnError = Color(0xFFFFFFFF)
-        override val ErrorContainer = Color(0xFFFDECEA)
-        override val OnErrorContainer = Color(0xFF58160F)
-
-        override val Outline = Color(0xFFDADADA)
-        override val OutlineVariant = Color(0xFFEEEEEE)
-        override val Background = Color(0xFFFFFFFF)
-        override val OnBackground = Color(0xFF202124)
-    }
-
-    // 蓝色主题
-    object Blue : ThemeColors() {
         override val Primary = Color(0xFF2196F3)
         override val Secondary = Color(0xFF64B5F6)
         override val Tertiary = Color(0xFF0D47A1)
@@ -293,7 +261,6 @@ sealed class ThemeColors {
 
     companion object {
         fun fromName(name: String): ThemeColors = when (name.lowercase()) {
-            "blue" -> Blue
             "green" -> Green
             "purple" -> Purple
             "orange" -> Orange

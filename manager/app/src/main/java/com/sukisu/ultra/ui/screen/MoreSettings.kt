@@ -249,7 +249,6 @@ fun MoreSettingsScreen(navigator: DestinationsNavigator) {
     // 主题色选项
     val themeColorOptions = listOf(
         stringResource(R.string.color_default) to ThemeColors.Default,
-        stringResource(R.string.color_blue) to ThemeColors.Blue,
         stringResource(R.string.color_green) to ThemeColors.Green,
         stringResource(R.string.color_purple) to ThemeColors.Purple,
         stringResource(R.string.color_orange) to ThemeColors.Orange,
@@ -396,7 +395,6 @@ fun MoreSettingsScreen(navigator: DestinationsNavigator) {
                                     supportingContent = {
                                         val currentThemeName = when (ThemeConfig.currentTheme) {
                                             is ThemeColors.Default -> stringResource(R.string.color_default)
-                                            is ThemeColors.Blue -> stringResource(R.string.color_blue)
                                             is ThemeColors.Green -> stringResource(R.string.color_green)
                                             is ThemeColors.Purple -> stringResource(R.string.color_purple)
                                             is ThemeColors.Orange -> stringResource(R.string.color_orange)
@@ -820,7 +818,6 @@ fun MoreSettingsScreen(navigator: DestinationsNavigator) {
                                 .clickable {
                                     context.saveThemeColors(when (theme) {
                                         ThemeColors.Default -> "default"
-                                        ThemeColors.Blue -> "blue"
                                         ThemeColors.Green -> "green"
                                         ThemeColors.Purple -> "purple"
                                         ThemeColors.Orange -> "orange"

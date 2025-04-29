@@ -202,8 +202,7 @@
     <string name="dynamic_color_title">Dynamic colours</string>
     <string name="dynamic_color_summary">Dynamic colours using system themes</string>
     <string name="choose_theme_color">Choose a theme colour</string>
-    <string name="color_default">White</string>
-    <string name="color_blue">Blue</string>
+    <string name="color_default">Blue</string>
     <string name="color_green">Green</string>
     <string name="color_purple">Purple</string>
     <string name="color_orange">Orange</string>

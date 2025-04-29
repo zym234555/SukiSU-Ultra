@@ -1,13 +1,11 @@
 package com.sukisu.ultra.ui.screen
 
+import android.R.attr.layerType
 import android.annotation.SuppressLint
 import android.content.Context
-import android.content.Intent
-import android.net.Uri
 import android.os.Build
 import android.os.PowerManager
 import android.system.Os
-import android.util.Log
 import androidx.annotation.StringRes
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
@@ -35,7 +33,6 @@ import androidx.core.content.pm.PackageInfoCompat
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootGraph
 import com.ramcosta.composedestinations.generated.destinations.InstallScreenDestination
-import com.ramcosta.composedestinations.generated.destinations.SettingScreenDestination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -54,6 +51,8 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.composed
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.sukisu.ultra.ui.theme.CardConfig
 import androidx.core.content.edit
@@ -113,7 +112,6 @@ fun HomeScreen(navigator: DestinationsNavigator) {
             TopBar(
                 kernelVersion,
                 onInstallClick = { navigator.navigate(InstallScreenDestination) },
-                onSettingsClick = { navigator.navigate(SettingScreenDestination) },
                 scrollBehavior = scrollBehavior
             )
         },
@@ -124,6 +122,8 @@ fun HomeScreen(navigator: DestinationsNavigator) {
         Column(
             modifier = Modifier
                 .padding(innerPadding)
+                .graphicsLayer(clip = true)
+                .disableOverscroll()
                 .nestedScroll(scrollBehavior.nestedScrollConnection)
                 .verticalScroll(rememberScrollState())
                 .padding(top = 16.dp)
@@ -293,7 +293,6 @@ fun RebootDropdownItem(@StringRes id: Int, reason: String = "") {
 private fun TopBar(
     kernelVersion: KernelVersion,
     onInstallClick: () -> Unit,
-    onSettingsClick: () -> Unit,
     scrollBehavior: TopAppBarScrollBehavior? = null
 ) {
     val cardColor = MaterialTheme.colorScheme.surfaceVariant
@@ -347,14 +346,6 @@ private fun TopBar(
                         RebootDropdownItem(id = R.string.reboot_edl, reason = "edl")
                     }
                 }
-            }
-
-            IconButton(onClick = onSettingsClick) {
-                Icon(
-                    Icons.Filled.Settings,
-                    contentDescription = stringResource(id = R.string.settings),
-                    tint = MaterialTheme.colorScheme.primary
-                )
             }
         },
         windowInsets = WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal),
@@ -962,4 +953,13 @@ private fun checkKpmConfigured(): Boolean {
         e.printStackTrace()
     }
     return false
+}
+
+@SuppressLint("UnnecessaryComposedModifier")
+fun Modifier.disableOverscroll(): Modifier = composed {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        this
+    } else {
+        this
+    }
 }

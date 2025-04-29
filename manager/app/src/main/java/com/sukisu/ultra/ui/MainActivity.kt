@@ -33,6 +33,7 @@ import com.sukisu.ultra.Natives
 import com.sukisu.ultra.ksuApp
 import com.sukisu.ultra.ui.screen.BottomBarDestination
 import com.sukisu.ultra.ui.theme.*
+import com.sukisu.ultra.ui.theme.CardConfig.cardAlpha
 import com.sukisu.ultra.ui.util.*
 
 class MainActivity : ComponentActivity() {
@@ -138,78 +139,29 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun BottomBar(navController: NavHostController) {
     val navigator = navController.rememberDestinationsNavigator()
     val isManager = Natives.becomeManager(ksuApp.packageName)
     val fullFeatured = isManager && !Natives.requireNewKernel() && rootAvailable()
     val kpmVersion = getKpmVersion()
+    val containerColor = MaterialTheme.colorScheme.surfaceVariant
+    val cardColor = MaterialTheme.colorScheme.surfaceVariant
 
-    val containerColor = MaterialTheme.colorScheme.surfaceContainer
-    val selectedColor = MaterialTheme.colorScheme.primary
-    val unselectedColor = MaterialTheme.colorScheme.onSurfaceVariant
-    val cornerRadius = 18.dp
-
-    Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 12.dp, vertical = 8.dp)
-            .clip(RoundedCornerShape(cornerRadius)),
-        color = containerColor.copy(alpha = 0.95f),
+    NavigationBar(
+        modifier = Modifier.windowInsetsPadding(
+            WindowInsets.navigationBars.only(WindowInsetsSides.Horizontal)
+        ),
+        containerColor = TopAppBarDefaults.topAppBarColors(
+            containerColor = cardColor.copy(alpha = cardAlpha),
+            scrolledContainerColor = containerColor.copy(alpha = cardAlpha)
+        ).containerColor,
         tonalElevation = 0.dp
     ) {
-        NavigationBar(
-            modifier = Modifier.windowInsetsPadding(
-                WindowInsets.navigationBars.only(WindowInsetsSides.Horizontal)
-            ),
-            containerColor = Color.Transparent,
-            tonalElevation = 0.dp
-        ) {
-            BottomBarDestination.entries.forEach { destination ->
-                if (destination == BottomBarDestination.Kpm) {
-                    if (kpmVersion.isNotEmpty() && !kpmVersion.startsWith("Error")) {
-                        if (!fullFeatured && destination.rootRequired) return@forEach
-                        val isCurrentDestOnBackStack by navController.isRouteOnBackStackAsState(destination.direction)
-                        NavigationBarItem(
-                            selected = isCurrentDestOnBackStack,
-                            onClick = {
-                                if (!isCurrentDestOnBackStack) {
-                                    navigator.navigate(destination.direction) {
-                                        popUpTo(NavGraphs.root as RouteOrDirection) {
-                                            saveState = true
-                                        }
-                                        launchSingleTop = true
-                                        restoreState = true
-                                    }
-                                }
-                            },
-                            icon = {
-                                Icon(
-                                    imageVector = if (isCurrentDestOnBackStack) {
-                                        destination.iconSelected
-                                    } else {
-                                        destination.iconNotSelected
-                                    },
-                                    contentDescription = stringResource(destination.label),
-                                    tint = if (isCurrentDestOnBackStack) selectedColor else unselectedColor
-                                )
-                            },
-                            label = {
-                                Text(
-                                    text = stringResource(destination.label),
-                                    style = MaterialTheme.typography.labelMedium
-                                )
-                            },
-                            colors = NavigationBarItemDefaults.colors(
-                                selectedIconColor = selectedColor,
-                                unselectedIconColor = unselectedColor,
-                                selectedTextColor = selectedColor,
-                                unselectedTextColor = unselectedColor,
-                                indicatorColor = MaterialTheme.colorScheme.secondaryContainer
-                            )
-                        )
-                    }
-                } else {
+        BottomBarDestination.entries.forEach { destination ->
+            if (destination == BottomBarDestination.Kpm) {
+                if (kpmVersion.isNotEmpty() && !kpmVersion.startsWith("Error")) {
                     if (!fullFeatured && destination.rootRequired) return@forEach
                     val isCurrentDestOnBackStack by navController.isRouteOnBackStackAsState(destination.direction)
                     NavigationBarItem(
@@ -233,7 +185,7 @@ private fun BottomBar(navController: NavHostController) {
                                     destination.iconNotSelected
                                 },
                                 contentDescription = stringResource(destination.label),
-                                tint = if (isCurrentDestOnBackStack) selectedColor else unselectedColor
+                                tint = if (isCurrentDestOnBackStack) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         },
                         label = {
@@ -241,16 +193,43 @@ private fun BottomBar(navController: NavHostController) {
                                 text = stringResource(destination.label),
                                 style = MaterialTheme.typography.labelMedium
                             )
-                        },
-                        colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = selectedColor,
-                            unselectedIconColor = unselectedColor,
-                            selectedTextColor = selectedColor,
-                            unselectedTextColor = unselectedColor,
-                            indicatorColor = MaterialTheme.colorScheme.secondaryContainer
-                        )
+                        }
                     )
                 }
+            } else {
+                if (!fullFeatured && destination.rootRequired) return@forEach
+                val isCurrentDestOnBackStack by navController.isRouteOnBackStackAsState(destination.direction)
+                NavigationBarItem(
+                    selected = isCurrentDestOnBackStack,
+                    onClick = {
+                        if (!isCurrentDestOnBackStack) {
+                            navigator.navigate(destination.direction) {
+                                popUpTo(NavGraphs.root as RouteOrDirection) {
+                                    saveState = true
+                                }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        }
+                    },
+                    icon = {
+                        Icon(
+                            imageVector = if (isCurrentDestOnBackStack) {
+                                destination.iconSelected
+                            } else {
+                                destination.iconNotSelected
+                            },
+                            contentDescription = stringResource(destination.label),
+                            tint = if (isCurrentDestOnBackStack) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    },
+                    label = {
+                        Text(
+                            text = stringResource(destination.label),
+                            style = MaterialTheme.typography.labelMedium
+                        )
+                    }
+                )
             }
         }
     }

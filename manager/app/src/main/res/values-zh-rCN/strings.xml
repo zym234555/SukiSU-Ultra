@@ -202,8 +202,7 @@
     <string name="dynamic_color_title">动态颜色</string>
     <string name="dynamic_color_summary">使用系统主题的动态颜色</string>
     <string name="choose_theme_color">选择主题色</string>
-    <string name="color_default">白色</string>
-    <string name="color_blue">蓝色</string>
+    <string name="color_default">蓝色</string>
     <string name="color_green">绿色</string>
     <string name="color_purple">紫色</string>
     <string name="color_orange">橙色</string>
