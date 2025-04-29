@@ -299,6 +299,7 @@
     <string name="configuration">配置</string>
     <string name="app_settings">应用设置</string>
     <string name="tools">工具</string>
+    <string name="currently_selected">当前</string>
     <!--  SuperUser 里用到的字符串资源 -->
     <string name="clear">清除</string>
     <string name="apps_with_root">Root 权限应用</string>
