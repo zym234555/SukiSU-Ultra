@@ -1,6 +1,5 @@
 package com.sukisu.ultra.ui.screen
 
-import android.R.attr.layerType
 import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Build
@@ -126,9 +125,9 @@ fun HomeScreen(navigator: DestinationsNavigator) {
                 .disableOverscroll()
                 .nestedScroll(scrollBehavior.nestedScrollConnection)
                 .verticalScroll(rememberScrollState())
-                .padding(top = 16.dp)
+                .padding(top = 12.dp)
                 .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             if (shouldTriggerRestart) {
                 WarningCard(message = "zakozako")
@@ -411,7 +410,7 @@ private fun StatusCard(
                         Icons.Outlined.CheckCircle,
                         contentDescription = stringResource(R.string.home_working),
                         tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(40.dp)
+                        modifier = Modifier.size(24.dp)
                     )
 
                     Column(Modifier.padding(start = 20.dp)) {
@@ -482,7 +481,7 @@ private fun StatusCard(
                         Icons.Outlined.Warning,
                         contentDescription = stringResource(R.string.home_not_installed),
                         tint = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.size(40.dp)
+                        modifier = Modifier.size(24.dp)
                     )
 
                     Column(Modifier.padding(start = 20.dp)) {
@@ -506,7 +505,7 @@ private fun StatusCard(
                         Icons.Outlined.Block,
                         contentDescription = stringResource(R.string.home_unsupported),
                         tint = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.size(40.dp)
+                        modifier = Modifier.size(24.dp)
                     )
 
                     Column(Modifier.padding(start = 20.dp)) {
@@ -581,6 +580,7 @@ fun ContributionCard() {
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         modifier = Modifier
             .fillMaxWidth()
+            .wrapContentHeight()
             .clip(MaterialTheme.shapes.large)
             .shadow(
                 elevation = 0.dp,
@@ -604,7 +604,7 @@ fun ContributionCard() {
                 tint = MaterialTheme.colorScheme.onTertiaryContainer,
                 modifier = Modifier
                     .padding(end = 16.dp)
-                    .size(28.dp)
+                    .size(24.dp)
             )
 
             Column {
@@ -657,7 +657,7 @@ fun LearnMoreCard() {
                 tint = MaterialTheme.colorScheme.onPrimaryContainer,
                 modifier = Modifier
                     .padding(end = 16.dp)
-                    .size(28.dp)
+                    .size(24.dp)
             )
 
             Column {
@@ -709,7 +709,7 @@ fun DonateCard() {
                 tint = MaterialTheme.colorScheme.onSecondaryContainer,
                 modifier = Modifier
                     .padding(end = 16.dp)
-                    .size(28.dp)
+                    .size(24.dp)
             )
 
             Column {
@@ -761,21 +761,29 @@ private fun InfoCard() {
             fun InfoCardItem(
                 label: String,
                 content: String,
-                icon: ImageVector = Icons.Default.Info
+                icon: ImageVector = Icons.Default.Info,
+                maxLines: Int = 2,
+                overflow: TextOverflow = TextOverflow.Ellipsis
             ) {
                 contents.appendLine(label).appendLine(content).appendLine()
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(vertical = 8.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp)
                 ) {
                     Icon(
                         imageVector = icon,
                         contentDescription = label,
-                        modifier = Modifier.size(28.dp),
+                        modifier = Modifier.size(24.dp),
                         tint = MaterialTheme.colorScheme.primary
                     )
                     Spacer(modifier = Modifier.width(16.dp))
-                    Column {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f)
+                    ){
                         Text(
                             text = label,
                             style = MaterialTheme.typography.labelLarge,
@@ -785,8 +793,7 @@ private fun InfoCard() {
                             text = content,
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurface,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
+                            softWrap = true
                         )
                     }
                 }
@@ -795,7 +802,7 @@ private fun InfoCard() {
             InfoCardItem(
                 stringResource(R.string.home_kernel),
                 uname.release,
-                icon = Icons.Default.Memory
+                icon = Icons.Default.Memory,
             )
 
             if (!isSimpleMode) {
@@ -803,7 +810,7 @@ private fun InfoCard() {
                 InfoCardItem(
                     stringResource(R.string.home_android_version),
                     androidVersion,
-                    icon = Icons.Default.Android
+                    icon = Icons.Default.Android,
                 )
             }
 
@@ -811,20 +818,20 @@ private fun InfoCard() {
             InfoCardItem(
                 stringResource(R.string.home_device_model),
                 deviceModel,
-                icon = Icons.Default.PhoneAndroid
+                icon = Icons.Default.PhoneAndroid,
             )
 
             val managerVersion = getManagerVersion(context)
             InfoCardItem(
                 stringResource(R.string.home_manager_version),
                 "${managerVersion.first} (${managerVersion.second})",
-                icon = Icons.Default.Settings
+                icon = Icons.Default.Settings,
             )
 
             InfoCardItem(
                 stringResource(R.string.home_selinux_status),
                 getSELinuxStatus(),
-                icon = Icons.Default.Security
+                icon = Icons.Default.Security,
             )
 
             if (!isSimpleMode) {
@@ -846,7 +853,9 @@ private fun InfoCard() {
                     InfoCardItem(
                         stringResource(R.string.home_kpm_version),
                         displayVersion,
-                        icon = Icons.Default.Code
+                        icon = Icons.Default.Code,
+                        Int.MAX_VALUE,
+                        TextOverflow.Clip
                     )
                 }
             }
@@ -874,7 +883,9 @@ private fun InfoCard() {
                         InfoCardItem(
                             stringResource(R.string.home_susfs_version),
                             infoText,
-                            icon = Icons.Default.Storage
+                            icon = Icons.Default.Storage,
+                            Int.MAX_VALUE,
+                            TextOverflow.Clip
                         )
                     }
                 }
@@ -892,7 +903,7 @@ fun getManagerVersion(context: Context): Pair<String, Long> {
 @Preview
 @Composable
 private fun StatusCardPreview() {
-    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         StatusCard(KernelVersion(5, 10, 101), 1, null)
         StatusCard(KernelVersion(5, 10, 101), 20000, true)
         StatusCard(KernelVersion(5, 10, 101), null, true)
@@ -903,7 +914,7 @@ private fun StatusCardPreview() {
 @Preview
 @Composable
 private fun WarningCardPreview() {
-    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         WarningCard(message = "Warning message")
         WarningCard(
             message = "Warning message ",

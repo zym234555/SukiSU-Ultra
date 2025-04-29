@@ -314,12 +314,7 @@ fun KpmScreen(
                 },
                 containerColor = cardColor,
                 contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                elevation = FloatingActionButtonDefaults.elevation(
-                    defaultElevation = 0.dp,
-                    pressedElevation = 0.dp
-                ),
                 expanded = true,
-                modifier = Modifier.padding(16.dp)
             )
         },
         snackbarHost = { SnackbarHost(snackBarHost) }
