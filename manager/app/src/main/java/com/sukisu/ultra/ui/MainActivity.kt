@@ -10,12 +10,9 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavBackStackEntry
@@ -48,7 +45,8 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        // 启用边缘到边缘显示
+
+        // Enable edge to edge
         enableEdgeToEdge()
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -57,7 +55,7 @@ class MainActivity : ComponentActivity() {
 
         super.onCreate(savedInstanceState)
 
-        // 加载保存的主题设置
+        // 加载保存的背景设置
         loadCustomBackground()
         loadThemeMode()
         loadThemeColors()
@@ -95,8 +93,7 @@ class MainActivity : ComponentActivity() {
 
                 Scaffold(
                     bottomBar = { BottomBar(navController) },
-                    contentWindowInsets = WindowInsets(0, 0, 0, 0),
-                    snackbarHost = { SnackbarHost(snackBarHostState) }
+                    contentWindowInsets = WindowInsets(0, 0, 0, 0)
                 ) { innerPadding ->
                     CompositionLocalProvider(
                         LocalSnackbarHost provides snackBarHostState
