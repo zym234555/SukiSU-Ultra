@@ -639,8 +639,7 @@ private fun SelectInstallMethod(
                             bottom = 16.dp
                         )
                     ) {
-                        if (radioOptions.size > 3) {
-                            radioOptions.drop(3).forEach { option ->
+                        radioOptions.filterIsInstance<InstallMethod.HorizonKernel>().forEach { option ->
                                 val interactionSource = remember { MutableInteractionSource() }
                                 Surface(
                                     color = if (option.javaClass == selectedOption?.javaClass)
@@ -695,7 +694,6 @@ private fun SelectInstallMethod(
                                     }
                                 }
                             }
-                        }
                     }
                 }
             }

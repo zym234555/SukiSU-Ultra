@@ -198,6 +198,7 @@ private fun BottomBar(navController: NavHostController) {
                                     destination.iconNotSelected
                                 },
                                 contentDescription = stringResource(destination.label),
+                                tint = if (isCurrentDestOnBackStack) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         },
                         label = {
