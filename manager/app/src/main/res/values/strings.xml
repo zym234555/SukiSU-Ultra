@@ -226,7 +226,7 @@
     <string name="batch_cancel_authorization">withdraw</string>
     <string name="backup">Backup</string>
     <string name="color_yellow">Yellow</string>
-    <string name="kpm">Kernel Module</string>
+    <string name="kpm">KPM</string>
     <string name="kpm_title">Kernel Module</string>
     <string name="kpm_empty">No installed kernel modules at this time</string>
     <string name="kpm_version">Version</string>
