@@ -63,7 +63,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import com.sukisu.ultra.R
 import com.sukisu.ultra.ui.theme.CardConfig
-import com.sukisu.ultra.ui.theme.ThemeConfig
 import com.sukisu.ultra.ui.viewmodel.TemplateViewModel
 
 /**
@@ -81,11 +80,6 @@ fun AppProfileTemplateScreen(
     val viewModel = viewModel<TemplateViewModel>()
     val scope = rememberCoroutineScope()
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
-    val cardColor = if (!ThemeConfig.useDynamicColor) {
-        ThemeConfig.currentTheme.ButtonContrast
-    } else {
-        MaterialTheme.colorScheme.secondaryContainer
-    }
 
     LaunchedEffect(Unit) {
         if (viewModel.templateList.isEmpty()) {
@@ -164,7 +158,6 @@ fun AppProfileTemplateScreen(
                 },
                 icon = { Icon(Icons.Filled.Add, null) },
                 text = { Text(stringResource(id = R.string.app_profile_template_create)) },
-                containerColor = cardColor.copy(alpha = 1f),
                 contentColor = MaterialTheme.colorScheme.onSecondaryContainer
             )
         },
