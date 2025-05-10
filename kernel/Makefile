@@ -32,6 +32,63 @@ $(warning "KSU_GIT_VERSION not defined! It is better to make KernelSU a git subm
 ccflags-y += -DKSU_VERSION=16
 endif
 
+# Do checks before compile
+ifeq ($(shell grep -q "int\s\+\path_umount" $(srctree)/fs/namespace.c; echo $$?),0)
+$(info -- KernelSU: checks ok. Found path_umount)
+else
+$(info -- KernelSU: checks failed, abort.)
+$(error -- Backporting path_umount is mandatory !! Read: https://kernelsu.org/guide/how-to-integrate-for-non-gki.html#how-to-backport-path-umount)
+endif
+
+# Check arch
+ifneq ($(strip $(CONFIG_KSU_64BIT)),y)
+$(info -- KernelSU: Running in 32-bit mode.)
+endif
+
+# Checks hooks state
+ifeq ($(strip $(CONFIG_KSU_MANUAL_HOOK)),y)
+$(info -- KernelSU: Manually-patched hook.)
+else
+$(info -- KernelSU: Kernel-probe hook.)
+ccflags-y += -DCONFIG_KSU_KPROBES_HOOK
+endif
+
+# SELinux drivers check
+ifeq ($(shell grep -q "current_sid(void)" $(srctree)/security/selinux/include/objsec.h; echo $$?),0)
+ccflags-y += -DKSU_COMPAT_HAS_CURRENT_SID
+endif
+ifeq ($(shell grep -q "struct selinux_state " $(srctree)/security/selinux/include/security.h; echo $$?),0)
+ccflags-y += -DKSU_COMPAT_HAS_SELINUX_STATE
+endif
+
+# This feature was introduced in linux 5.0-rc1
+ifeq ($(shell grep -q "get_cred_rcu" $(srctree)/include/linux/cred.h; echo $$?),0)
+ccflags-y += -DKSU_COMPAT_HAS_GET_CRED_RCU
+else
+ifeq ($(shell grep -q "atomic_long_t\s\+\usage" $(srctree)/include/linux/cred.h; echo $$?),0)
+ccflags-y += -DKSU_COMPAT_ATOMIC_LONG
+endif
+ifeq ($(shell grep -q "int\s\+\non_rcu" $(srctree)/include/linux/cred.h; echo $$?),0)
+ccflags-y += -DKSU_COMPAT_HAS_NONCONST_CRED
+endif
+endif
+
+# Handle optional backports
+ifeq ($(shell grep -q "strncpy_from_user_nofault" $(srctree)/include/linux/uaccess.h; echo $$?),0)
+ccflags-y += -DKSU_OPTIONAL_STRNCPY
+endif
+ifeq ($(shell grep -q "ssize_t kernel_read" $(srctree)/fs/read_write.c; echo $$?),0)
+ccflags-y += -DKSU_OPTIONAL_KERNEL_READ
+endif
+ifeq ($(shell grep "ssize_t kernel_write" $(srctree)/fs/read_write.c | grep -q "const void" ; echo $$?),0)
+ccflags-y += -DKSU_OPTIONAL_KERNEL_WRITE
+endif
+
+# Checks Samsung UH drivers
+ifeq ($(shell grep -q "CONFIG_KDP_CRED" $(srctree)/kernel/cred.c; echo $$?),0)
+ccflags-y += -DSAMSUNG_UH_DRIVER_EXIST
+endif
+
 ifndef KSU_EXPECTED_SIZE
 KSU_EXPECTED_SIZE := 0x35c
 endif
