@@ -49,16 +49,15 @@ SukiSU と susfs をベースにコンパイルされたプロジェクトです
 - この方式は (https://github.com/rsuntk/KernelSU) のフック方式を参照してください。
 
 1. **KPROBES フック:**
-    - この方式は GKI (5.10 - 6.x) のカーネルのみに対応しています。GKI 以外のカーネルは手動でフックを使用する必要があります。
     - 読み込み可能なカーネルモジュールの場合 (LKM)
     - GKI カーネルのデフォルトとなるフック方式
-    - `CONFIG_KPROBES=y` が必要です。
+    - `CONFIG_KPROBES=y` が必要です
 
 2. **手動でフック:**
-    - GKI (5.10 - 6.x) のカーネルの場合、カーネルの defconfig に `CONFIG_KSU_MANUAL_HOOK=y` を追加して `#ifdef CONFIG_KSU` ではなく `#ifdef CONFIG_KSU_MANUAL_HOOK` を使用して KernelSU フックを保護するようにしてください。
     - 標準の KernelSU フック: https://kernelsu.org/guide/how-to-integrate-for-non-gki.html#manually-modify-the-kernel-source
     - backslashxx syscall フック: https://github.com/backslashxx/KernelSU/issues/5
-    - KPROBES を手動で統合する一部の非 GKI デバイスでは手動の VFS フック `new_hook.patch` パッチは不要です。
+    - 非 GKI カーネル用のデフォルトフッキングメソッド
+    - `CONFIG_KSU_MANUAL_HOOK=y` が必要です
 
 ## 使い方
 

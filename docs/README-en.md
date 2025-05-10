@@ -47,16 +47,15 @@ Projects compiled based on Sukisu and susfs
 - This method references the hook method from (https://github.com/rsuntk/KernelSU)
 
 1. **KPROBES hook:**
-    - This method only supports GKI (5.10 - 6.x) kernels, and all non-GKI kernels must use manual hooks.
-    - For Loadable Kernel Modules (LKM)
-    - Default hooking method for GKI kernels
-    - Requires `CONFIG_KPROBES=y`.
+    - Also used for Loadable Kernel Module (LKM)
+    - Default hook method on GKI kernels.
+    - Need `CONFIG_KPROBES=y`
 
-2. **Manual hooks:**
-    - For GKI (5.10 - 6.x) kernels, add `CONFIG_KSU_MANUAL_HOOK=y` to the kernel defconfig and make sure to protect KernelSU hooks by using `#ifdef CONFIG_KSU_MANUAL_HOOK` instead of `#ifdef CONFIG_KSU`.
-    - Standard KernelSU hooks: https://kernelsu.org/guide/how-to-integrate-for-non-gki.html#manually-modify-the-kernel-source
-    - backslashxx syscall hooks: https://github.com/backslashxx/KernelSU/issues/5
-    - Some non-GKI devices that manually integrate KPROBES do not require the manual VFS hook `new_hook.patch` patch
+2. **Manual hook:**
+    - Standard KernelSU hook: https://kernelsu.org/guide/how-to-integrate-for-non-gki.html#manually-modify-the-kernel-source
+    - backslashxx's syscall manual hook: https://github.com/backslashxx/KernelSU/issues/5
+    - Default hook method on Non-GKI kernels.
+    - Need `CONFIG_KSU_MANUAL_HOOK=y`
 
 ## Usage
 

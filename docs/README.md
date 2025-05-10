@@ -33,16 +33,15 @@ curl -LSs "https://raw.githubusercontent.com/ShirkNeko/SukiSU-Ultra/main/kernel/
 - 此部分引用自 [rsuntk 的钩子方法](https://github.com/rsuntk/KernelSU)
 
 1. **KPROBES 钩子：**
-    - 此方法仅支持 GKI 2.0 (5.10 - 6.x) 内核, 所有非 GKI 2.0 内核都必须使用手动钩子
     - 用于可加载内核模块 (LKM)
     - GKI 2.0 内核的默认钩子方法
     - 需要 `CONFIG_KPROBES=y`
 
 2. **手动钩子：**
-    - 对于 GKI 2.0 (5.10 - 6.x) 内核，需要在对应设备的 defconfig 文件中添加 `CONFIG_KSU_MANUAL_HOOK=y` 并确保使用 `#ifdef CONFIG_KSU_MANUAL_HOOK` 而不是 `#ifdef CONFIG_KSU` 来保护 KernelSU 钩子
     - 标准的 KernelSU 钩子：https://kernelsu.org/guide/how-to-integrate-for-non-gki.html#manually-modify-the-kernel-source
     - backslashxx 的 syscall 手动钩子：https://github.com/backslashxx/KernelSU/issues/5
-    - 部分手动集成 KPROBES 的非 GKI 2.0 设备不需要手动 VFS 钩子 `new_hook.patch` 补丁
+    - 非 GKI 内核的默认挂钩方法
+    - 需要 `CONFIG_KSU_MANUAL_HOOK=y`
 
 ## KPM 支持
 
