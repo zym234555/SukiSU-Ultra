@@ -52,13 +52,11 @@ $(info -- SukiSU Manager signature size: $(KSU_EXPECTED_SIZE))
 $(info -- SukiSU Manager signature hash: $(KSU_EXPECTED_HASH))
 $(info -- Supported Unofficial Manager: 5ec1cff (GKI) rsuntk (Non-GKI) ShirkNeko udochina (GKI and non-GKI and KPM))
 
-ifeq ($(strip $(CONFIG_KSU_HOOK_KPROBES)),y)
-$(info -- SukiSU: KPROBES hooking enabled!)
-else
+ifeq ($(strip $(CONFIG_KSU_MANUAL_HOOK)),y)
 $(info -- SukiSU: Manual hooking enabled!)
-ifeq ($(strip $(CONFIG_KSU)),m)
-$(error CONFIG_KSU_MANUAL_HOOK cannot be enabled when compiling SukiSU as LKM!)
-endif
+else
+$(info -- SukiSU: KPROBES hooking enabled!)
+ccflags-y += -DCONFIG_KSU_KPROBES_HOOK
 endif
 
 KERNEL_VERSION := $(VERSION).$(PATCHLEVEL)
