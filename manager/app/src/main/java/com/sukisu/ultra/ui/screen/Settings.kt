@@ -110,7 +110,7 @@ fun SettingScreen(navigator: DestinationsNavigator) {
                 }
             }
 
-            // 设置分组卡片 - 配置
+            // 配置
             Card(
                 modifier = Modifier
                     .fillMaxWidth()

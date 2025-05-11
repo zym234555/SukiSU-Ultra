@@ -225,7 +225,6 @@
     <string name="batch_authorization">授权</string>
     <string name="batch_cancel_authorization">撤销</string>
     <string name="color_yellow">黄色</string>
-    <string name="kpm">内核模块</string>
     <string name="kpm_title">内核模块</string>
     <string name="kpm_empty">暂无已安装的内核模块</string>
     <string name="kpm_version">版本</string>
