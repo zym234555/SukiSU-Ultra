@@ -57,6 +57,7 @@ import com.sukisu.ultra.ui.util.LocalSnackbarHost
 import com.sukisu.ultra.ui.util.getBugreportFile
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import com.sukisu.ultra.ui.component.KsuIsValid
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -65,7 +66,6 @@ import java.time.format.DateTimeFormatter
 fun SettingScreen(navigator: DestinationsNavigator) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
     val snackBarHost = LocalSnackbarHost.current
-    val ksuIsValid = Natives.isKsuValid(ksuApp.packageName)
 
     Scaffold(
         topBar = {
@@ -130,7 +130,7 @@ fun SettingScreen(navigator: DestinationsNavigator) {
 
                     // 配置文件模板入口
                     val profileTemplate = stringResource(id = R.string.settings_profile_template)
-                    if (ksuIsValid) {
+                    KsuIsValid {
                         SettingItem(
                             icon = Icons.Filled.Fence,
                             title = profileTemplate,
@@ -146,7 +146,7 @@ fun SettingScreen(navigator: DestinationsNavigator) {
                         mutableStateOf(Natives.isDefaultUmountModules())
                     }
 
-                    if (ksuIsValid) {
+                    KsuIsValid {
                         SwitchSettingItem(
                             icon = Icons.Filled.FolderDelete,
                             title = stringResource(id = R.string.settings_umount_modules_default),
@@ -161,7 +161,7 @@ fun SettingScreen(navigator: DestinationsNavigator) {
                     }
 
                     // SU 禁用开关（仅在兼容版本显示）
-                    if (ksuIsValid) {
+                    KsuIsValid {
                         if (Natives.version >= Natives.MINIMAL_SUPPORTED_SU_COMPAT) {
                             var isSuDisabled by rememberSaveable {
                                 mutableStateOf(!Natives.isSuEnabled())
@@ -226,7 +226,7 @@ fun SettingScreen(navigator: DestinationsNavigator) {
                             prefs.getBoolean("enable_web_debugging", false)
                         )
                     }
-                    if (Natives.isKsuValid(ksuApp.packageName)) {
+                    KsuIsValid {
                         SwitchSettingItem(
                             icon = Icons.Filled.DeveloperMode,
                             title = stringResource(id = R.string.enable_web_debugging),

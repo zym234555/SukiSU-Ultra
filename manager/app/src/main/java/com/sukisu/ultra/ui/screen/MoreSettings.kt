@@ -85,6 +85,7 @@ import com.sukisu.ultra.Natives
 import com.sukisu.ultra.R
 import com.sukisu.ultra.ksuApp
 import com.sukisu.ultra.ui.component.ImageEditorDialog
+import com.sukisu.ultra.ui.component.KsuIsValid
 import com.sukisu.ultra.ui.component.SwitchItem
 import com.sukisu.ultra.ui.theme.CardConfig
 import com.sukisu.ultra.ui.theme.ThemeColors
@@ -267,7 +268,6 @@ fun MoreSettingsScreen(navigator: DestinationsNavigator) {
     )
 
     var showThemeColorDialog by remember { mutableStateOf(false) }
-    val ksuIsValid = Natives.isKsuValid(ksuApp.packageName)
 
     // 图片选择器
     val pickImageLauncher = rememberLauncherForActivityResult(
@@ -674,7 +674,7 @@ fun MoreSettingsScreen(navigator: DestinationsNavigator) {
                 ) {
                     Column {
                         // SELinux 开关
-                        if (ksuIsValid) {
+                        KsuIsValid {
                             SwitchItem(
                                 icon = Icons.Filled.Security,
                                 title = stringResource(R.string.selinux),

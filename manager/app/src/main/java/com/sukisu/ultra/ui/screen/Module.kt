@@ -69,7 +69,6 @@ import java.io.InputStreamReader
 import java.util.zip.ZipInputStream
 import androidx.core.content.edit
 import androidx.core.net.toUri
-import com.sukisu.ultra.ui.theme.ThemeConfig
 import com.sukisu.ultra.R
 import com.sukisu.ultra.ui.theme.CardConfig.cardElevation
 

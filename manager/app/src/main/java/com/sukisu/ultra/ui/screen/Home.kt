@@ -95,6 +95,7 @@ import com.sukisu.ultra.Natives
 import com.sukisu.ultra.R
 import com.sukisu.ultra.getKernelVersion
 import com.sukisu.ultra.ksuApp
+import com.sukisu.ultra.ui.component.KsuIsValid
 import com.sukisu.ultra.ui.component.rememberConfirmDialog
 import com.sukisu.ultra.ui.theme.CardConfig
 import com.sukisu.ultra.ui.theme.CardConfig.cardElevation
@@ -400,17 +401,18 @@ private fun TopBar(
             }
 
             var showDropdown by remember { mutableStateOf(false) }
-            if (Natives.isKsuValid(ksuApp.packageName)) {
-                IconButton(onClick = { showDropdown = true }) {
+            KsuIsValid {
+                IconButton(onClick = {
+                    showDropdown = true
+                }) {
                     Icon(
-                        Icons.Filled.Refresh,
-                        contentDescription = stringResource(R.string.reboot),
+                        imageVector = Icons.Filled.Refresh,
+                        contentDescription = stringResource(id = R.string.reboot)
                     )
 
-                    DropdownMenu(
-                        expanded = showDropdown,
-                        onDismissRequest = { showDropdown = false }
-                    ) {
+                    DropdownMenu(expanded = showDropdown, onDismissRequest = {
+                        showDropdown = false
+                    }) {
                         RebootDropdownItem(id = R.string.reboot)
 
                         val pm = LocalContext.current.getSystemService(Context.POWER_SERVICE) as PowerManager?
@@ -652,7 +654,7 @@ fun WarningCard(
 @Composable
 fun ContributionCard() {
     val uriHandler = LocalUriHandler.current
-    val links = listOf("https://github.com/zako", "https://github.com/udochina")
+    val links = listOf("https://github.com/ShirkNeko", "https://github.com/udochina")
 
     ElevatedCard(
         colors = getCardColors(MaterialTheme.colorScheme.surfaceContainerHigh),
