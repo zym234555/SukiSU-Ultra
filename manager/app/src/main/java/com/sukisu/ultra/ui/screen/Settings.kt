@@ -272,7 +272,7 @@ fun SettingScreen(navigator: DestinationsNavigator) {
                             summary = stringResource(id = R.string.use_webuix_eruda_summary),
                             checked = useWebUIXEruda
                         ) {
-                            prefs.edit().putBoolean("use_webuix_eruda", it).apply()
+                            prefs.edit { putBoolean("use_webuix_eruda", it) }
                             useWebUIXEruda = it
                         }
                     }

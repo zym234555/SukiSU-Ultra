@@ -8,6 +8,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -17,7 +18,6 @@ import androidx.lifecycle.lifecycleScope
 import com.dergoogler.mmrl.platform.Platform
 import com.dergoogler.mmrl.platform.model.ModId
 import com.dergoogler.mmrl.ui.component.Loading
-
 import com.dergoogler.mmrl.webui.screen.WebUIScreen
 import com.dergoogler.mmrl.webui.util.rememberWebUIOptions
 import com.sukisu.ultra.BuildConfig
@@ -43,7 +43,7 @@ class WebUIXActivity : ComponentActivity() {
             val osVersion = Build.VERSION.RELEASE
             val deviceModel = Build.MODEL
 
-            return "KernelSU Next/$ksuVersion (Linux; Android $osVersion; $deviceModel; $platform/$platformVersion)"
+            return "SukiSU /$ksuVersion (Linux; Android $osVersion; $deviceModel; $platform/$platformVersion)"
         }
 
     override fun onCreate(savedInstanceState: Bundle?) {
