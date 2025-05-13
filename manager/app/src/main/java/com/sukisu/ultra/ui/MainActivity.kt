@@ -49,6 +49,9 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // 应用DPI设置（仅对当前应用生效）
+        applyCustomDpi()
+
         // Enable edge to edge
         enableEdgeToEdge()
 
@@ -131,6 +134,26 @@ class MainActivity : ComponentActivity() {
                         )
                     }
                 }
+            }
+        }
+    }
+
+    // 应用自定义DPI设置（仅对当前应用生效）
+    private fun applyCustomDpi() {
+        val prefs = getSharedPreferences("settings", MODE_PRIVATE)
+        val customDpi = prefs.getInt("app_dpi", 0)
+
+        if (customDpi > 0) {
+            try {
+                val resources = resources
+                val metrics = resources.displayMetrics
+
+                // 仅更新应用内显示，不影响系统状态栏
+                metrics.density = customDpi / 160f
+                metrics.scaledDensity = customDpi / 160f
+                metrics.densityDpi = customDpi
+            } catch (e: Exception) {
+                e.printStackTrace()
             }
         }
     }

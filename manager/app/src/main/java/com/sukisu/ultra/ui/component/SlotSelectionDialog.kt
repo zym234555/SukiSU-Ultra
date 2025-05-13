@@ -47,11 +47,7 @@ fun SlotSelectionDialog(
     }
 
     if (show) {
-        val cardColor = if (!ThemeConfig.useDynamicColor) {
-            ThemeConfig.currentTheme.ButtonContrast
-        } else {
-            MaterialTheme.colorScheme.surfaceContainerHigh
-        }
+        val cardColor = MaterialTheme.colorScheme.surfaceContainerHighest
 
         AlertDialog(
             onDismissRequest = onDismiss,

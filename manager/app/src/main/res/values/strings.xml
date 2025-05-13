@@ -332,4 +332,18 @@
     <string name="use_webuix_summary">Use WebUI X instead of WebUI which supports more API\'s</string>
     <string name="use_webuix_eruda">Inject Eruda into WebUI X</string>
     <string name="use_webuix_eruda_summary">Inject a debug console into WebUI X to make debugging easier. Requires web debugging to be on.</string>
+    <!-- DPI setting related strings -->
+    <string name="dpi_settings">DPI setting</string>
+    <string name="app_dpi_title">Applied DPI</string>
+    <string name="app_dpi_summary">Adjust the screen display density for the current application only</string>
+    <string name="dpi_size_small">Small </string>
+    <string name="dpi_size_medium">Medium </string>
+    <string name="dpi_size_large">Big</string>
+    <string name="dpi_size_extra_large">oversize</string>
+    <string name="dpi_size_custom">customizable</string>
+    <string name="dpi_apply_settings">Applying DPI settings</string>
+    <string name="dpi_confirm_title">Confirm DPI change</string>
+    <string name="dpi_confirm_message">Are you sure you want to change the application DPI from %1$d to %2$d?</string>
+    <string name="dpi_confirm_summary">Application needs to be restarted to apply the new DPI settings, does not affect the system status bar or other applications</string>
+    <string name="dpi_applied_success">DPI has been set to %1$d, effective after restarting the application</string>
 </resources>
