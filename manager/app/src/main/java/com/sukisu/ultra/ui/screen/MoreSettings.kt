@@ -176,6 +176,17 @@ fun MoreSettingsScreen(navigator: DestinationsNavigator) {
         isHideOtherInfo = newValue
     }
 
+    // 显示KPM开关状态
+    var isShowKpmInfo by remember {
+        mutableStateOf(prefs.getBoolean("show_kpm_info", true))
+    }
+
+    // 更新显示KPM开关状态
+    val onShowKpmInfoChange = { newValue: Boolean ->
+        prefs.edit { putBoolean("show_kpm_info", newValue) }
+        isShowKpmInfo = newValue
+    }
+
     // 隐藏SuSFS状态开关状态
     var isHideSusfsStatus by remember {
         mutableStateOf(prefs.getBoolean("is_hide_susfs_status", false))
@@ -635,6 +646,21 @@ fun MoreSettingsScreen(navigator: DestinationsNavigator) {
                             checked = isHideSusfsStatus
                         ) {
                             onHideSusfsStatusChange(it)
+                        }
+
+                        HorizontalDivider(
+                            modifier = Modifier.padding(horizontal = 16.dp),
+                            color = MaterialTheme.colorScheme.outlineVariant
+                        )
+
+                        // 显示KPM开关
+                        SwitchItem(
+                            icon = Icons.Filled.VisibilityOff,
+                            title = stringResource(R.string.show_kpm_info),
+                            summary = stringResource(R.string.show_kpm_info_summary),
+                            checked = isShowKpmInfo
+                        ) {
+                            onShowKpmInfoChange(it)
                         }
 
                         HorizontalDivider(

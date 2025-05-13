@@ -6,6 +6,11 @@ import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -81,7 +86,6 @@ fun SettingScreen(navigator: DestinationsNavigator) {
             AboutDialog(it)
         }
         val loadingDialog = rememberLoadingDialog()
-        // endregion
 
         Column(
             modifier = Modifier
@@ -89,12 +93,8 @@ fun SettingScreen(navigator: DestinationsNavigator) {
                 .nestedScroll(scrollBehavior.nestedScrollConnection)
                 .verticalScroll(rememberScrollState())
         ) {
-            // region 上下文与协程
             val context = LocalContext.current
             val scope = rememberCoroutineScope()
-            // endregion
-
-            // region 日志导出功能
             val exportBugreportLauncher = rememberLauncherForActivityResult(
                 ActivityResultContracts.CreateDocument("application/gzip")
             ) { uri: Uri? ->
@@ -184,7 +184,7 @@ fun SettingScreen(navigator: DestinationsNavigator) {
                 }
             }
 
-            // 设置分组卡片 - 应用设置
+            // 应用设置
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -240,6 +240,7 @@ fun SettingScreen(navigator: DestinationsNavigator) {
                         )
                     }
 
+                    // Web X 开关
                     var useWebUIX by rememberSaveable {
                         mutableStateOf(
                             prefs.getBoolean("use_webuix", false)
@@ -258,22 +259,30 @@ fun SettingScreen(navigator: DestinationsNavigator) {
                             useWebUIX = it
                         }
                     }
+
+                    // Web X Eruda 开关
                     var useWebUIXEruda by rememberSaveable {
                         mutableStateOf(
                             prefs.getBoolean("use_webuix_eruda", false)
                         )
                     }
                     KsuIsValid {
-                        SwitchItem(
-                            beta = true,
-                            enabled = Platform.isAlive && useWebUIX && enableWebDebugging,
-                            icon = Icons.Filled.FormatListNumbered,
-                            title = stringResource(id = R.string.use_webuix_eruda),
-                            summary = stringResource(id = R.string.use_webuix_eruda_summary),
-                            checked = useWebUIXEruda
+                        AnimatedVisibility(
+                            visible = useWebUIX && enableWebDebugging,
+                            enter = fadeIn() + expandVertically(),
+                            exit = fadeOut() + shrinkVertically()
                         ) {
-                            prefs.edit { putBoolean("use_webuix_eruda", it) }
-                            useWebUIXEruda = it
+                            SwitchItem(
+                                beta = true,
+                                enabled = Platform.isAlive && useWebUIX && enableWebDebugging,
+                                icon = Icons.Filled.FormatListNumbered,
+                                title = stringResource(id = R.string.use_webuix_eruda),
+                                summary = stringResource(id = R.string.use_webuix_eruda_summary),
+                                checked = useWebUIXEruda
+                            ) {
+                                prefs.edit { putBoolean("use_webuix_eruda", it) }
+                                useWebUIXEruda = it
+                            }
                         }
                     }
 
@@ -289,7 +298,7 @@ fun SettingScreen(navigator: DestinationsNavigator) {
                 }
             }
 
-            // 设置分组卡片 - 工具
+            // 工具
             Card(
                 modifier = Modifier
                     .fillMaxWidth()

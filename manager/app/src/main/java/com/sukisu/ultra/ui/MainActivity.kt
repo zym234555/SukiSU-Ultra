@@ -1,5 +1,6 @@
 package com.sukisu.ultra.ui
 
+import android.content.Context
 import android.database.ContentObserver
 import android.os.Build
 import android.os.Bundle
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavHostController
@@ -167,6 +169,10 @@ private fun BottomBar(navController: NavHostController) {
     val containerColor = MaterialTheme.colorScheme.surfaceVariant
     val cardColor = MaterialTheme.colorScheme.surfaceVariant
 
+    // 检查是否显示KPM
+    val showKpmInfo = LocalContext.current.getSharedPreferences("settings", Context.MODE_PRIVATE)
+        .getBoolean("show_kpm_info", true)
+
     NavigationBar(
         modifier = Modifier.windowInsetsPadding(
             WindowInsets.navigationBars.only(WindowInsetsSides.Horizontal)
@@ -179,7 +185,7 @@ private fun BottomBar(navController: NavHostController) {
     ) {
         BottomBarDestination.entries.forEach { destination ->
             if (destination == BottomBarDestination.Kpm) {
-                if (kpmVersion.isNotEmpty() && !kpmVersion.startsWith("Error")) {
+                if (kpmVersion.isNotEmpty() && !kpmVersion.startsWith("Error") && showKpmInfo) {
                     if (!fullFeatured && destination.rootRequired) return@forEach
                     val isCurrentDestOnBackStack by navController.isRouteOnBackStackAsState(destination.direction)
                     NavigationBarItem(

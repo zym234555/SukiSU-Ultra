@@ -324,6 +324,10 @@
     <string name="background_set_success">Background set successfully</string>
     <string name="background_removed">Removed custom backgrounds</string>
     <string name="root_require_for_install">Requires root privileges</string>
+    <!-- KPM display settings -->
+    <string name="show_kpm_info">Display KPM Function</string>
+    <string name="show_kpm_info_summary">Display KPM information and Function in home and bottom bar (Need to reopen the app)</string>
+    <!-- Webui X settings -->
     <string name="use_webuix">Use WebUI X</string>
     <string name="use_webuix_summary">Use WebUI X instead of WebUI which supports more API\'s</string>
     <string name="use_webuix_eruda">Inject Eruda into WebUI X</string>
