@@ -342,4 +342,8 @@
     <string name="dpi_confirm_message">你确定要将应用DPI从 %1$d 更改为 %2$d 吗？</string>
     <string name="dpi_confirm_summary">应用需要重启以应用新的DPI设置，不会影响系统状态栏或其他应用</string>
     <string name="dpi_applied_success">DPI 已设置为 %1$d，重启应用后生效</string>
+    <!-- 语言设置相关字符串 -->
+    <string name="language_setting">应用语言</string>
+    <string name="language_follow_system">跟随系统</string>
+    <string name="language_changed">语言已更改，重启应用以应用更改</string>
 </resources>

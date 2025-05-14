@@ -1,7 +1,10 @@
 package com.sukisu.ultra.ui.screen
 
+import android.annotation.SuppressLint
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.content.res.Configuration
 import android.net.Uri
 import android.os.Build
 import android.widget.Toast
@@ -36,6 +39,7 @@ import androidx.compose.material.icons.filled.ColorLens
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Opacity
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Security
@@ -84,6 +88,7 @@ import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootGraph
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import com.sukisu.ultra.R
+import com.sukisu.ultra.ui.MainActivity
 import com.sukisu.ultra.ui.component.ImageEditorDialog
 import com.sukisu.ultra.ui.component.KsuIsValid
 import com.sukisu.ultra.ui.component.SwitchItem
@@ -103,12 +108,14 @@ import com.sukisu.ultra.ui.util.susfsSUS_SU_Mode
 import com.topjohnwu.superuser.Shell
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.util.Locale
 import kotlin.math.roundToInt
 
 fun saveCardConfig(context: Context) {
     CardConfig.save(context)
 }
 
+@SuppressLint("LocalContextConfigurationRead", "ObsoleteSdkInt")
 @OptIn(ExperimentalMaterial3Api::class)
 @Destination<RootGraph>
 @Composable
@@ -142,6 +149,128 @@ fun MoreSettingsScreen(navigator: DestinationsNavigator) {
         stringResource(R.string.theme_light),
         stringResource(R.string.theme_dark)
     )
+
+    // 获取当前语言设置
+    var currentLanguage by remember {
+        mutableStateOf(prefs.getString("app_language", "") ?: "")
+    }
+
+    // 获取支持的语言列表
+    val supportedLanguages = remember {
+        val languages = mutableListOf<Pair<String, String>>()
+        languages.add("" to context.getString(R.string.language_follow_system))
+        val locales = context.resources.configuration.locales
+        for (i in 0 until locales.size()) {
+            val locale = locales.get(i)
+            val code = locale.toLanguageTag()
+            if (!languages.any { it.first == code }) {
+                languages.add(code to locale.getDisplayName(locale))
+            }
+        }
+
+        val commonLocales = listOf(
+            Locale.forLanguageTag("en"),
+            Locale.forLanguageTag("zh-CN"),
+            Locale.forLanguageTag("zh-HK"),
+            Locale.forLanguageTag("zh-TW"),
+            Locale.forLanguageTag("ja"), // 日语
+            Locale.forLanguageTag("fr"), // 法语
+            Locale.forLanguageTag("de"), // 德语
+            Locale.forLanguageTag("es"), // 西班牙语
+            Locale.forLanguageTag("it"), // 意大利语
+            Locale.forLanguageTag("ru"), // 俄语
+            Locale.forLanguageTag("pt"), // 葡萄牙语
+            Locale.forLanguageTag("ko")  // 韩语
+        )
+
+        for (locale in commonLocales) {
+            val code = locale.toLanguageTag()
+            if (!languages.any { it.first == code }) {
+                val config = Configuration(context.resources.configuration)
+                config.setLocale(locale)
+                try {
+                    val testContext = context.createConfigurationContext(config)
+                    testContext.getString(R.string.language_follow_system)
+                    languages.add(code to locale.getDisplayName(locale))
+                } catch (_: Exception) {
+                }
+            }
+        }
+        languages
+    }
+
+    var showLanguageDialog by remember { mutableStateOf(false) }
+
+    // 语言切换对话框
+    if (showLanguageDialog) {
+        AlertDialog(
+            onDismissRequest = { showLanguageDialog = false },
+            title = { Text(stringResource(R.string.language_setting)) },
+            text = {
+                Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                    supportedLanguages.forEach { (code, name) ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    if (currentLanguage != code) {
+                                        prefs.edit {
+                                            putString("app_language", code)
+                                            commit()
+                                        }
+
+                                        currentLanguage = code
+
+                                        Toast.makeText(
+                                            context,
+                                            context.getString(R.string.language_changed),
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+
+                                        val locale = if (code.isEmpty()) Locale.getDefault() else Locale.forLanguageTag(code)
+                                        Locale.setDefault(locale)
+                                        val config = Configuration(context.resources.configuration)
+                                        config.setLocale(locale)
+
+                                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                                            context.createConfigurationContext(config)
+                                        } else {
+                                            @Suppress("DEPRECATION")
+                                            context.resources.updateConfiguration(config, context.resources.displayMetrics)
+                                        }
+
+                                        val intent = Intent(context, MainActivity::class.java)
+                                        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK)
+                                        context.startActivity(intent)
+
+                                        if (context is Activity) {
+                                            context.finish()
+                                        }
+                                    }
+                                    showLanguageDialog = false
+                                }
+                                .padding(vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(
+                                selected = currentLanguage == code,
+                                onClick = null
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(name)
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = { showLanguageDialog = false }
+                ) {
+                    Text(stringResource(R.string.cancel))
+                }
+            }
+        )
+    }
 
     // 简洁模式开关状态
     var isSimpleMode by remember {
@@ -407,6 +536,35 @@ fun MoreSettingsScreen(navigator: DestinationsNavigator) {
                 expanded = isAppearanceExpanded,
                 onToggle = { isAppearanceExpanded = !isAppearanceExpanded }
             )
+
+            AnimatedVisibility(
+                visible = isAppearanceExpanded,
+                enter = fadeIn() + expandVertically(),
+                exit = fadeOut() + shrinkVertically()
+            ) {
+                ListItem(
+                    headlineContent = { Text(stringResource(R.string.language_setting)) },
+                    supportingContent = {
+                        Text(supportedLanguages.find { it.first == currentLanguage }?.second
+                            ?: stringResource(R.string.language_follow_system))
+                    },
+                    leadingContent = {
+                        Icon(
+                            Icons.Default.Language,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    },
+                    trailingContent = {
+                        Icon(
+                            Icons.AutoMirrored.Filled.NavigateNext,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    },
+                    modifier = Modifier.clickable { showLanguageDialog = true }
+                )
+            }
 
             AnimatedVisibility(
                 visible = isAppearanceExpanded,
