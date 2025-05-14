@@ -24,6 +24,7 @@ import com.sukisu.ultra.ui.util.controlKpmModule
 import com.sukisu.ultra.ui.util.listKpmModules
 import java.io.File
 import java.util.concurrent.CompletableFuture
+import androidx.compose.runtime.Composable
 
 class WebViewInterface(
     wxOptions: WXOptions,
@@ -35,6 +36,12 @@ class WebViewInterface(
     }
 
     private val modDir get() = "/data/adb/modules/${modId.id}"
+
+    @Composable
+    @JavascriptInterface
+    fun isSecondaryPage(): Boolean {
+        return isSecondaryScreen()
+    }
 
     @JavascriptInterface
     fun exec(cmd: String): String {

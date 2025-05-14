@@ -546,9 +546,6 @@ fun Context.loadDynamicColorState() {
     ThemeConfig.useDynamicColor = enabled
 }
 
-/**
- * webui X样式
- */
 @Composable
 private fun SystemBarStyle(
     darkMode: Boolean,
