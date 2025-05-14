@@ -169,10 +169,10 @@ fun MoreSettingsScreen(navigator: DestinationsNavigator) {
         }
 
         val commonLocales = listOf(
-            Locale.forLanguageTag("en"),
-            Locale.forLanguageTag("zh-CN"),
-            Locale.forLanguageTag("zh-HK"),
-            Locale.forLanguageTag("zh-TW"),
+            Locale.forLanguageTag("en"), // 英语
+            Locale.forLanguageTag("zh-CN"), // 简体中文
+            Locale.forLanguageTag("zh-HK"), // 繁体中文(香港)
+            Locale.forLanguageTag("zh-TW"), // 繁体中文(台湾)
             Locale.forLanguageTag("ja"), // 日语
             Locale.forLanguageTag("fr"), // 法语
             Locale.forLanguageTag("de"), // 德语
@@ -180,7 +180,8 @@ fun MoreSettingsScreen(navigator: DestinationsNavigator) {
             Locale.forLanguageTag("it"), // 意大利语
             Locale.forLanguageTag("ru"), // 俄语
             Locale.forLanguageTag("pt"), // 葡萄牙语
-            Locale.forLanguageTag("ko")  // 韩语
+            Locale.forLanguageTag("ko"), // 韩语
+            Locale.forLanguageTag("vi")  // 越南语
         )
 
         for (locale in commonLocales) {
