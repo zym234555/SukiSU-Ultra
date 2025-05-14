@@ -350,4 +350,5 @@
     <string name="language_setting">App Language</string>
     <string name="language_follow_system">Follow System</string>
     <string name="language_changed">Language changed, restarting to apply changes</string>
+    <string name="settings_card_dim">Card Darkness Adjustment</string>
 </resources>

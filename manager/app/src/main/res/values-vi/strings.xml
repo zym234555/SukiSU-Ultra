@@ -36,11 +36,11 @@
     <string name="settings">Cài đặt</string>
     <string name="reboot_userspace">Khởi động lại không gian người dùng</string>
     <string name="reboot_recovery">Khởi động lại vào Recovery</string>
-    <string name="reboot_bootloader">hởi động lại vào Bootloader</string>
+    <string name="reboot_bootloader">Khởi động lại vào Bootloader</string>
     <string name="reboot_download">Khởi động lại vào Download Mode</string>
     <string name="reboot_edl">Khởi động lại vào EDL</string>
     <string name="about">Thông tin</string>
-    <string name="module_uninstall_confirm">Bạn có THẬT SỰ muốn gỡ module %s?</string>
+    <string name="module_uninstall_confirm">Bạn có THẬT SỰ muốn gỡ cài đặt module %s không?</string>
     <string name="module_uninstall_success">%s đã được gỡ cài đặt</string>
     <string name="module_uninstall_failed">Gỡ cài đặt thất bại: %s</string>
     <string name="module_version">Phiên bản</string>
@@ -58,7 +58,7 @@
     <string name="home_support_title">Hỗ trợ chúng tôi</string>
     <string name="home_support_content">KernelSU sẽ luôn là miễn phí và mã nguồn mở. Tuy nhiên, bạn có thể cho chúng tôi thấy rằng bạn quan tâm bằng cách quyên góp.</string>
     <string name="about_source_code"><![CDATA[Xem mã nguồn tại %1$s<br/>Tham gia kênh %2$s của chúng tôi]]></string>
-    <string name="profile" translatable="false">App Profile</string>
+    <string name="profile" translatable="false">Hồ sơ ứng dụng</string>
     <string name="profile_default">Mặc định</string>
     <string name="profile_template">Bản mẫu</string>
     <string name="profile_custom">Tuỳ chỉnh</string>
@@ -139,7 +139,7 @@
     <string name="log_saved">Logs đã được lưu</string>
     <string name="status_supported">Được hỗ trợ</string>
     <string name="status_not_supported">Không được hỗ trợ</string>
-    <string name="status_unknown">Unknown</string>
+    <string name="status_unknown">Không rõ</string>
     <string name="sus_su_mode">Chế độ SU của SuS:</string>
     <!-- Module related -->
     <string name="module_install_confirm">Xác nhận cài đặt Module %1$s？</string>
@@ -180,7 +180,7 @@
     <string name="settings_disable_su">Vô hiệu hoá khả năng của lệnh SU</string>
     <string name="settings_disable_su_summary">Vô hiệu hoá khả năng thực thi lệnh SU để lấy quyền root (những app đã cấp trước đó không bị ảnh hưởng).</string>
     <string name="using_mksu_manager">Bạn đang sử dụng trình quản lý SukiSU Beta</string>
-    <string name="module_install_multiple_confirm">Bạn có chắc muốn cài đặt các Module %d đã chọn không??</string>
+    <string name="module_install_multiple_confirm">Bạn có chắc muốn cài đặt các Module %d đã chọn không?</string>
     <string name="module_install_multiple_confirm_with_names">Bạn có chắc muốn cài đặt các module %1$d sau không? \n\n%2$s</string>
     <string name="more_settings">Nhiều thiết lập hơn</string>
     <string name="selinux">SELinux</string>
@@ -247,7 +247,7 @@
     <string name="home_click_to_ContributionCard_kernelsu">SukiSU Ultra sẽ là một nhánh tương đối độc lập của KSU trong tương lai, nhưng chúng tôi xin cảm ơn KernelSU và MKSU,... vì những đóng góp của họ!</string>
     <string name="not_supported">Không được hỗ trợ</string>
     <string name="supported">Được hỗ trợ</string>
-    <string name="home_kpm_module">"Module KPM: %d "</string>
+    <string name="home_kpm_module">Module KPM: %d</string>
     <string name="kpm_invalid_file">Tệp KPM không hợp lệ</string>
     <string name="kernel_patched">Kernel chưa được vá</string>
     <string name="kernel_not_enabled">Kernel chưa được cấu hình</string>
@@ -350,4 +350,5 @@
     <string name="language_setting">Ngôn ngữ ứng dụng</string>
     <string name="language_follow_system">Theo dõi hệ thống</string>
     <string name="language_changed">Ngôn ngữ đã thay đổi, khởi động lại để áp dụng thay đổi</string>
+    <string name="settings_card_dim">Điều chỉnh độ tối của thẻ</string>
 </resources>

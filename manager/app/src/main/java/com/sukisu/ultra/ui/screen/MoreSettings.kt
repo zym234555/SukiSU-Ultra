@@ -40,6 +40,7 @@ import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Opacity
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Security
@@ -345,6 +346,7 @@ fun MoreSettingsScreen(navigator: DestinationsNavigator) {
 
     // 卡片配置状态
     var cardAlpha by rememberSaveable { mutableFloatStateOf(CardConfig.cardAlpha) }
+    var cardDim by rememberSaveable { mutableFloatStateOf(CardConfig.cardDim) }
     var isCustomBackgroundEnabled by rememberSaveable {
         mutableStateOf(ThemeConfig.customBackgroundUri != null)
     }
@@ -393,6 +395,7 @@ fun MoreSettingsScreen(navigator: DestinationsNavigator) {
         // 加载设置
         CardConfig.load(context)
         cardAlpha = CardConfig.cardAlpha
+        cardDim = CardConfig.cardDim
         isCustomBackgroundEnabled = ThemeConfig.customBackgroundUri != null
 
         // 设置主题模式
@@ -699,10 +702,13 @@ fun MoreSettingsScreen(navigator: DestinationsNavigator) {
                                             isCustomBackgroundEnabled = false
                                             CardConfig.cardElevation
                                             CardConfig.cardAlpha = 1f
+                                            CardConfig.cardDim = 0f
                                             CardConfig.isCustomAlphaSet = false
+                                            CardConfig.isCustomDimSet = false
                                             CardConfig.isCustomBackgroundEnabled = false
                                             saveCardConfig(context)
                                             cardAlpha = 1f
+                                            cardDim = 0f
 
                                             // 重置其他相关设置
                                             ThemeConfig.needsResetOnThemeChange = true
@@ -730,7 +736,7 @@ fun MoreSettingsScreen(navigator: DestinationsNavigator) {
                             )
                         )
 
-                        // 透明度 Slider
+                        // 透明度和亮度调节滑动条
                         AnimatedVisibility(
                             visible = ThemeConfig.customBackgroundUri != null,
                             enter = fadeIn() + expandVertically(),
@@ -738,6 +744,7 @@ fun MoreSettingsScreen(navigator: DestinationsNavigator) {
                             modifier = Modifier.padding(horizontal = 32.dp)
                         ) {
                             Column(modifier = Modifier.padding(vertical = 8.dp)) {
+                                // 透明度滑动条
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
                                     modifier = Modifier.padding(bottom = 4.dp)
@@ -770,6 +777,55 @@ fun MoreSettingsScreen(navigator: DestinationsNavigator) {
                                         prefs.edit {
                                             putBoolean("is_custom_alpha_set", true)
                                             putFloat("card_alpha", newValue)
+                                        }
+                                    },
+                                    onValueChangeFinished = {
+                                        coroutineScope.launch(Dispatchers.IO) {
+                                            saveCardConfig(context)
+                                        }
+                                    },
+                                    valueRange = 0f..1f,
+                                    steps = 20,
+                                    colors = SliderDefaults.colors(
+                                        thumbColor = MaterialTheme.colorScheme.primary,
+                                        activeTrackColor = MaterialTheme.colorScheme.primary,
+                                        inactiveTrackColor = MaterialTheme.colorScheme.surfaceVariant
+                                    )
+                                )
+
+                                // 亮度调节滑动条
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.padding(top = 16.dp, bottom = 4.dp)
+                                ) {
+                                    Icon(
+                                        Icons.Filled.LightMode,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(20.dp),
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = stringResource(R.string.settings_card_dim),
+                                        style = MaterialTheme.typography.titleSmall
+                                    )
+                                    Spacer(modifier = Modifier.weight(1f))
+                                    Text(
+                                        text = "${(cardDim * 100).roundToInt()}%",
+                                        style = MaterialTheme.typography.labelMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+
+                                Slider(
+                                    value = cardDim,
+                                    onValueChange = { newValue ->
+                                        cardDim = newValue
+                                        CardConfig.cardDim = newValue
+                                        CardConfig.isCustomDimSet = true
+                                        prefs.edit {
+                                            putBoolean("is_custom_dim_set", true)
+                                            putFloat("card_dim", newValue)
                                         }
                                     },
                                     onValueChangeFinished = {
@@ -1144,6 +1200,9 @@ fun MoreSettingsScreen(navigator: DestinationsNavigator) {
                                             if (!CardConfig.isCustomAlphaSet) {
                                                 CardConfig.cardAlpha = 1f
                                             }
+                                            if (!CardConfig.isCustomDimSet) {
+                                                CardConfig.cardDim = 0.5f
+                                            }
                                             CardConfig.save(context)
                                         }
                                         1 -> { // 浅色
@@ -1152,6 +1211,9 @@ fun MoreSettingsScreen(navigator: DestinationsNavigator) {
                                             CardConfig.isUserDarkModeEnabled = false
                                             if (!CardConfig.isCustomAlphaSet) {
                                                 CardConfig.cardAlpha = 1f
+                                            }
+                                            if (!CardConfig.isCustomDimSet) {
+                                                CardConfig.cardDim = 0f
                                             }
                                             CardConfig.save(context)
                                         }
