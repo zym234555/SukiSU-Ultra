@@ -546,41 +546,44 @@ fun MoreSettingsScreen(navigator: DestinationsNavigator) {
                 enter = fadeIn() + expandVertically(),
                 exit = fadeOut() + shrinkVertically()
             ) {
-                ListItem(
-                    headlineContent = { Text(stringResource(R.string.language_setting)) },
-                    supportingContent = {
-                        Text(supportedLanguages.find { it.first == currentLanguage }?.second
-                            ?: stringResource(R.string.language_follow_system))
-                    },
-                    leadingContent = {
-                        Icon(
-                            Icons.Default.Language,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                    },
-                    trailingContent = {
-                        Icon(
-                            Icons.AutoMirrored.Filled.NavigateNext,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    },
-                    modifier = Modifier.clickable { showLanguageDialog = true }
-                )
-            }
-
-            AnimatedVisibility(
-                visible = isAppearanceExpanded,
-                enter = fadeIn() + expandVertically(),
-                exit = fadeOut() + shrinkVertically()
-            ) {
                 Surface(
                     shape = RoundedCornerShape(16.dp),
                     tonalElevation = 1.dp,
                     modifier = Modifier.padding(bottom = 16.dp)
                 ) {
                     Column {
+                        // 语言设置
+                        ListItem(
+                            headlineContent = { Text(stringResource(R.string.language_setting)) },
+                            supportingContent = {
+                                Text(supportedLanguages.find { it.first == currentLanguage }?.second
+                                    ?: stringResource(R.string.language_follow_system))
+                            },
+                            leadingContent = {
+                                Icon(
+                                    Icons.Default.Language,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            },
+                            trailingContent = {
+                                Icon(
+                                    Icons.AutoMirrored.Filled.NavigateNext,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            },
+                            colors = ListItemDefaults.colors(
+                                containerColor = Color.Transparent
+                            ),
+                            modifier = Modifier.clickable { showLanguageDialog = true }
+                        )
+
+                        HorizontalDivider(
+                            modifier = Modifier.padding(horizontal = 16.dp),
+                            color = MaterialTheme.colorScheme.outlineVariant
+                        )
+
                         // 主题模式
                         ListItem(
                             headlineContent = { Text(stringResource(R.string.theme_mode)) },
