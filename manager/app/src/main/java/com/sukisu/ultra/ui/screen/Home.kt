@@ -862,7 +862,7 @@ private fun InfoCard() {
 
             InfoCardItem(
                 stringResource(R.string.home_kernel),
-                uname.release,
+                "${uname.release} (${uname.machine})",
                 icon = Icons.Default.Memory,
             )
 
