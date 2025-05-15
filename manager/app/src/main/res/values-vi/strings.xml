@@ -9,7 +9,7 @@
     <string name="home_superuser_count">Ứng dụng đã cấp SU: %d</string>
     <string name="home_module_count">Modules: %d</string>
     <string name="home_unsupported">Không được hỗ trợ</string>
-    <string name="home_unsupported_reason">Không phát hiện được trình điều khiển SukiSU Ultra trên Kernel của bạn, Kernel sai?.</string>
+    <string name="home_unsupported_reason">Không phát hiện được trình điều khiển SukiSU Ultra trên Kernel của bạn, Kernel sai?</string>
     <string name="home_kernel">Phiên bản Kernel</string>
     <string name="home_susfs">SuSFS: %s</string>
     <string name="home_susfs_version">Phiên bản SuSFS</string>
@@ -25,9 +25,9 @@
     <string name="module_failed_to_enable">Không thể kích hoạt module: %s</string>
     <string name="module_failed_to_disable">Không thể vô hiệu hoá module: %s</string>
     <string name="module_empty">Chưa cài module nào</string>
-    <string name="module">Module</string>
-    <string name="module_sort_action_first">Sắp xếp (theo hành động)</string>
-    <string name="module_sort_enabled_first">Sắp xếp (theo trạng thái)</string>
+    <string name="module">Modules</string>
+    <string name="module_sort_action_first">Sắp xếp (Theo hành động)</string>
+    <string name="module_sort_enabled_first">Sắp xếp (Theo trạng thái)</string>
     <string name="uninstall">Gỡ cài đặt</string>
     <string name="restore">Khôi phục</string>
     <string name="module_install">Cài đặt</string>
@@ -54,9 +54,9 @@
     <string name="module_magisk_conflict">Các module không khả dụng do xung đột với Magisk!</string>
     <string name="home_learn_kernelsu">Tìm hiểu về KernelSU</string>
     <string name="home_learn_kernelsu_url">https://kernelsu.org/guide/what-is-kernelsu.html</string>
-    <string name="home_click_to_learn_kernelsu">Tìm hiểu cách cài đặt KernelSU và sử dụng các Module</string>
+    <string name="home_click_to_learn_kernelsu">Tìm hiểu cách cài đặt KernelSU và sử dụng các Module!</string>
     <string name="home_support_title">Hỗ trợ chúng tôi</string>
-    <string name="home_support_content">KernelSU sẽ luôn là miễn phí và mã nguồn mở. Tuy nhiên, bạn có thể cho chúng tôi thấy rằng bạn quan tâm bằng cách quyên góp.</string>
+    <string name="home_support_content">KernelSU sẽ luôn là miễn phí và mã nguồn mở. Tuy nhiên, bạn có thể cho chúng tôi thấy rằng bạn quan tâm bằng cách quyên góp!</string>
     <string name="about_source_code"><![CDATA[Xem mã nguồn tại %1$s<br/>Tham gia kênh %2$s của chúng tôi]]></string>
     <string name="profile" translatable="false">Hồ sơ ứng dụng</string>
     <string name="profile_default">Mặc định</string>
@@ -74,15 +74,15 @@
     <string name="failed_to_update_app_profile">Cập nhật hồ sơ ứng dụng thất bại cho %s</string>
     <string name="require_kernel_version" formatted="false">Phiên bản SukiSU Ultra hiện tại %d quá thấp để trình quản lý hoạt động bình thường. Vui lòng cập nhật lên phiên bản %d hoặc cao hơn!</string>
     <string name="settings_umount_modules_default">Bỏ gắn kết các Module cho toàn hệ thống</string>
-    <string name="settings_umount_modules_default_summary">Giá trị mặc định chung cho \"Bỏ gắn kết các Module\" trong Hồ sơ ứng dụng. Nếu bật, mọi thay đổi hệ thống do Module gây ra sẽ bị gỡ bỏ đối với hệ thống đối và các ứng dụng không có hồ sơ được đặt.</string>
+    <string name="settings_umount_modules_default_summary">Giá trị mặc định chung cho \"Bỏ gắn kết các Module\" trong Hồ sơ ứng dụng. Nếu được bật, mọi thay đổi hệ thống do các Module gây ra sẽ bị gỡ bỏ khỏi hệ thống và các ứng dụng chưa thiết lập hồ sơ</string>
     <string name="settings_susfs_toggle">Ẩn hooks kprobe</string>
-    <string name="profile_umount_modules_summary">Bật tùy chọn này sẽ cho phép SukiSU Ultra khôi phục mọi tệp đã được các Module sửa đổi cho ứng dụng này.</string>
+    <string name="profile_umount_modules_summary">Bật tùy chọn này sẽ cho phép SukiSU Ultra khôi phục mọi tệp đã được các Module sửa đổi cho ứng dụng này</string>
     <string name="profile_selinux_domain">Tên miền</string>
     <string name="profile_selinux_rules">Quy tắc</string>
     <string name="module_update">Cập nhật</string>
     <string name="module_downloading">Tải xuống module: %s</string>
     <string name="module_start_downloading">Đang tải xuống module: %s</string>
-    <string name="new_version_available">Phiên bản mới %s đã có sẵn, hãy nhấp để cập nhật.</string>
+    <string name="new_version_available">Phiên bản mới %s đã có sẵn, hãy nhấp để cập nhật</string>
     <string name="launch_app">Mở</string>
     <string name="force_stop_app" formatted="false">Buộc dừng</string>
     <string name="restart_app">Khởi động lại</string>
@@ -116,7 +116,7 @@
     <string name="action">Khởi chạy</string>
     <string name="open">Mở</string>
     <string name="enable_web_debugging">Bật gỡ lỗi WebView</string>
-    <string name="enable_web_debugging_summary">Có thể sử dụng để gỡ lỗi WebUI. Vui lòng chỉ bật khi cần thiết.</string>
+    <string name="enable_web_debugging_summary">Có thể sử dụng để gỡ lỗi WebUI. Vui lòng chỉ bật khi cần thiết</string>
     <string name="direct_install">Cài đặt trực tiếp (Khuyến nghị)</string>
     <string name="select_file">Chọn tệp .img cần vá</string>
     <string name="install_inactive_slot">Cài đặt vào phân vùng chưa được sử dụng (Sau OTA)</string>
@@ -128,9 +128,9 @@
     <string name="settings_uninstall_temporary">Gỡ cài đặt tạm thời</string>
     <string name="settings_uninstall_permanent">Gỡ cài đặt sạch</string>
     <string name="settings_restore_stock_image">Khôi phục phân vùng khởi động về mặc định</string>
-    <string name="settings_uninstall_temporary_message">Gỡ cài đặt tạm thời SukiSU Ultra, khôi phục lại trạng thái ban đầu sau lần khởi động lại tiếp theo.</string>
-    <string name="settings_uninstall_permanent_message">Gỡ cài đặt SukiSU Ultra (Root và tất cả các module) sạch hoàn toàn, trả về trạng thái ban đầu.</string>
-    <string name="settings_restore_stock_image_message">Khôi phục lại boot lúc đầu (nếu có bản sao lưu), thường được sử dụng trước OTA; nếu bạn cần gỡ hẳn SukiSU Ultra, sử dụng\"Gỡ cài đặt sạch\".</string>
+    <string name="settings_uninstall_temporary_message">Gỡ cài đặt tạm thời SukiSU Ultra, khôi phục lại trạng thái ban đầu sau lần khởi động lại tiếp theo</string>
+    <string name="settings_uninstall_permanent_message">Gỡ cài đặt SukiSU Ultra (Root và tất cả các module) sạch hoàn toàn, trả về trạng thái ban đầu</string>
+    <string name="settings_restore_stock_image_message">Khôi phục lại boot lúc đầu (Nếu có bản sao lưu), thường được sử dụng trước OTA; nếu bạn cần gỡ hẳn SukiSU Ultra, sử dụng\"Gỡ cài đặt sạch\"</string>
     <string name="flashing">Đang flash...</string>
     <string name="flash_success">Flash thành công</string>
     <string name="flash_failed">Flash thất bại</string>
@@ -178,7 +178,7 @@
     <string name="home_device_model">Model thiết bị</string>
     <string name="su_not_allowed">Cấp quyền SU không được phép cho: %s</string>
     <string name="settings_disable_su">Vô hiệu hoá khả năng của lệnh SU</string>
-    <string name="settings_disable_su_summary">Vô hiệu hoá khả năng thực thi lệnh SU để lấy quyền root (những app đã cấp trước đó không bị ảnh hưởng).</string>
+    <string name="settings_disable_su_summary">Vô hiệu hoá khả năng thực thi lệnh SU để lấy quyền root (Những app đã cấp trước đó không bị ảnh hưởng)</string>
     <string name="using_mksu_manager">Bạn đang sử dụng trình quản lý SukiSU Beta</string>
     <string name="module_install_multiple_confirm">Bạn có chắc muốn cài đặt các Module %d đã chọn không?</string>
     <string name="module_install_multiple_confirm_with_names">Bạn có chắc muốn cài đặt các module %1$d sau không? \n\n%2$s</string>
@@ -265,7 +265,7 @@
     <string name="invalid_file_type">Loại tệp không đúng! Vui lòng chọn tệp .kpm</string>
     <string name="confirm_uninstall_title_with_filename">Gỡ cài đặt</string>
     <string name="confirm_uninstall_content">KPM sau đây sẽ được gỡ cài đặt: %s</string>
-    <string name="settings_susfs_toggle_summary">Vô hiệu hóa các hook kprobe được tạo bởi SukiSU Ultra, thay vào đó sử dụng các hook nội tuyến, tương tự như phương pháp hook kernel không phải GKI.</string>
+    <string name="settings_susfs_toggle_summary">Vô hiệu hóa các hook kprobe được tạo bởi SukiSU Ultra, thay vào đó sử dụng các hook nội tuyến, tương tự như phương pháp hook kernel không phải GKI</string>
     <string name="image_editor_title">Điều chỉnh hình nền</string>
     <string name="image_editor_hint">Sử dụng hai ngón tay để phóng to hình ảnh và một ngón tay để kéo nó để điều chỉnh vị trí</string>
     <string name="background_image_error">Không thể tải hình ảnh</string>
@@ -283,28 +283,28 @@
     <string name="horizon_flashing">Flashing kernel…</string>
     <string name="horizon_flash_complete_status">Flash completed</string>
     <!-- Slot selection related strings -->
-    <string name="select_slot_title">Select Flash Slot</string>
-    <string name="select_slot_description">Please select the target slot for flashing boot</string>
+    <string name="select_slot_title">Chọn Slot Flash</string>
+    <string name="select_slot_description">Vui lòng chọn Slot để Flash Boot</string>
     <string name="slot_a">Slot A</string>
     <string name="slot_b">Slot B</string>
-    <string name="selected_slot">Selected slot: %1$s</string>
-    <string name="horizon_getting_original_slot">Getting the original slot</string>
-    <string name="horizon_setting_target_slot">Setting the specified slot</string>
-    <string name="horizon_restoring_original_slot">Restore Default Slot</string>
-    <string name="current_slot">Current Slot：%1$s </string>
+    <string name="selected_slot">Chọn Slot: %1$s</string>
+    <string name="horizon_getting_original_slot">Lấy Slot ban đầu</string>
+    <string name="horizon_setting_target_slot">Cài đặt Slot được chỉ định</string>
+    <string name="horizon_restoring_original_slot">Khôi phục Slot mặc định</string>
+    <string name="current_slot">Slot hiện tại：%1$s </string>
     <!-- Error Messages -->
-    <string name="horizon_copy_failed">Copy failed</string>
-    <string name="horizon_unknown_error">Unknown error</string>
-    <string name="flash_failed_message">Flash failed</string>
+    <string name="horizon_copy_failed">Copy thất bại</string>
+    <string name="horizon_unknown_error">Lỗi không xác định</string>
+    <string name="flash_failed_message">Flash thất bại</string>
     <!-- lkm/gki install -->
-    <string name="Lkm_install_methods">LKM repair/installation</string>
-    <string name="GKI_install_methods">GKI/non-GKI installation</string>
-    <string name="kernel_version_log">Kernel version：%1$s</string>
-    <string name="tool_version_log">Using the patching tool：%1$s</string>
-    <string name="configuration">Configure</string>
-    <string name="app_settings">Application Settings</string>
-    <string name="tools">Tools</string>
-    <string name="currently_selected">Currently</string>
+    <string name="Lkm_install_methods">LKM cài đặt</string>
+    <string name="GKI_install_methods">GKI/non-GKI cài đặt</string>
+    <string name="kernel_version_log">Phiên bản Kernel：%1$s</string>
+    <string name="tool_version_log">Sử dụng công cụ vá lỗi：%1$s</string>
+    <string name="configuration">Cấu hình</string>
+    <string name="app_settings">Cài đặt ứng dụng</string>
+    <string name="tools">Công cụ</string>
+    <string name="currently_selected">Hiện tại</string>
     <!--  String resources used in SuperUser -->
     <string name="clear">Loại bỏ</string>
     <string name="apps_with_root">Quyền Root của ứng dụng</string>
@@ -326,22 +326,22 @@
     <string name="root_require_for_install">Yêu cầu quyền root</string>
     <!-- KPM display settings -->
     <string name="show_kpm_info">Hiển thị chức năng KPM</string>
-    <string name="show_kpm_info_summary">Hiển thị thông tin KPM và Chức năng ở trang chủ và thanh dưới cùng (Cần khởi động lại ứng dụng)</string>
+    <string name="show_kpm_info_summary">Hiển thị thông tin KPM, chức năng ở trang chủ và thanh dưới cùng (Cần khởi động lại ứng dụng)</string>
     <!-- Webui X settings -->
     <string name="use_webuix">Sử dụng WebUI X</string>
-    <string name="use_webuix_summary">Sử dụng WebUI X thay vì WebUI hỗ trợ nhiều API hơn</string>
+    <string name="use_webuix_summary">Sử dụng WebUI X thay cho WebUI vì hỗ trợ nhiều API hơn</string>
     <string name="use_webuix_eruda">Tiêm Eruda vào WebUI X</string>
-    <string name="use_webuix_eruda_summary">Chèn bảng điều khiển gỡ lỗi vào WebUI X để gỡ lỗi dễ dàng hơn. Yêu cầu bật gỡ lỗi web.</string>
+    <string name="use_webuix_eruda_summary">Chèn bảng điều khiển gỡ lỗi vào WebUI X để gỡ lỗi dễ dàng hơn. Yêu cầu bật gỡ lỗi web</string>
     <!-- DPI setting related strings -->
     <string name="dpi_settings">Cài đặt DPI</string>
-    <string name="app_dpi_title">Áp dụng DPI</string>
-    <string name="app_dpi_summary">Chỉ điều chỉnh mật độ hiển thị màn hình cho ứng dụng hiện tại</string>
+    <string name="app_dpi_title">Tuỳ chỉnh DPI</string>
+    <string name="app_dpi_summary">Điều chỉnh DPI hiển thị cho ứng dụng</string>
     <string name="dpi_size_small">Nhỏ</string>
     <string name="dpi_size_medium">Vừa</string>
     <string name="dpi_size_large">Lớn</string>
     <string name="dpi_size_extra_large">Cực lớn</string>
     <string name="dpi_size_custom">Có thể tùy chỉnh</string>
-    <string name="dpi_apply_settings">Áp dụng cài đặt DPI</string>
+    <string name="dpi_apply_settings">Áp dụng</string>
     <string name="dpi_confirm_title">Xác nhận thay đổi DPI</string>
     <string name="dpi_confirm_message">Bạn có chắc chắn muốn thay đổi DPI của ứng dụng từ %1$d thành %2$d?</string>
     <string name="dpi_confirm_summary">Ứng dụng cần được khởi động lại để áp dụng cài đặt DPI mới, không ảnh hưởng đến thanh trạng thái hệ thống hoặc các ứng dụng khác</string>
