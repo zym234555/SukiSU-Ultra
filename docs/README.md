@@ -14,19 +14,23 @@
 
 在内核源码的根目录下执行以下命令：
 
-使用 susfs-dev 分支（已集成 susfs，带非 GKI 设备的支持）
-```
-curl -LSs "https://raw.githubusercontent.com/ShirkNeko/SukiSU-Ultra/main/kernel/setup.sh" | bash -s susfs-dev
-```
-
-使用 main 分支
+使用 main 分支 (不支持非GKI设备构建)
 ```
 curl -LSs "https://raw.githubusercontent.com/ShirkNeko/SukiSU-Ultra/main/kernel/setup.sh" | bash -s main
+```
+
+使用支持非 GKI 设备的分支
+```
+curl -LSs "https://raw.githubusercontent.com/ShirkNeko/SukiSU-Ultra/main/kernel/setup.sh" | bash -s nongki
 ```
 
 ## 如何集成 susfs
 
 1. 直接使用 susfs-stable 或者 susfs-dev 分支，不需要再集成 susfs
+
+```
+curl -LSs "https://raw.githubusercontent.com/ShirkNeko/SukiSU-Ultra/main/kernel/setup.sh" | bash -s susfs-dev
+```
 
 ## 钩子方法
 
@@ -51,6 +55,25 @@ curl -LSs "https://raw.githubusercontent.com/ShirkNeko/SukiSU-Ultra/main/kernel/
 开源地址: https://github.com/ShirkNeko/SukiSU_KernelPatch_patch
 
 KPM 模板地址: https://github.com/udochina/KPM-Build-Anywhere
+
+> [!Note]
+> 1. 需要 `CONFIG_KPM=y`
+> 2. 非GKI设备还需要 `CONFIG_KALLSYMS=y` 和 `CONFIG_KALLSYMS_ALL=y`
+> 3. 部分内核 `4.19` 以下源码还需要从 `4.19` 向后移植头文件 `set_memory.h`
+
+
+## 如何进行系统更新保留ROOT
+- OTA后先不要重启，进入管理器刷写/修补内核界面，找到 `GKI/non_GKI安装` 选择需要刷写的Anykernel3内核压缩文件，选择与现在系统运行槽位相反的槽位进行刷写并重启即可保留GKI模式更新（暂不支持所有非GKI设备使用这种方法，请自行尝试。非GKI设备使用TWRP刷写是最稳妥的）
+- 或者使用LKM模式的安装到未使用的槽位（OTA后）
+
+## 兼容状态
+- KernelSU（v1.0.0 之前版本）正式支持 Android GKI 2.0 设备（内核 5.10+）
+
+- 旧内核（4.4+）也兼容，但必须手动构建内核
+
+- 通过更多的反向移植，KernelSU 可以支持 3.x 内核（3.4-3.18）
+
+- 目前支持 `arm64-v8a` ，`armeabi-v7a (bare)` 和部分 `X86_64`
 
 ## 更多链接
 
