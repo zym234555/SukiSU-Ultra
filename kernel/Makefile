@@ -80,16 +80,6 @@ else
 $(info -- KPM is disabled)
 endif
 
-# 检查原子函数
-ifeq ($(shell grep -q "atomic_inc_not_zero" $(srctree)/kernel/cred.c; echo $$?),0)
-ATOMIC_INC_FUNC = atomic_inc_not_zero
-else ifeq ($(shell grep -q "atomic_long_inc_not_zero" $(srctree)/kernel/cred.c; echo $$?),0)
-ATOMIC_INC_FUNC = atomic_long_inc_not_zero
-else
-$(info -- SukiSU compat: Neither atomic_inc_not_zero nor atomic_long_inc_not_zero found in kernel/cred.c)
-endif
-$(info -- SukiSU compat: Using $(ATOMIC_INC_FUNC) in get_cred_rcu patch.)
-
 # 写入签名
 ccflags-y += -DEXPECTED_SIZE=$(KSU_EXPECTED_SIZE)
 ccflags-y += -DEXPECTED_HASH=\"$(KSU_EXPECTED_HASH)\"
