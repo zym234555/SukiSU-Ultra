@@ -347,4 +347,14 @@
     <string name="language_follow_system">跟随系统</string>
     <string name="language_changed">语言已更改，重启应用以应用更改</string>
     <string name="settings_card_dim">卡片暗度调节</string>
+    <!-- 超级用户相关 -->
+    <string name="scroll_to_top">顶部</string>
+    <string name="scroll_to_bottom">底部</string>
+    <string name="scroll_to_top_description">滚动到顶部</string>
+    <string name="scroll_to_bottom_description">滚动到底部</string>
+    <string name="authorized">已授权</string>
+    <string name="unauthorized">未授权</string>
+    <string name="selected">已选择</string>
+    <string name="select">选择</string>
+    <string name="profile_umount_modules_disable">禁用自定义卸载模块</string>
 </resources>
