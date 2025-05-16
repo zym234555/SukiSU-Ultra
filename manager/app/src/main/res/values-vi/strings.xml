@@ -340,7 +340,7 @@
     <string name="dpi_size_medium">Vừa</string>
     <string name="dpi_size_large">Lớn</string>
     <string name="dpi_size_extra_large">Cực lớn</string>
-    <string name="dpi_size_custom">Có thể tùy chỉnh</string>
+    <string name="dpi_size_custom">DPI đang hiển thị</string>
     <string name="dpi_apply_settings">Áp dụng</string>
     <string name="dpi_confirm_title">Xác nhận thay đổi DPI</string>
     <string name="dpi_confirm_message">Bạn có chắc chắn muốn thay đổi DPI của ứng dụng từ %1$d thành %2$d?</string>
@@ -351,4 +351,14 @@
     <string name="language_follow_system">Theo dõi hệ thống</string>
     <string name="language_changed">Ngôn ngữ đã thay đổi, khởi động lại để áp dụng thay đổi</string>
     <string name="settings_card_dim">Điều chỉnh độ tối của thẻ</string>
+    <!-- Super User Related -->
+    <string name="scroll_to_top">Lên trên</string>
+    <string name="scroll_to_bottom">Xuống dưới</string>
+    <string name="scroll_to_top_description">Cuộn lên trên</string>
+    <string name="scroll_to_bottom_description">Cuộn xuống dưới</string>
+    <string name="authorized">Uỷ quyền</string>
+    <string name="unauthorized">Huỷ uỷ quyền</string>
+    <string name="selected">Đã chọn</string>
+    <string name="select">Chọn</string>
+    <string name="profile_umount_modules_disable">Vô hiệu hóa tuỳ chỉnh của các module</string>
 </resources>
