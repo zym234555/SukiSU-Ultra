@@ -27,19 +27,15 @@
 #define SU_PATH "/system/bin/su"
 #define SH_PATH "/system/bin/sh"
 
-bool ksu_faccessat_hook __read_mostly = true;
-bool ksu_stat_hook __read_mostly = true;
-bool ksu_execve_sucompat_hook __read_mostly = true;
-bool ksu_execveat_sucompat_hook __read_mostly = true;
+#ifndef CONFIG_KSU_HOOK_KPROBES
+static bool ksu_sucompat_non_kp __read_mostly = true;
+#endif
+
 #ifndef CONFIG_KSU_SUSFS_SUS_SU
 bool ksu_devpts_hook __read_mostly = true;
 #endif
 
 extern void ksu_escape_to_root();
-
-#ifndef CONFIG_KSU_HOOK_KPROBES
-static bool ksu_sucompat_non_kp __read_mostly = true;
-#endif
 
 static void __user *userspace_stack_buffer(const void *d, size_t len)
 {
@@ -71,12 +67,6 @@ int ksu_handle_faccessat(int *dfd, const char __user **filename_user, int *mode,
 	if (!ksu_sucompat_non_kp) {
  		return 0;
  	}
-#endif
-
-#ifndef CONFIG_KSU_HOOK_KPROBES
-	if (!ksu_faccessat_hook) {
-		return 0;
-	}
 #endif
 
 	if (!ksu_is_allow_uid(current_uid().val)) {
@@ -130,12 +120,6 @@ int ksu_handle_stat(int *dfd, const char __user **filename_user, int *flags)
  	}
 #endif
 
-#ifndef CONFIG_KSU_HOOK_KPROBES
-	if (!ksu_stat_hook){
-		return 0;
-	}
-#endif
-
 	if (!ksu_is_allow_uid(current_uid().val)) {
 		return 0;
 	}
@@ -183,12 +167,6 @@ int ksu_handle_execveat_sucompat(int *fd, struct filename **filename_ptr, void *
  	}
 #endif
 
-#ifndef CONFIG_KSU_HOOK_KPROBES
-	if (!ksu_execveat_sucompat_hook) {
-		return 0;
-	}
-#endif
-
 	if (unlikely(!filename_ptr)) {
     return 0;
 	}
@@ -225,12 +203,6 @@ int ksu_handle_execve_sucompat(int *fd, const char __user **filename_user, void 
  	}
 #endif
 
-#ifndef CONFIG_KSU_HOOK_KPROBES
-	if (!ksu_execve_sucompat_hook) {
-		return 0;
-	}
-#endif
-
 	if (unlikely(!filename_user))
 		return 0;
 
@@ -254,7 +226,7 @@ int ksu_handle_execve_sucompat(int *fd, const char __user **filename_user, void 
 int ksu_handle_devpts(struct inode *inode)
 {
 #ifndef CONFIG_KSU_HOOK_KPROBES
-	if (!ksu_devpts_hook) {
+	if (!ksu_sucompat_non_kp) {
 		return 0;
 	}
 #endif
@@ -375,13 +347,8 @@ void ksu_sucompat_init()
 	su_kps[4] = init_kprobe(SYS_FSTATAT64_SYMBOL, newfstatat_handler_pre);
 	su_kps[5] = init_kprobe("pts_unix98_lookup", pts_unix98_lookup_pre);
 #else
-	ksu_faccessat_hook = true;
-	ksu_stat_hook = true;
-	ksu_execve_sucompat_hook = true;
-	ksu_execveat_sucompat_hook = true;
-	ksu_devpts_hook = true;
 	ksu_sucompat_non_kp = true;
-	pr_info("ksu_sucompat_init: hooks enabled: execve/execveat_su, faccessat, stat, devpts\n");
+	pr_info("ksu_sucompat_init: hooks enabled: execve/execveat_su, faccessat, stat\n");
 #endif
 }
 
@@ -393,13 +360,8 @@ void ksu_sucompat_exit()
 		destroy_kprobe(&su_kps[i]);
 	}
 #else
-	ksu_faccessat_hook = false;
-	ksu_stat_hook = false;
-	ksu_execve_sucompat_hook = false;
-	ksu_execveat_sucompat_hook = false;
-	ksu_devpts_hook = false;
 	ksu_sucompat_non_kp = false;
-	pr_info("ksu_sucompat_exit: hooks disabled: execve/execveat_su, faccessat, stat, devpts\n");
+	pr_info("ksu_sucompat_exit: hooks disabled: execve/execveat_su, faccessat, stat\n");
 #endif
 }
 
