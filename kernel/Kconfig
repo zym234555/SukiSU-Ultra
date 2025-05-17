@@ -41,7 +41,7 @@ config KSU_CMDLINE
 
 config KPM
 	  bool "Enable SukiSU KPM"
-	  depends on KSU
+	  depends on KSU && 64BIT
 	  default n
 	  help
 	    Enabling this option will activate the KPM feature of SukiSU.
