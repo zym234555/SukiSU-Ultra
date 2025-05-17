@@ -1023,6 +1023,18 @@ private fun checkKpmConfigured(): Boolean {
     } catch (e: Exception) {
         e.printStackTrace()
     }
+    try {
+        val process = Runtime.getRuntime().exec("su -c grep sukisu_kpm /proc/kallsyms")
+        val reader = BufferedReader(InputStreamReader(process.inputStream))
+        if (reader.readLine() != null) {
+            reader.close()
+            return true
+        }
+        reader.close()
+    } catch (e: Exception) {
+        e.printStackTrace()
+    }
+
     return false
 }
 

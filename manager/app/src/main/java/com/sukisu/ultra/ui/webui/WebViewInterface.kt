@@ -12,8 +12,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import com.dergoogler.mmrl.webui.interfaces.WXInterface
 import com.dergoogler.mmrl.webui.interfaces.WXOptions
-import com.dergoogler.mmrl.webui.interfaces.WebUIInterface
 import com.dergoogler.mmrl.webui.model.JavaScriptInterface
 import com.topjohnwu.superuser.CallbackList
 import com.topjohnwu.superuser.ShellUtils
@@ -30,18 +30,43 @@ import java.util.concurrent.CompletableFuture
 
 class WebViewInterface(
     wxOptions: WXOptions,
-) : WebUIInterface(wxOptions) {
+) : WXInterface(wxOptions) {
     override var name: String = "ksu"
 
     companion object {
         private var isSecondaryScreenState by mutableStateOf(false)
+        private var windowInsetsController: WindowInsetsControllerCompat? = null
 
         fun factory() = JavaScriptInterface(WebViewInterface::class.java)
 
         fun updateSecondaryScreenState(isSecondary: Boolean) {
             isSecondaryScreenState = isSecondary
+
+            windowInsetsController?.let { controller ->
+                if (isSecondary) {
+                    controller.show(WindowInsetsCompat.Type.systemBars())
+                    controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_DEFAULT
+                } else {
+                    controller.systemBarsBehavior =
+                        WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+                }
+            }
+        }
+
+        fun setWindowInsetsController(controller: WindowInsetsControllerCompat) {
+            windowInsetsController = controller
         }
     }
+
+    init {
+        if (context is Activity) {
+            setWindowInsetsController(WindowInsetsControllerCompat(
+                activity.window,
+                activity.window.decorView
+            ))
+        }
+    }
+
 
     private val modDir get() = "/data/adb/modules/${modId.id}"
 

@@ -20,8 +20,6 @@ import java.text.Collator
 import java.util.*
 import com.dergoogler.mmrl.platform.Platform
 import com.dergoogler.mmrl.platform.TIMEOUT_MILLIS
-import com.sukisu.ultra.ui.webui.packageManager
-import com.sukisu.ultra.ui.webui.userManager
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withTimeoutOrNull
 
