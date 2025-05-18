@@ -1,20 +1,6 @@
 name: Build Manager Manual
 
 on:
-  push:
-    branches: [ "main" ]
-    paths:
-      - '.github/workflows/build-manager-manual.yml'
-      - 'manager/**'
-      - 'kernel/**'
-      - 'userspace/ksud/**'
-      - 'userspace/susfs/**'
-      - 'userspace/kpmmgr/**'
-  pull_request:
-    branches: [ "main" ]
-    paths:
-      - 'manager/**'
-  workflow_call:
   workflow_dispatch:
     inputs:
       build_lkm:
@@ -78,7 +64,7 @@ jobs:
 
   build-lkm:
     needs: check-build-lkm
-    uses: ./.github/workflows/build-lkm.yml
+    uses: ./.github/workflows/build-lkm-local.yml
     if: ${{ needs.check-build-lkm.outputs.build_lkm == 'true' }}
     with:
       upload: ${{ needs.check-build-lkm.outputs.upload_lkm == 'true' }}
