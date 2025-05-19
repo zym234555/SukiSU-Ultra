@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.dropUnlessResumed
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootGraph
+import com.ramcosta.composedestinations.generated.destinations.FlashScreenDestination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import com.ramcosta.composedestinations.navigation.EmptyDestinationsNavigator
 import kotlinx.coroutines.Dispatchers
@@ -33,6 +34,7 @@ import kotlinx.parcelize.Parcelize
 import com.sukisu.ultra.ui.component.KeyEventBlocker
 import com.sukisu.ultra.ui.util.*
 import com.sukisu.ultra.R
+import com.sukisu.ultra.ui.theme.CardConfig
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
@@ -79,6 +81,16 @@ fun FlashScreen(navigator: DestinationsNavigator, flashIt: FlashIt) {
                 if (showReboot) {
                     text += "\n\n\n"
                     showFloatAction = true
+                }
+
+                if (flashIt is FlashIt.FlashModules && flashIt.currentIndex < flashIt.uris.size - 1) {
+                    val nextFlashIt = flashIt.copy(
+                        currentIndex = flashIt.currentIndex + 1
+                    )
+                    scope.launch {
+                        kotlinx.coroutines.delay(500)
+                        navigator.navigate(FlashScreenDestination(nextFlashIt))
+                    }
                 }
             }, onStdout = {
                 tempText = "$it\n"
@@ -166,6 +178,7 @@ fun FlashScreen(navigator: DestinationsNavigator, flashIt: FlashIt) {
 sealed class FlashIt : Parcelable {
     data class FlashBoot(val boot: Uri? = null, val lkm: LkmSelection, val ota: Boolean) : FlashIt()
     data class FlashModule(val uri: Uri) : FlashIt()
+    data class FlashModules(val uris: List<Uri>, val currentIndex: Int = 0) : FlashIt()
     data object FlashRestore : FlashIt()
     data object FlashUninstall : FlashIt()
 }
@@ -186,6 +199,17 @@ fun flashIt(
             onStderr
         )
         is FlashIt.FlashModule -> flashModule(flashIt.uri, onFinish, onStdout, onStderr)
+        is FlashIt.FlashModules -> {
+            if (flashIt.uris.isEmpty() || flashIt.currentIndex >= flashIt.uris.size) {
+                onFinish(false, 0)
+                return
+            }
+
+            val currentUri = flashIt.uris[flashIt.currentIndex]
+            onStdout("Installing module ${flashIt.currentIndex + 1} of ${flashIt.uris.size}")
+
+            flashModule(currentUri, onFinish, onStdout, onStderr)
+        }
         FlashIt.FlashRestore -> restoreBoot(onFinish, onStdout, onStderr)
         FlashIt.FlashUninstall -> uninstallPermanently(onFinish, onStdout, onStderr)
     }
@@ -199,6 +223,9 @@ private fun TopBar(
     onSave: () -> Unit = {},
     scrollBehavior: TopAppBarScrollBehavior? = null
 ) {
+    val cardColor = MaterialTheme.colorScheme.surfaceVariant
+    val cardAlpha = CardConfig.cardAlpha
+
     TopAppBar(
         title = {
             Text(
@@ -216,6 +243,10 @@ private fun TopBar(
                 onClick = onBack
             ) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null) }
         },
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = cardColor.copy(alpha = cardAlpha),
+            scrolledContainerColor = cardColor.copy(alpha = cardAlpha)
+        ),
         actions = {
             IconButton(onClick = onSave) {
                 Icon(
