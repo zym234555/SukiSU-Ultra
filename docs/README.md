@@ -77,6 +77,8 @@ KPM 模板地址: https://github.com/udochina/KPM-Build-Anywhere
 
 ## 更多链接
 
+**如果你需要为管理器提交翻译请前往** https://crowdin.com/project/SukiSU-Ultra
+
 基于 SukiSU 和 susfs 编译的项目
 - [GKI](https://github.com/ShirkNeko/GKI_KernelSU_SUSFS) 
 - [一加](https://github.com/ShirkNeko/Action_OnePlus_MKSU_SUSFS)

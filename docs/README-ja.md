@@ -60,7 +60,7 @@ KPM テンプレートのアドレス: https://github.com/udochina/KPM-Build-Any
 
 ## その他のリンク
 
-SukiSU と susfs をベースにコンパイルされたプロジェクトです。
+**監督に翻訳を提出する必要がある場合は、https://crowdin.com/project/SukiSU-Ultra。
 
 - [GKI](https://github.com/ShirkNeko/GKI_KernelSU_SUSFS) 
 - [OnePlus](https://github.com/ShirkNeko/Action_OnePlus_MKSU_SUSFS)
