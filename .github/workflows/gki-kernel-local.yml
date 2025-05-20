@@ -162,6 +162,8 @@ jobs:
         if: ${{ inputs.build_lkm == true }}
         working-directory: android-kernel
         run: |
+          pip install ast-grep-cli
+          sudo apt-get install llvm-15 -y
           ast-grep -U -p '$$$ check_exports($$$) {$$$}' -r '' common/scripts/mod/modpost.c
           ast-grep -U -p 'check_exports($$$);' -r '' common/scripts/mod/modpost.c
           sed -i '/config KSU/,/help/{s/default y/default m/}' common/drivers/kernelsu/Kconfig
