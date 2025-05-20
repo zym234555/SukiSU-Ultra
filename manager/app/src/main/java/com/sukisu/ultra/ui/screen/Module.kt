@@ -4,6 +4,7 @@ import android.app.Activity.*
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -64,10 +65,7 @@ import okhttp3.OkHttpClient
 import com.sukisu.ultra.ui.util.ModuleModify
 import com.sukisu.ultra.ui.theme.getCardColors
 import com.sukisu.ultra.ui.viewmodel.ModuleViewModel
-import java.io.BufferedReader
-import java.io.InputStreamReader
 import java.util.concurrent.TimeUnit
-import java.util.zip.ZipInputStream
 import androidx.core.content.edit
 import com.sukisu.ultra.R
 import com.sukisu.ultra.ui.theme.CardConfig.cardElevation
@@ -97,38 +95,21 @@ fun ModuleScreen(navigator: DestinationsNavigator) {
         scope.launch {
             val clipData = data.clipData
             if (clipData != null) {
-                // 处理多选结果
                 val selectedModules = mutableListOf<Uri>()
                 val selectedModuleNames = mutableMapOf<Uri, String>()
 
-                suspend fun processUri(uri: Uri) {
-                    val moduleName = withContext(Dispatchers.IO) {
-                        try {
-                            val zipInputStream = ZipInputStream(context.contentResolver.openInputStream(uri))
-                            var entry = zipInputStream.nextEntry
-                            var name = context.getString(R.string.unknown_module)
-
-                            while (entry != null) {
-                                if (entry.name == "module.prop") {
-                                    val reader = BufferedReader(InputStreamReader(zipInputStream))
-                                    var line: String?
-                                    while (reader.readLine().also { line = it } != null) {
-                                        if (line?.startsWith("name=") == true) {
-                                            name = line.substringAfter("=")
-                                            break
-                                        }
-                                    }
-                                    break
-                                }
-                                entry = zipInputStream.nextEntry
-                            }
-                            name
-                        } catch (e: Exception) {
-                            context.getString(R.string.unknown_module)
+                fun processUri(uri: Uri) {
+                    try {
+                        if (!ModuleUtils.isUriAccessible(context, uri)) {
+                            return
                         }
+                        ModuleUtils.takePersistableUriPermission(context, uri)
+                        val moduleName = ModuleUtils.extractModuleName(context, uri)
+                        selectedModules.add(uri)
+                        selectedModuleNames[uri] = moduleName
+                    } catch (e: Exception) {
+                        Log.e("ModuleScreen", "Error while processing URI: $uri, Error: ${e.message}")
                     }
-                    selectedModules.add(uri)
-                    selectedModuleNames[uri] = moduleName
                 }
 
                 for (i in 0 until clipData.itemCount) {
@@ -136,7 +117,11 @@ fun ModuleScreen(navigator: DestinationsNavigator) {
                     processUri(uri)
                 }
 
-                // 显示确认对话框
+                if (selectedModules.isEmpty()) {
+                    snackBarHost.showSnackbar("Unable to access selected module files")
+                    return@launch
+                }
+
                 val modulesList = selectedModuleNames.values.joinToString("\n• ", "• ")
                 val confirmResult = confirmDialog.awaitConfirm(
                     title = context.getString(R.string.module_install),
@@ -146,49 +131,42 @@ fun ModuleScreen(navigator: DestinationsNavigator) {
                 )
 
                 if (confirmResult == ConfirmResult.Confirmed) {
-                    // 批量安装模块
-                    navigator.navigate(FlashScreenDestination(FlashIt.FlashModules(selectedModules)))
-                    viewModel.markNeedRefresh()
-                }
-            } else {
-                // 单个文件安装逻辑
-                val uri = data.data ?: return@launch
-                val moduleName = withContext(Dispatchers.IO) {
                     try {
-                        val zipInputStream = ZipInputStream(context.contentResolver.openInputStream(uri))
-                        var entry = zipInputStream.nextEntry
-                        var name = context.getString(R.string.unknown_module)
-
-                        while (entry != null) {
-                            if (entry.name == "module.prop") {
-                                val reader = BufferedReader(InputStreamReader(zipInputStream))
-                                var line: String?
-                                while (reader.readLine().also { line = it } != null) {
-                                    if (line?.startsWith("name=") == true) {
-                                        name = line.substringAfter("=")
-                                        break
-                                    }
-                                }
-                                break
-                            }
-                            entry = zipInputStream.nextEntry
-                        }
-                        name
+                        // 批量安装模块
+                        navigator.navigate(FlashScreenDestination(FlashIt.FlashModules(selectedModules)))
+                        viewModel.markNeedRefresh()
                     } catch (e: Exception) {
-                        context.getString(R.string.unknown_module)
+                        Log.e("ModuleScreen", "Error navigating to FlashScreen: ${e.message}")
+                        snackBarHost.showSnackbar("Error while installing module: ${e.message}")
                     }
                 }
+            } else {
+                val uri = data.data ?: return@launch
+                    // 单个安装模块
+                try {
+                    if (!ModuleUtils.isUriAccessible(context, uri)) {
+                        snackBarHost.showSnackbar("Unable to access selected module files")
+                        return@launch
+                    }
 
-                val confirmResult = confirmDialog.awaitConfirm(
-                    title = context.getString(R.string.module_install),
-                    content = context.getString(R.string.module_install_confirm, moduleName),
-                    confirm = context.getString(R.string.install),
-                    dismiss = context.getString(R.string.cancel)
-                )
+                    ModuleUtils.takePersistableUriPermission(context, uri)
 
-                if (confirmResult == ConfirmResult.Confirmed) {
-                    navigator.navigate(FlashScreenDestination(FlashIt.FlashModule(uri)))
-                    viewModel.markNeedRefresh()
+                    val moduleName = ModuleUtils.extractModuleName(context, uri)
+
+                    val confirmResult = confirmDialog.awaitConfirm(
+                        title = context.getString(R.string.module_install),
+                        content = context.getString(R.string.module_install_confirm, moduleName),
+                        confirm = context.getString(R.string.install),
+                        dismiss = context.getString(R.string.cancel)
+                    )
+
+                    if (confirmResult == ConfirmResult.Confirmed) {
+                        navigator.navigate(FlashScreenDestination(FlashIt.FlashModule(uri)))
+                        viewModel.markNeedRefresh()
+                    }
+                } catch (e: Exception) {
+                    Log.e("ModuleScreen", "Error processing a single URI: $uri, Error: ${e.message}")
+                    snackBarHost.showSnackbar("Error processing module file: ${e.message}")
                 }
             }
         }

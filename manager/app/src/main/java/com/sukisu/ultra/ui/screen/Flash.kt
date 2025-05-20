@@ -50,7 +50,6 @@ import com.sukisu.ultra.ui.theme.CardConfig
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
-import java.util.zip.ZipInputStream
 
 enum class FlashingStatus {
     FLASHING,
@@ -493,26 +492,13 @@ private fun TopBar(
 suspend fun getModuleNameFromUri(context: android.content.Context, uri: Uri): String {
     return withContext(Dispatchers.IO) {
         try {
-            val zipInputStream = ZipInputStream(context.contentResolver.openInputStream(uri))
-            var entry = zipInputStream.nextEntry
-            var name = context.getString(R.string.unknown_module)
-
-            while (entry != null) {
-                if (entry.name == "module.prop") {
-                    val reader = java.io.BufferedReader(java.io.InputStreamReader(zipInputStream))
-                    var line: String?
-                    while (reader.readLine().also { line = it } != null) {
-                        if (line?.startsWith("name=") == true) {
-                            name = line.substringAfter("=")
-                            break
-                        }
-                    }
-                    break
-                }
-                entry = zipInputStream.nextEntry
+            if (uri == Uri.EMPTY) {
+                return@withContext context.getString(R.string.unknown_module)
             }
-            zipInputStream.close()
-            name
+            if (!ModuleUtils.isUriAccessible(context, uri)) {
+                return@withContext context.getString(R.string.unknown_module)
+            }
+            ModuleUtils.extractModuleName(context, uri)
         } catch (_: Exception) {
             context.getString(R.string.unknown_module)
         }
