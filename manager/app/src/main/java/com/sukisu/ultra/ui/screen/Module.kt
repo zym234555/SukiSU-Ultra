@@ -66,6 +66,7 @@ import com.sukisu.ultra.ui.theme.getCardColors
 import com.sukisu.ultra.ui.viewmodel.ModuleViewModel
 import java.io.BufferedReader
 import java.io.InputStreamReader
+import java.util.concurrent.TimeUnit
 import java.util.zip.ZipInputStream
 import androidx.core.content.edit
 import com.sukisu.ultra.R
@@ -443,6 +444,7 @@ private fun ModuleList(
     val downloadingText = stringResource(R.string.module_downloading)
     val startDownloadingText = stringResource(R.string.module_start_downloading)
     val fetchChangeLogFailed = stringResource(R.string.module_changelog_failed)
+    val downloadErrorText = stringResource(R.string.module_download_error)
 
     val loadingDialog = rememberLoadingDialog()
     val confirmDialog = rememberConfirmDialog()
@@ -453,12 +455,20 @@ private fun ModuleList(
         downloadUrl: String,
         fileName: String
     ) {
+        val client = OkHttpClient.Builder()
+            .connectTimeout(15, TimeUnit.SECONDS)
+            .readTimeout(30, TimeUnit.SECONDS)
+            .build()
+
+        val request = okhttp3.Request.Builder()
+            .url(changelogUrl)
+            .header("User-Agent", "SukiSU-Ultra/2.0")
+            .build()
+
         val changelogResult = loadingDialog.withLoading {
             withContext(Dispatchers.IO) {
                 runCatching {
-                    OkHttpClient().newCall(
-                        okhttp3.Request.Builder().url(changelogUrl).build()
-                    ).execute().body!!.string()
+                    client.newCall(request).execute().body!!.string()
                 }
             }
         }
@@ -506,6 +516,11 @@ private fun ModuleList(
                 onDownloading = {
                     launch(Dispatchers.Main) {
                         Toast.makeText(context, downloading, Toast.LENGTH_SHORT).show()
+                    }
+                },
+                onError = { errorMsg ->
+                    launch(Dispatchers.Main) {
+                        Toast.makeText(context, "$downloadErrorText: $errorMsg", Toast.LENGTH_LONG).show()
                     }
                 }
             )
@@ -823,14 +838,6 @@ fun ModuleItem(
                             imageVector = Icons.Outlined.PlayArrow,
                             contentDescription = null
                         )
-                        //if (!module.hasWebUi && updateUrl.isEmpty()) {
-                            //Text(
-                            //    modifier = Modifier.padding(start = 7.dp),
-                            //    text = stringResource(R.string.action),
-                            //    fontFamily = MaterialTheme.typography.labelMedium.fontFamily,
-                            //    fontSize = MaterialTheme.typography.labelMedium.fontSize
-                            //)
-                        //}
                     }
                 }
 
@@ -849,14 +856,6 @@ fun ModuleItem(
                             imageVector = Icons.AutoMirrored.Outlined.Wysiwyg,
                             contentDescription = null
                         )
-                        //if (!module.hasActionScript && updateUrl.isEmpty()) {
-                            //Text(
-                            //    modifier = Modifier.padding(start = 7.dp),
-                            //    fontFamily = MaterialTheme.typography.labelMedium.fontFamily,
-                            //    fontSize = MaterialTheme.typography.labelMedium.fontSize,
-                            //    text = stringResource(R.string.open)
-                            //)
-                        //}
                     }
                 }
 
@@ -875,14 +874,6 @@ fun ModuleItem(
                             imageVector = Icons.Outlined.Download,
                             contentDescription = null
                         )
-                        //if (!module.hasActionScript || !module.hasWebUi) {
-                            //Text(
-                            //    modifier = Modifier.padding(start = 7.dp),
-                            //    fontFamily = MaterialTheme.typography.labelMedium.fontFamily,
-                            //    fontSize = MaterialTheme.typography.labelMedium.fontSize,
-                            //    text = stringResource(R.string.module_update)
-                            //)
-                        //}
                     }
                 }
 
@@ -891,7 +882,7 @@ fun ModuleItem(
                     onClick = { onUninstallClicked(module) },
                     contentPadding = ButtonDefaults.TextButtonContentPadding,
                     colors = ButtonDefaults.filledTonalButtonColors(
-                            containerColor = if (!module.remove) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.errorContainer)
+                        containerColor = if (!module.remove) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.errorContainer)
                 ) {
                     if (!module.remove) {
                         Icon(
@@ -906,15 +897,6 @@ fun ModuleItem(
                             contentDescription = null
                         )
                     }
-                    //if (!module.hasActionScript && !module.hasWebUi && updateUrl.isEmpty()) {
-                        //Text(
-                        //    modifier = Modifier.padding(start = 7.dp),
-                        //    fontFamily = MaterialTheme.typography.labelMedium.fontFamily,
-                        //    fontSize = MaterialTheme.typography.labelMedium.fontSize,
-                        //    text = stringResource(if (!module.remove) R.string.uninstall else R.string.restore),
-                        //    color = if (!module.remove) MaterialTheme.colorScheme.onErrorContainer else MaterialTheme.colorScheme.onSecondaryContainer
-                        //)
-                    //}
                 }
             }
         }
