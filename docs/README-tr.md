@@ -16,12 +16,12 @@
 
 Ana dalı kullanın (GKI olmayan cihazlar için desteklenmez)
 ```
-curl -LSs "https://raw.githubusercontent.com/ShirkNeko/SukiSU-Ultra/main/kernel/setup.sh" | bash -s main
+curl -LSs "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/main/kernel/setup.sh" | bash -s main
 ```
 
 GKI olmayan cihazları destekleyen dalı kullanın
 ```
-curl -LSs "https://raw.githubusercontent.com/ShirkNeko/SukiSU-Ultra/main/kernel/setup.sh" | bash -s nongki
+curl -LSs "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/main/kernel/setup.sh" | bash -s nongki
 ```
 
 ## susfs Nasıl Entegre Edilir
@@ -29,7 +29,7 @@ curl -LSs "https://raw.githubusercontent.com/ShirkNeko/SukiSU-Ultra/main/kernel/
 1. Doğrudan susfs-stable veya susfs-dev dalını kullanın, susfs entegrasyonuna gerek yok
 
 ```
-curl -LSs "https://raw.githubusercontent.com/ShirkNeko/SukiSU-Ultra/main/kernel/setup.sh" | bash -s susfs-dev
+curl -LSs "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/main/kernel/setup.sh" | bash -s susfs-dev
 ```
 
 ## Kanca Yöntemleri

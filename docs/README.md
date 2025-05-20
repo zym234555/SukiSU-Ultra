@@ -16,12 +16,12 @@
 
 使用 main 分支 (不支持非GKI设备构建)
 ```
-curl -LSs "https://raw.githubusercontent.com/ShirkNeko/SukiSU-Ultra/main/kernel/setup.sh" | bash -s main
+curl -LSs "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/main/kernel/setup.sh" | bash -s main
 ```
 
 使用支持非 GKI 设备的分支
 ```
-curl -LSs "https://raw.githubusercontent.com/ShirkNeko/SukiSU-Ultra/main/kernel/setup.sh" | bash -s nongki
+curl -LSs "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/main/kernel/setup.sh" | bash -s nongki
 ```
 
 ## 如何集成 susfs
@@ -29,7 +29,7 @@ curl -LSs "https://raw.githubusercontent.com/ShirkNeko/SukiSU-Ultra/main/kernel/
 1. 直接使用 susfs-stable 或者 susfs-dev 分支，不需要再集成 susfs
 
 ```
-curl -LSs "https://raw.githubusercontent.com/ShirkNeko/SukiSU-Ultra/main/kernel/setup.sh" | bash -s susfs-dev
+curl -LSs "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/main/kernel/setup.sh" | bash -s susfs-dev
 ```
 
 ## 钩子方法

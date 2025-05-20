@@ -15,19 +15,19 @@
 
 メイン分岐の使用（GKI デバイス以外のビルドはサポートされていません。）
 ```
-curl -LSs "https://raw.githubusercontent.com/ShirkNeko/KernelSU/main/kernel/setup.sh" | bash -s main
+curl -LSs "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/main/kernel/setup.sh" | bash -s main
 ```
 
 GKI以外のデバイスをサポートするブランチを使用する
 ```
-curl -LSs "https://raw.githubusercontent.com/ShirkNeko/SukiSU-Ultra/main/kernel/setup.sh" | bash -s nongki
+curl -LSs "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/main/kernel/setup.sh" | bash -s nongki
 ```
 
 ## 統合された susfs の使い方
 
 1. パッチを当てずに susfs-dev ブランチを直接使用してください。
 ```
-curl -LSs "https://raw.githubusercontent.com/ShirkNeko/SukiSU-Ultra/main/kernel/setup.sh" | bash -s susfs-dev
+curl -LSs "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/main/kernel/setup.sh" | bash -s susfs-dev
 ```
 
 ## KPM に対応
