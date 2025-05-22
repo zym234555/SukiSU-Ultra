@@ -23,6 +23,9 @@
 
 #include <linux/fs.h>
 #include <linux/namei.h>
+#ifndef KSU_HAS_PATH_UMOUNT
+#include <linux/syscalls.h> // sys_umount
+#endif
 
 #ifdef MODULE
 #include <linux/list.h>
@@ -984,6 +987,7 @@ static bool should_umount(struct path *path)
 #endif
 }
 
+#ifdef KSU_HAS_PATH_UMOUNT
 static int ksu_umount_mnt(struct path *path, int flags)
 {
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 9, 0) || defined(KSU_UMOUNT)
@@ -993,6 +997,18 @@ static int ksu_umount_mnt(struct path *path, int flags)
 	return -ENOSYS;
 #endif
 }
+#else
+static int ksu_sys_umount(const char *mnt, int flags)
+{
+	char __user *usermnt = (char __user *)mnt;
+
+	mm_segment_t old_fs = get_fs();
+	set_fs(KERNEL_DS);
+	long ret = sys_umount(usermnt, flags); // cuz asmlinkage long sys##name
+	set_fs(old_fs);
+	pr_info("%s: path: %s code: %d \n", __func__, usermnt, ret);
+}
+#endif
 
 #ifdef CONFIG_KSU_SUSFS_TRY_UMOUNT
 void ksu_try_umount(const char *mnt, bool check_mnt, int flags, uid_t uid)
@@ -1022,7 +1038,11 @@ static void ksu_try_umount(const char *mnt, bool check_mnt, int flags)
 	}
 #endif
 
+#ifdef KSU_HAS_PATH_UMOUNT
 	err = ksu_umount_mnt(&path, flags);
+#else
+	err = ksu_sys_umount(mnt, flags);
+#endif
 	if (err) {
 		pr_warn("umount %s failed: %d\n", mnt, err);
 	}
