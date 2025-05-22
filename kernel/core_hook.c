@@ -25,6 +25,9 @@
 
 #include <linux/fs.h>
 #include <linux/namei.h>
+#ifndef KSU_HAS_PATH_UMOUNT
+#include <linux/syscalls.h> // sys_umount
+#endif
 
 #ifdef MODULE
 #include <linux/list.h>
@@ -538,6 +541,7 @@ static bool should_umount(struct path *path)
 	return false;
 }
 
+#ifdef KSU_HAS_PATH_UMOUNT
 static void ksu_umount_mnt(struct path *path, int flags)
 {
 	int err = path_umount(path, flags);
@@ -549,6 +553,18 @@ static void ksu_umount_mnt(struct path *path, int flags)
 			path->dentry->d_iname);
 	}
 }
+#else
+static void ksu_sys_umount(const char *mnt, int flags)
+{
+	char __user *usermnt = (char __user *)mnt;
+
+	mm_segment_t old_fs = get_fs();
+	set_fs(KERNEL_DS);
+	long ret = sys_umount(usermnt, flags); // cuz asmlinkage long sys##name
+	set_fs(old_fs);
+	pr_info("%s: path: %s code: %d \n", __func__, usermnt, ret);
+}
+#endif
 
 static void try_umount(const char *mnt, bool check_mnt, int flags)
 {
@@ -568,7 +584,11 @@ static void try_umount(const char *mnt, bool check_mnt, int flags)
 		return;
 	}
 
+#ifdef KSU_HAS_PATH_UMOUNT
 	ksu_umount_mnt(&path, flags);
+#else
+	ksu_sys_umount(mnt, flags);
+#endif
 }
 
 int ksu_handle_setuid(struct cred *new, const struct cred *old)
