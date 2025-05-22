@@ -1,3 +1,5 @@
+package com.sukisu.ultra.ui.screen
+
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
@@ -514,9 +516,6 @@ fun SuperUserScreen(navigator: DestinationsNavigator) {
                                     val profile = Natives.getAppProfile(app.packageName, app.uid)
                                     val updatedProfile = profile.copy(allowSu = allowSu)
                                     if (Natives.setAppProfile(updatedProfile)) {
-                                        // 不重新获取应用列表，避免滚动位置重置
-                                        // viewModel.fetchAppList()
-                                        // 仅更新当前应用的配置
                                         viewModel.updateAppProfileLocally(app.packageName, updatedProfile)
                                     }
                                 }
@@ -556,9 +555,6 @@ fun SuperUserScreen(navigator: DestinationsNavigator) {
                                     val profile = Natives.getAppProfile(app.packageName, app.uid)
                                     val updatedProfile = profile.copy(allowSu = allowSu)
                                     if (Natives.setAppProfile(updatedProfile)) {
-                                        // 不重新获取应用列表，避免滚动位置重置
-                                        // viewModel.fetchAppList()
-                                        // 仅更新当前应用的配置
                                         viewModel.updateAppProfileLocally(app.packageName, updatedProfile)
                                     }
                                 }
@@ -598,9 +594,6 @@ fun SuperUserScreen(navigator: DestinationsNavigator) {
                                     val profile = Natives.getAppProfile(app.packageName, app.uid)
                                     val updatedProfile = profile.copy(allowSu = allowSu)
                                     if (Natives.setAppProfile(updatedProfile)) {
-                                        // 不重新获取应用列表，避免滚动位置重置
-                                        // viewModel.fetchAppList()
-                                        // 仅更新当前应用的配置
                                         viewModel.updateAppProfileLocally(app.packageName, updatedProfile)
                                     }
                                 }
