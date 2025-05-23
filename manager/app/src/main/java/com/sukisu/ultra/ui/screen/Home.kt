@@ -35,7 +35,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Android
 import androidx.compose.material.icons.filled.Archive
-import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Memory
 import androidx.compose.material.icons.filled.PhoneAndroid
@@ -43,10 +42,8 @@ import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Storage
-import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.outlined.Block
 import androidx.compose.material.icons.outlined.CheckCircle
-import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Warning
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
@@ -122,9 +119,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.withContext
-import java.io.BufferedReader
-import java.io.InputStreamReader
-import java.util.zip.GZIPInputStream
 import kotlin.random.Random
 
 @OptIn(ExperimentalMaterial3Api::class, FlowPreview::class)
@@ -559,7 +553,7 @@ private fun StatusCard(
                             )
 
                             val kpmVersion = getKpmVersion()
-                            if (kpmVersion.isNotEmpty() && !kpmVersion.startsWith("Error") && showKpmInfo) {
+                            if (kpmVersion.isNotEmpty() && !kpmVersion.startsWith("Error") && showKpmInfo && Natives.version >= Natives.MINIMAL_SUPPORTED_KPM) {
                                 Spacer(Modifier.height(4.dp))
                                 Text(
                                     text = stringResource(R.string.home_kpm_module, getKpmModuleCount()),
@@ -899,7 +893,7 @@ private fun InfoCard() {
                     val isKpmConfigured = checkKPMEnabled()
 
                     // 根据showKpmInfo决定是否显示KPM信息
-                    if (showKpmInfo) {
+                    if (showKpmInfo && Natives.version >= Natives.MINIMAL_SUPPORTED_KPM) {
                         val displayVersion = if (kpmVersion.isEmpty() || kpmVersion.startsWith("Error")) {
                             val statusText = if (isKpmConfigured) {
                                 stringResource(R.string.kernel_patched)
@@ -1019,11 +1013,7 @@ private fun getDeviceModel(): String {
 
 // 检查KPM是否存在
 private fun checkKPMEnabled(): Boolean {
-    return if (Natives.version >= Natives.MINIMAL_SUPPORTED_KPM) {
-        isKPMEnabled()
-    } else {
-        false
-    }
+    return isKPMEnabled()
 }
 
 @SuppressLint("UnnecessaryComposedModifier")

@@ -88,6 +88,7 @@ import androidx.core.content.edit
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootGraph
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
+import com.sukisu.ultra.Natives
 import com.sukisu.ultra.R
 import com.sukisu.ultra.ui.MainActivity
 import com.sukisu.ultra.ui.component.ImageEditorDialog
@@ -1015,19 +1016,21 @@ fun MoreSettingsScreen(navigator: DestinationsNavigator) {
                             onHideSusfsStatusChange(it)
                         }
 
-                        HorizontalDivider(
-                            modifier = Modifier.padding(horizontal = 16.dp),
-                            color = MaterialTheme.colorScheme.outlineVariant
-                        )
+                        if (Natives.version >= Natives.MINIMAL_SUPPORTED_KPM) {
+                            HorizontalDivider(
+                                modifier = Modifier.padding(horizontal = 16.dp),
+                                color = MaterialTheme.colorScheme.outlineVariant
+                            )
 
-                        // 显示KPM开关
-                        SwitchItem(
-                            icon = Icons.Filled.VisibilityOff,
-                            title = stringResource(R.string.show_kpm_info),
-                            summary = stringResource(R.string.show_kpm_info_summary),
-                            checked = isShowKpmInfo
-                        ) {
-                            onShowKpmInfoChange(it)
+                            // 显示KPM开关
+                            SwitchItem(
+                                icon = Icons.Filled.VisibilityOff,
+                                title = stringResource(R.string.show_kpm_info),
+                                summary = stringResource(R.string.show_kpm_info_summary),
+                                checked = isShowKpmInfo
+                            ) {
+                                onShowKpmInfoChange(it)
+                            }
                         }
 
                         HorizontalDivider(
