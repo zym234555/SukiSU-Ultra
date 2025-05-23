@@ -239,8 +239,7 @@ private fun BottomBar(navController: NavHostController) {
     val isManager = Natives.becomeManager(ksuApp.packageName)
     val fullFeatured = isManager && !Natives.requireNewKernel() && rootAvailable()
     val kpmVersion = getKpmVersion()
-    val containerColor = MaterialTheme.colorScheme.surfaceVariant
-    val cardColor = MaterialTheme.colorScheme.surfaceVariant
+    val cardColor = MaterialTheme.colorScheme.surfaceContainer
 
     // 检查是否显示KPM
     val showKpmInfo = LocalContext.current.getSharedPreferences("settings", Context.MODE_PRIVATE)
@@ -252,7 +251,7 @@ private fun BottomBar(navController: NavHostController) {
         ),
         containerColor = TopAppBarDefaults.topAppBarColors(
             containerColor = cardColor.copy(alpha = cardAlpha),
-            scrolledContainerColor = containerColor.copy(alpha = cardAlpha)
+            scrolledContainerColor = cardColor.copy(alpha = cardAlpha)
         ).containerColor,
         tonalElevation = cardElevation
     ) {
@@ -265,32 +264,25 @@ private fun BottomBar(navController: NavHostController) {
                         selected = isCurrentDestOnBackStack,
                         onClick = {
                             if (!isCurrentDestOnBackStack) {
-                                navigator.navigate(destination.direction) {
-                                    popUpTo(NavGraphs.root as RouteOrDirection) {
-                                        saveState = true
-                                    }
-                                    launchSingleTop = true
-                                    restoreState = true
+                                navigator.popBackStack(destination.direction, false)
+                            }
+                            navigator.navigate(destination.direction) {
+                                popUpTo(NavGraphs.root as RouteOrDirection) {
+                                    saveState = true
                                 }
+                                launchSingleTop = true
+                                restoreState = true
                             }
                         },
                         icon = {
-                            Icon(
-                                imageVector = if (isCurrentDestOnBackStack) {
-                                    destination.iconSelected
-                                } else {
-                                    destination.iconNotSelected
-                                },
-                                contentDescription = stringResource(destination.label),
-                                tint = if (isCurrentDestOnBackStack) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+                            if (isCurrentDestOnBackStack) {
+                                Icon(destination.iconSelected, stringResource(destination.label))
+                            } else {
+                                Icon(destination.iconNotSelected, stringResource(destination.label))
+                            }
                         },
-                        label = {
-                            Text(
-                                text = stringResource(destination.label),
-                                style = MaterialTheme.typography.labelMedium
-                            )
-                        }
+                        label = { Text(stringResource(destination.label),style = MaterialTheme.typography.labelMedium) },
+                        alwaysShowLabel = false
                     )
                 }
             } else {
@@ -299,33 +291,26 @@ private fun BottomBar(navController: NavHostController) {
                 NavigationBarItem(
                     selected = isCurrentDestOnBackStack,
                     onClick = {
-                        if (!isCurrentDestOnBackStack) {
-                            navigator.navigate(destination.direction) {
-                                popUpTo(NavGraphs.root as RouteOrDirection) {
-                                    saveState = true
-                                }
-                                launchSingleTop = true
-                                restoreState = true
+                        if (isCurrentDestOnBackStack) {
+                            navigator.popBackStack(destination.direction, false)
+                        }
+                        navigator.navigate(destination.direction) {
+                            popUpTo(NavGraphs.root) {
+                                saveState = true
                             }
+                            launchSingleTop = true
+                            restoreState = true
                         }
                     },
                     icon = {
-                        Icon(
-                            imageVector = if (isCurrentDestOnBackStack) {
-                                destination.iconSelected
-                            } else {
-                                destination.iconNotSelected
-                            },
-                            contentDescription = stringResource(destination.label),
-                            tint = if (isCurrentDestOnBackStack) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                        if (isCurrentDestOnBackStack) {
+                            Icon(destination.iconSelected, stringResource(destination.label))
+                        } else {
+                            Icon(destination.iconNotSelected, stringResource(destination.label))
+                        }
                     },
-                    label = {
-                        Text(
-                            text = stringResource(destination.label),
-                            style = MaterialTheme.typography.labelMedium
-                        )
-                    }
+                    label = { Text(stringResource(destination.label),style = MaterialTheme.typography.labelMedium) },
+                    alwaysShowLabel = false
                 )
             }
         }

@@ -789,7 +789,7 @@ private fun TopBar(
     scrollBehavior: TopAppBarScrollBehavior? = null
 ) {
     val systemIsDark = isSystemInDarkTheme()
-    val cardColor = MaterialTheme.colorScheme.surfaceVariant
+    val cardColor = MaterialTheme.colorScheme.surfaceContainer
     val cardAlpha = if (ThemeConfig.customBackgroundUri != null) {
         cardAlpha
     } else {

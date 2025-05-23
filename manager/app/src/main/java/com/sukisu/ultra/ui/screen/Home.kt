@@ -13,6 +13,7 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -29,6 +30,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Android
@@ -55,6 +57,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -225,7 +228,7 @@ fun HomeScreen(navigator: DestinationsNavigator) {
                     exit = shrinkVertically() + fadeOut()
                 ) {
                     ElevatedCard(
-                        colors = getCardColors(MaterialTheme.colorScheme.secondaryContainer),
+                        colors = getCardColors(MaterialTheme.colorScheme.surfaceVariant),
                         elevation = CardDefaults.cardElevation(defaultElevation = cardElevation),
                         modifier = Modifier
                             .clip(MaterialTheme.shapes.medium)
@@ -245,11 +248,6 @@ fun HomeScreen(navigator: DestinationsNavigator) {
                                 .padding(16.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(
-                                imageVector = Icons.Outlined.Info,
-                                contentDescription = null,
-                                modifier = Modifier.padding(end = 12.dp)
-                            )
                             Text(
                                 text = stringResource(R.string.using_mksu_manager),
                                 style = MaterialTheme.typography.bodyMedium,
@@ -319,7 +317,7 @@ fun UpdateCard() {
         val updateDialog = rememberConfirmDialog(onConfirm = { uriHandler.openUri(newVersionUrl) })
         WarningCard(
             message = stringResource(id = R.string.new_version_available).format(newVersionCode),
-            color = MaterialTheme.colorScheme.tertiaryContainer,
+            color = MaterialTheme.colorScheme.surfaceVariant,
             onClick = {
                 if (changelog.isEmpty()) {
                     uriHandler.openUri(newVersionUrl)
@@ -357,7 +355,7 @@ private fun TopBar(
     onInstallClick: () -> Unit,
     scrollBehavior: TopAppBarScrollBehavior? = null
 ) {
-    val cardColor = MaterialTheme.colorScheme.surfaceVariant
+    val cardColor = MaterialTheme.colorScheme.surfaceContainer
     val cardAlpha = CardConfig.cardAlpha
 
     TopAppBar(
@@ -422,7 +420,7 @@ private fun StatusCard(
     onClickInstall: () -> Unit = {}
 ) {
     ElevatedCard(
-        colors = getCardColors(MaterialTheme.colorScheme.surfaceVariant),
+        colors = getCardColors(MaterialTheme.colorScheme.secondaryContainer),
         elevation = CardDefaults.cardElevation(defaultElevation = cardElevation),
         modifier = Modifier
             .fillMaxWidth()
@@ -451,25 +449,12 @@ private fun StatusCard(
                         else -> ""
                     }
 
-                    val workingMode = when (lkmMode) {
-                        null -> " <Non-GKI>"
-                        true -> " <LKM>"
-                        else -> " <GKI>"
+                    val workingModeText = when {
+                        lkmMode == true -> "LKM"
+                        lkmMode == null && kernelVersion.isGKI1() -> "GKI1.0"
+                        lkmMode == false || kernelVersion.isGKI() -> "GKI2.0"
+                        else -> "N-GKI"
                     }
-
-                    val workingText = "${stringResource(id = R.string.home_working)}$workingMode$safeMode"
-
-                    val isHideVersion = LocalContext.current.getSharedPreferences("settings", Context.MODE_PRIVATE)
-                        .getBoolean("is_hide_version", false)
-
-                    val isHideOtherInfo = LocalContext.current.getSharedPreferences("settings", Context.MODE_PRIVATE)
-                        .getBoolean("is_hide_other_info", false)
-
-                    val isHideSusfsStatus = LocalContext.current.getSharedPreferences("settings", Context.MODE_PRIVATE)
-                        .getBoolean("is_hide_susfs_status", false)
-
-                    val showKpmInfo = LocalContext.current.getSharedPreferences("settings", Context.MODE_PRIVATE)
-                        .getBoolean("show_kpm_info", true)
 
                     Icon(
                         Icons.Outlined.CheckCircle,
@@ -479,11 +464,74 @@ private fun StatusCard(
                     )
 
                     Column(Modifier.padding(start = 20.dp)) {
-                        Text(
-                            text = workingText,
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = stringResource(id = R.string.home_working),
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+
+                            Spacer(Modifier.width(8.dp))
+
+                            // 工作模式标签
+                            Surface(
+                                shape = RoundedCornerShape(4.dp),
+                                color = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier
+                                    .border(
+                                        width = 1.dp,
+                                        color = MaterialTheme.colorScheme.secondary,
+                                        shape = RoundedCornerShape(4.dp)
+                                    )
+                            ) {
+                                Text(
+                                    text = workingModeText,
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.onSecondary,
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                )
+                            }
+
+                            Spacer(Modifier.width(6.dp))
+
+                            // 机器架构标签
+                            Surface(
+                                shape = RoundedCornerShape(4.dp),
+                                color = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier
+                                    .border(
+                                        width = 1.dp,
+                                        color = MaterialTheme.colorScheme.secondary,
+                                        shape = RoundedCornerShape(4.dp)
+                                    )
+                            ) {
+                                Text(
+                                    text = Os.uname().machine,
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.onSecondary,
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                )
+                            }
+                            if (safeMode.isNotEmpty()) {
+                                Text(
+                                    text = safeMode,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                        }
+
+                        val isHideVersion = LocalContext.current.getSharedPreferences("settings", Context.MODE_PRIVATE)
+                            .getBoolean("is_hide_version", false)
+
+                        val isHideOtherInfo = LocalContext.current.getSharedPreferences("settings", Context.MODE_PRIVATE)
+                            .getBoolean("is_hide_other_info", false)
+
+                        val showKpmInfo = LocalContext.current.getSharedPreferences("settings", Context.MODE_PRIVATE)
+                            .getBoolean("show_kpm_info", true)
 
                         if (!isHideVersion) {
                             Spacer(Modifier.height(4.dp))
@@ -514,25 +562,6 @@ private fun StatusCard(
                                 Spacer(Modifier.height(4.dp))
                                 Text(
                                     text = stringResource(R.string.home_kpm_module, getKpmModuleCount()),
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                        }
-
-                        if (!isHideSusfsStatus) {
-                            Spacer(modifier = Modifier.height(4.dp))
-
-                            val suSFS = getSuSFS()
-                            if (lkmMode != true) {
-                                val translatedStatus = when (suSFS) {
-                                    "Supported" -> stringResource(R.string.status_supported)
-                                    "Not Supported" -> stringResource(R.string.status_not_supported)
-                                    else -> stringResource(R.string.status_unknown)
-                                }
-
-                                Text(
-                                    text = stringResource(R.string.home_susfs, translatedStatus),
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -596,7 +625,7 @@ private fun StatusCard(
 @Composable
 fun WarningCard(
     message: String,
-    color: Color = MaterialTheme.colorScheme.errorContainer,
+    color: Color = MaterialTheme.colorScheme.error,
     onClick: (() -> Unit)? = null
 ) {
     ElevatedCard(
@@ -608,7 +637,6 @@ fun WarningCard(
             .shadow(
                 elevation = cardElevation,
                 shape = MaterialTheme.shapes.large,
-                spotColor = MaterialTheme.colorScheme.error.copy(alpha = 0.1f)
             )
     ) {
         Row(
@@ -618,14 +646,6 @@ fun WarningCard(
                 .padding(24.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(
-                imageVector = Icons.Filled.Warning,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onErrorContainer,
-                modifier = Modifier
-                    .padding(end = 16.dp)
-                    .size(28.dp)
-            )
             Text(
                 text = message,
                 style = MaterialTheme.typography.bodyMedium,
@@ -641,7 +661,7 @@ fun ContributionCard() {
     val links = listOf("https://github.com/ShirkNeko", "https://github.com/udochina")
 
     ElevatedCard(
-        colors = getCardColors(MaterialTheme.colorScheme.surfaceContainerHigh),
+        colors = getCardColors(MaterialTheme.colorScheme.surfaceContainer),
         elevation = CardDefaults.cardElevation(defaultElevation = cardElevation),
         modifier = Modifier
             .fillMaxWidth()
@@ -687,7 +707,7 @@ fun LearnMoreCard() {
     val url = stringResource(R.string.home_learn_kernelsu_url)
 
     ElevatedCard(
-        colors = getCardColors(MaterialTheme.colorScheme.surfaceContainerHigh),
+        colors = getCardColors(MaterialTheme.colorScheme.surfaceContainer),
         elevation = CardDefaults.cardElevation(defaultElevation = cardElevation),
         modifier = Modifier
             .fillMaxWidth()
@@ -730,7 +750,7 @@ fun DonateCard() {
     val uriHandler = LocalUriHandler.current
 
     ElevatedCard(
-        colors = getCardColors(MaterialTheme.colorScheme.surfaceContainerHigh),
+        colors = getCardColors(MaterialTheme.colorScheme.surfaceContainer),
         elevation = CardDefaults.cardElevation(defaultElevation = cardElevation),
         modifier = Modifier
             .fillMaxWidth()
@@ -778,7 +798,7 @@ private fun InfoCard() {
         .getBoolean("show_kpm_info", true)
 
     ElevatedCard(
-        colors = getCardColors(MaterialTheme.colorScheme.surfaceContainerHighest),
+        colors = getCardColors(MaterialTheme.colorScheme.surfaceContainer),
         elevation = CardDefaults.cardElevation(defaultElevation = cardElevation),
         modifier = Modifier
             .fillMaxWidth()
@@ -839,7 +859,7 @@ private fun InfoCard() {
 
             InfoCardItem(
                 stringResource(R.string.home_kernel),
-                "${uname.release} (${uname.machine})",
+                uname.release,
                 icon = Icons.Default.Memory,
             )
 
@@ -893,7 +913,7 @@ private fun InfoCard() {
                         InfoCardItem(
                             stringResource(R.string.home_kpm_version),
                             displayVersion,
-                            icon = Icons.Default.Code
+                            icon = Icons.Default.Settings
                         )
                     }
                 }
@@ -955,7 +975,7 @@ private fun WarningCardPreview() {
         WarningCard(message = "Warning message")
         WarningCard(
             message = "Warning message ",
-            MaterialTheme.colorScheme.tertiaryContainer,
+            MaterialTheme.colorScheme.outlineVariant,
             onClick = {})
     }
 }

@@ -231,7 +231,7 @@ private fun TopBar(
     colors: TopAppBarColors,
     scrollBehavior: TopAppBarScrollBehavior? = null
 ) {
-    val cardColor = MaterialTheme.colorScheme.surfaceVariant
+    val cardColor = MaterialTheme.colorScheme.surfaceContainer
     val cardAlpha = CardConfig.cardAlpha
 
     TopAppBar(

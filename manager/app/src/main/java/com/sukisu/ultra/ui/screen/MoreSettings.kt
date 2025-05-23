@@ -506,7 +506,7 @@ fun MoreSettingsScreen(navigator: DestinationsNavigator) {
         )
     }
 
-    val cardColor = MaterialTheme.colorScheme.surfaceVariant
+    val cardColor = MaterialTheme.colorScheme.surfaceContainer
     val cardAlphaUse = CardConfig.cardAlpha
     val isDarkTheme = isSystemInDarkTheme()
 
