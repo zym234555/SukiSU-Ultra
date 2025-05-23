@@ -508,6 +508,7 @@ fun MoreSettingsScreen(navigator: DestinationsNavigator) {
 
     val cardColor = MaterialTheme.colorScheme.surfaceVariant
     val cardAlphaUse = CardConfig.cardAlpha
+    val isDarkTheme = isSystemInDarkTheme()
 
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -641,7 +642,6 @@ fun MoreSettingsScreen(navigator: DestinationsNavigator) {
                                     headlineContent = { Text(stringResource(R.string.theme_color)) },
                                     supportingContent = {
                                         val currentThemeName = when (ThemeConfig.currentTheme) {
-                                            is ThemeColors.Default -> stringResource(R.string.color_default)
                                             is ThemeColors.Green -> stringResource(R.string.color_green)
                                             is ThemeColors.Purple -> stringResource(R.string.color_purple)
                                             is ThemeColors.Orange -> stringResource(R.string.color_orange)
@@ -1108,9 +1108,9 @@ fun MoreSettingsScreen(navigator: DestinationsNavigator) {
                         val suSFS = getSuSFS()
                         val isSUS_SU = getSuSFSFeatures()
                         if (suSFS == "Supported" && isSUS_SU == "CONFIG_KSU_SUSFS_SUS_SU") {
-                            // 初始化时，默认启用
+                            // 默认启用
                             var isEnabled by rememberSaveable {
-                                mutableStateOf(true) // 默认启用
+                                mutableStateOf(true)
                             }
 
                             // 在启动时检查状态
@@ -1208,6 +1208,12 @@ fun MoreSettingsScreen(navigator: DestinationsNavigator) {
                                             ThemeConfig.forceDarkMode = null
                                             CardConfig.isUserLightModeEnabled = false
                                             CardConfig.isUserDarkModeEnabled = false
+                                            if (!CardConfig.isCustomAlphaSet) {
+                                                CardConfig.cardAlpha = 1f
+                                            }
+                                            if (!CardConfig.isCustomDimSet) {
+                                                CardConfig.cardDim = if (isDarkTheme) 0.5f else 0f
+                                            }
                                             CardConfig.save(context)
                                         }
                                     }
@@ -1285,7 +1291,6 @@ fun MoreSettingsScreen(navigator: DestinationsNavigator) {
                                 .fillMaxWidth()
                                 .clickable {
                                     context.saveThemeColors(when (theme) {
-                                        ThemeColors.Default -> "default"
                                         ThemeColors.Green -> "green"
                                         ThemeColors.Purple -> "purple"
                                         ThemeColors.Orange -> "orange"
@@ -1304,11 +1309,12 @@ fun MoreSettingsScreen(navigator: DestinationsNavigator) {
                                 onClick = null
                             )
                             Spacer(modifier = Modifier.width(12.dp))
+                            val isDark = isSystemInDarkTheme()
                             Box(
                                 modifier = Modifier
                                     .size(24.dp)
                                     .clip(CircleShape)
-                                    .background(theme.Primary)
+                                    .background(if (isDark) theme.primaryDark else theme.primaryLight)
                             )
                             Spacer(modifier = Modifier.width(12.dp))
                             Text(name)

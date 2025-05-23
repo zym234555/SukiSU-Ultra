@@ -210,7 +210,6 @@
     <string name="color_orange">Orange</string>
     <string name="color_pink">Rose</string>
     <string name="color_gray">Gris</string>
-    <string name="color_ivory">Ivoire</string>
     <string name="flash_option">Options du flash</string>
     <string name="flash_option_tip">Sélectionnez le fichier à installer</string>
     <string name="horizon_kernel">Install Anykernel3</string>

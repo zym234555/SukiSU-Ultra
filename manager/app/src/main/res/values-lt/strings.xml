@@ -208,7 +208,6 @@
     <string name="color_orange">Orange</string>
     <string name="color_pink">Pink</string>
     <string name="color_gray">Gray</string>
-    <string name="color_ivory">Ivory</string>
     <string name="flash_option">Brush Options</string>
     <string name="flash_option_tip">Select the file to be flashed</string>
     <string name="horizon_kernel">Install Anykernel3</string>
