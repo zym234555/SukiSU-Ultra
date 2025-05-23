@@ -95,6 +95,7 @@ import com.ramcosta.composedestinations.generated.destinations.InstallScreenDest
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import com.sukisu.ultra.KernelVersion
 import com.sukisu.ultra.Natives
+import com.sukisu.ultra.Natives.isKPMEnabled
 import com.sukisu.ultra.R
 import com.sukisu.ultra.getKernelVersion
 import com.sukisu.ultra.ksuApp
@@ -895,7 +896,7 @@ private fun InfoCard() {
             if (!isSimpleMode) {
                 if (lkmMode != true) {
                     val kpmVersion = getKpmVersion()
-                    val isKpmConfigured = checkKpmConfigured()
+                    val isKpmConfigured = checkKPMEnabled()
 
                     // 根据showKpmInfo决定是否显示KPM信息
                     if (showKpmInfo) {
@@ -1010,55 +1011,6 @@ private object DeviceModelCache {
         }
     }
 }
-
-private object KpmConfigCache {
-    private var isChecked = false
-    private var isConfigured = false
-
-    fun checkKpmConfigured(): Boolean {
-        if (isChecked) {
-            return isConfigured
-        }
-
-        isConfigured = performKpmCheck()
-        isChecked = true
-        return isConfigured
-    }
-
-    private fun performKpmCheck(): Boolean {
-        try {
-            val process = Runtime.getRuntime().exec("su -c cat /proc/config.gz")
-            val inputStream = process.inputStream
-            val gzipInputStream = GZIPInputStream(inputStream)
-            val reader = BufferedReader(InputStreamReader(gzipInputStream))
-
-            var line: String?
-            while (reader.readLine().also { line = it } != null) {
-                if (line?.contains("CONFIG_KPM=y") == true) {
-                    reader.close()
-                    return true
-                }
-            }
-            reader.close()
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-        try {
-            val process = Runtime.getRuntime().exec("su -c grep sukisu_kpm /proc/kallsyms")
-            val reader = BufferedReader(InputStreamReader(process.inputStream))
-            if (reader.readLine() != null) {
-                reader.close()
-                return true
-            }
-            reader.close()
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-
-        return false
-    }
-}
-
 // 获取设备型号
 @SuppressLint("PrivateApi")
 private fun getDeviceModel(): String {
@@ -1066,8 +1018,12 @@ private fun getDeviceModel(): String {
 }
 
 // 检查KPM是否存在
-private fun checkKpmConfigured(): Boolean {
-    return KpmConfigCache.checkKpmConfigured()
+private fun checkKPMEnabled(): Boolean {
+    return if (Natives.version >= Natives.MINIMAL_SUPPORTED_KPM) {
+        isKPMEnabled()
+    } else {
+        false
+    }
 }
 
 @SuppressLint("UnnecessaryComposedModifier")
