@@ -44,6 +44,7 @@ import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import kotlinx.coroutines.launch
 import com.sukisu.ultra.Natives
 import com.sukisu.ultra.ui.component.SearchAppBar
+import com.sukisu.ultra.ui.theme.CardConfig
 import com.sukisu.ultra.ui.util.ModuleModify
 import com.sukisu.ultra.ui.viewmodel.SuperUserViewModel
 
@@ -683,12 +684,14 @@ private fun AppItem(
     onLongClick: () -> Unit,
     viewModel: SuperUserViewModel
 ) {
+    val cardAlpha = CardConfig.cardAlpha
+
     val cardColor = if (app.allowSu)
-        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = cardAlpha)
     else if (app.hasCustomProfile)
-        MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.3f)
+        MaterialTheme.colorScheme.secondaryContainer.copy(alpha = cardAlpha)
     else
-        MaterialTheme.colorScheme.surfaceContainerLow
+        MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = cardAlpha)
 
     Card(
         colors = CardDefaults.cardColors(containerColor = cardColor),

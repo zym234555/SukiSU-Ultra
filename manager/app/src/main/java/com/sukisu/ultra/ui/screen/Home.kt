@@ -42,6 +42,7 @@ import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Storage
+import androidx.compose.material.icons.filled.Token
 import androidx.compose.material.icons.outlined.Block
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Warning
@@ -350,7 +351,7 @@ private fun TopBar(
     onInstallClick: () -> Unit,
     scrollBehavior: TopAppBarScrollBehavior? = null
 ) {
-    val cardColor = MaterialTheme.colorScheme.surfaceContainer
+    val cardColor = MaterialTheme.colorScheme.surfaceContainerLow
     val cardAlpha = CardConfig.cardAlpha
 
     TopAppBar(
@@ -908,7 +909,7 @@ private fun InfoCard() {
                         InfoCardItem(
                             stringResource(R.string.home_kpm_version),
                             displayVersion,
-                            icon = Icons.Default.Settings
+                            icon = Icons.Default.Token
                         )
                     }
                 }
