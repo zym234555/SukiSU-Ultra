@@ -525,6 +525,12 @@ int ksu_handle_prctl(int option, unsigned long arg2, unsigned long arg3,
 		return 0;
 	}
 #endif
+	if (arg2 == CMD_ENABLE_KPM) {
+    	bool KPM_Enabled = IS_ENABLED(CONFIG_KPM);
+    	if (copy_to_user((void __user *)arg3, &KPM_Enabled, sizeof(KPM_Enabled)))
+        	pr_info("KPM: copy_to_user() failed\n");
+    	return 0;
+	}
 
 #ifdef CONFIG_KSU_SUSFS
 	if (current_uid_val == 0) {
