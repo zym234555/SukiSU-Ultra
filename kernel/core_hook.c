@@ -217,7 +217,6 @@ void ksu_escape_to_root(void)
 {
 	struct cred *cred;
 
-#ifdef KSU_GET_CRED_RCU
 	rcu_read_lock();
 
 	do {
@@ -230,14 +229,6 @@ void ksu_escape_to_root(void)
 		rcu_read_unlock();
 		return;
 	}
-#else
-	cred = (struct cred *)__task_cred(current);
-
-	if (cred->euid.val == 0) {
-		pr_warn("Already root, don't escape!\n");
-		return;
-	}
-#endif
 
 	struct root_profile *profile = ksu_get_root_profile(cred->uid.val);
 
@@ -266,16 +257,10 @@ void ksu_escape_to_root(void)
 	       sizeof(cred->cap_permitted));
 	memcpy(&cred->cap_bset, &profile->capabilities.effective,
 	       sizeof(cred->cap_bset));
-	// set ambient caps to all-zero
-	// fixes "operation not permitted" on dbus cap dropping
-	memset(&cred->cap_ambient, 0,
-			sizeof(cred->cap_ambient));
 
 	setup_groups(profile, cred);
 	
-#ifdef KSU_GET_CRED_RCU
 	rcu_read_unlock();
-#endif
 
 	// Refer to kernel/seccomp.c: seccomp_set_mode_strict
 	// When disabling Seccomp, ensure that current->sighand->siglock is held during the operation.
