@@ -366,15 +366,6 @@ private fun TopBar(
             scrolledContainerColor = cardColor.copy(alpha = cardAlpha)
         ),
         actions = {
-            if (rootAvailable() || kernelVersion.isGKI()) {
-                IconButton(onClick = onInstallClick) {
-                    Icon(
-                        Icons.Filled.Archive,
-                        contentDescription = stringResource(R.string.install),
-                    )
-                }
-            }
-
             var showDropdown by remember { mutableStateOf(false) }
             KsuIsValid {
                 IconButton(onClick = {
@@ -440,10 +431,6 @@ private fun StatusCard(
         ) {
             when {
                 ksuVersion != null -> {
-                    val safeMode = when {
-                        Natives.isSafeMode -> " [${stringResource(id = R.string.safe_mode)}]"
-                        else -> ""
-                    }
 
                     val workingModeText = when {
                         lkmMode == true -> "LKM"
@@ -493,7 +480,13 @@ private fun StatusCard(
 
                             Spacer(Modifier.width(6.dp))
 
-                            // 机器架构标签
+                            // 机器架构标签或者安全模式标签
+                            val labelText = if (Natives.isSafeMode) {
+                                stringResource(id = R.string.safe_mode)
+                            } else {
+                                Os.uname().machine
+                            }
+
                             Surface(
                                 shape = RoundedCornerShape(4.dp),
                                 color = MaterialTheme.colorScheme.primary,
@@ -505,17 +498,10 @@ private fun StatusCard(
                                     )
                             ) {
                                 Text(
-                                    text = Os.uname().machine,
+                                    text = labelText,
                                     style = MaterialTheme.typography.labelMedium,
                                     color = MaterialTheme.colorScheme.onSecondary,
                                     modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                                )
-                            }
-                            if (safeMode.isNotEmpty()) {
-                                Text(
-                                    text = safeMode,
-                                    style = MaterialTheme.typography.titleMedium,
-                                    color = MaterialTheme.colorScheme.onSurface
                                 )
                             }
                         }

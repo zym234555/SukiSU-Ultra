@@ -846,9 +846,7 @@ fun ModuleItem(
                         onClick = { onUpdate(module) },
                         shape = ButtonDefaults.textShape,
                         contentPadding = ButtonDefaults.TextButtonContentPadding,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.secondaryContainer
-                        )
+                        colors = ButtonDefaults.filledTonalButtonColors()
                     ) {
                         Icon(
                             modifier = Modifier.size(20.dp),
