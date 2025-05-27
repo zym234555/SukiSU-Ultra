@@ -667,12 +667,6 @@ int ksu_handle_setuid(struct cred *new, const struct cred *old)
 	return 0;
 }
 
-static int ksu_task_prctl(int option, unsigned long arg2, unsigned long arg3,
-			  unsigned long arg4, unsigned long arg5)
-{
-	ksu_handle_prctl(option, arg2, arg3, arg4, arg5);
-	return -ENOSYS;
-}
 // kernel 4.4 and 4.9
 #if LINUX_VERSION_CODE < KERNEL_VERSION(4, 10, 0) ||	\
 	defined(CONFIG_IS_HW_HISI) ||	\
