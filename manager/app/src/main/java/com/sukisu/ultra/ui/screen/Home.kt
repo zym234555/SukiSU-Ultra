@@ -41,6 +41,7 @@ import androidx.compose.material.icons.filled.PhoneAndroid
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.SettingsSuggest
 import androidx.compose.material.icons.filled.Storage
 import androidx.compose.material.icons.filled.Token
 import androidx.compose.material.icons.outlined.Block
@@ -865,7 +866,7 @@ private fun InfoCard() {
             InfoCardItem(
                 stringResource(R.string.home_manager_version),
                 "${managerVersion.first} (${managerVersion.second})",
-                icon = Icons.Default.Settings,
+                icon = Icons.Default.SettingsSuggest,
             )
 
             InfoCardItem(
@@ -895,7 +896,7 @@ private fun InfoCard() {
                         InfoCardItem(
                             stringResource(R.string.home_kpm_version),
                             displayVersion,
-                            icon = Icons.Default.Token
+                            icon = Icons.Default.Archive
                         )
                     }
                 }
