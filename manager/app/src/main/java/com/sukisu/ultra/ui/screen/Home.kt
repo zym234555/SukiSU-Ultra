@@ -421,11 +421,6 @@ private fun StatusCard(
                                 shape = RoundedCornerShape(4.dp),
                                 color = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier
-                                    .border(
-                                        width = 1.dp,
-                                        color = MaterialTheme.colorScheme.secondary,
-                                        shape = RoundedCornerShape(4.dp)
-                                    )
                             ) {
                                 Text(
                                     text = workingModeText,
@@ -448,11 +443,6 @@ private fun StatusCard(
                                 shape = RoundedCornerShape(4.dp),
                                 color = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier
-                                    .border(
-                                        width = 1.dp,
-                                        color = MaterialTheme.colorScheme.secondary,
-                                        shape = RoundedCornerShape(4.dp)
-                                    )
                             ) {
                                 Text(
                                     text = labelText,
