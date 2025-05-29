@@ -109,6 +109,7 @@ class ModuleViewModel : ViewModel() {
                         )
                     }.toList()
                 launch {
+                    // load WebUI config
                     modules.forEach { module ->
                         withContext(Dispatchers.IO) {
                             try {
@@ -126,6 +127,8 @@ class ModuleViewModel : ViewModel() {
                 isRefreshing = false
             }
 
+            // when both old and new is kotlin.collections.EmptyList
+            // moduleList update will don't trigger
             if (oldModuleList === modules) {
                 isRefreshing = false
             }
@@ -143,6 +146,7 @@ class ModuleViewModel : ViewModel() {
         if (m.updateJson.isEmpty() || m.remove || m.update || !m.enabled) {
             return empty
         }
+        // download updateJson
         val result = kotlin.runCatching {
             val url = m.updateJson
             Log.i(TAG, "checkUpdate url: $url")

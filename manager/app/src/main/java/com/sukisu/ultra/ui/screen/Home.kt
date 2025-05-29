@@ -40,10 +40,8 @@ import androidx.compose.material.icons.filled.Memory
 import androidx.compose.material.icons.filled.PhoneAndroid
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Security
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.SettingsSuggest
 import androidx.compose.material.icons.filled.Storage
-import androidx.compose.material.icons.filled.Token
 import androidx.compose.material.icons.outlined.Block
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Warning
@@ -65,7 +63,6 @@ import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
@@ -86,7 +83,6 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.core.content.edit
 import androidx.core.content.pm.PackageInfoCompat
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootGraph
@@ -213,46 +209,6 @@ fun HomeScreen(navigator: DestinationsNavigator) {
                     .getBoolean("check_update", true)
             if (checkUpdate) {
                 UpdateCard()
-            }
-
-            val prefs = remember { context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE) }
-            var clickCount by rememberSaveable { mutableIntStateOf(prefs.getInt("click_count", 0)) }
-
-            if (!isSimpleMode && clickCount < 3) {
-                AnimatedVisibility(
-                    visible = clickCount < 3,
-                    enter = fadeIn() + expandVertically(),
-                    exit = shrinkVertically() + fadeOut()
-                ) {
-                    ElevatedCard(
-                        colors = getCardColors(MaterialTheme.colorScheme.surfaceVariant),
-                        elevation = CardDefaults.cardElevation(defaultElevation = cardElevation),
-                        modifier = Modifier
-                            .clip(MaterialTheme.shapes.medium)
-                            .shadow(
-                                elevation = cardElevation,
-                                shape = MaterialTheme.shapes.medium,
-                                spotColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
-                            )
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable {
-                                    clickCount++
-                                    prefs.edit { putInt("click_count", clickCount) }
-                                }
-                                .padding(horizontal = 24.dp, vertical = 16.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = stringResource(R.string.using_mksu_manager),
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                        }
-                    }
-                }
             }
 
             InfoCard()
