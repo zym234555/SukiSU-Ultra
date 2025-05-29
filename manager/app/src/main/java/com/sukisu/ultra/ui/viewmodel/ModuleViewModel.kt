@@ -10,6 +10,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import com.sukisu.ultra.ui.util.HanziToPinyin
 import com.sukisu.ultra.ui.util.listModules
 import org.json.JSONArray
@@ -42,7 +43,7 @@ class ModuleViewModel : ViewModel() {
         val hasWebUi: Boolean,
         val hasActionScript: Boolean,
         val dirId: String, // real module id (dir name)
-        val config: ModuleConfig,
+        var config: ModuleConfig? = null,
     )
 
     var isRefreshing by mutableStateOf(false)
@@ -91,32 +92,40 @@ class ModuleViewModel : ViewModel() {
                     .map { array.getJSONObject(it) }
                     .map { obj ->
                         val id = obj.getString("id")
-                        val config = id.asModuleConfig
                         ModuleInfo(
                             id,
-                            config.name ?: obj.optString("name"),
+                            obj.optString("name", "Unknown"),
                             obj.optString("author", "Unknown"),
                             obj.optString("version", "Unknown"),
                             obj.optInt("versionCode", 0),
-                            config.description ?: obj.optString("description"),
+                            obj.optString("description", ""),
                             obj.getBoolean("enabled"),
                             obj.getBoolean("update"),
                             obj.getBoolean("remove"),
                             obj.optString("updateJson"),
                             obj.optBoolean("web"),
                             obj.optBoolean("action"),
-                            obj.getString("dir_id"),
-                            config
+                            obj.getString("dir_id")
                         )
                     }.toList()
+                launch {
+                    modules.forEach { module ->
+                        withContext(Dispatchers.IO) {
+                            try {
+                                module.config = module.id.asModuleConfig
+                            } catch (e: Exception) {
+                                Log.e(TAG, "Failed to load config for module ${module.id}", e)
+                            }
+                        }
+                    }
+                }
+
                 isNeedRefresh = false
             }.onFailure { e ->
                 Log.e(TAG, "fetchModuleList: ", e)
                 isRefreshing = false
             }
 
-            // when both old and new is kotlin.collections.EmptyList
-            // moduleList update will don't trigger
             if (oldModuleList === modules) {
                 isRefreshing = false
             }
@@ -134,7 +143,6 @@ class ModuleViewModel : ViewModel() {
         if (m.updateJson.isEmpty() || m.remove || m.update || !m.enabled) {
             return empty
         }
-        // download updateJson
         val result = kotlin.runCatching {
             val url = m.updateJson
             Log.i(TAG, "checkUpdate url: $url")
