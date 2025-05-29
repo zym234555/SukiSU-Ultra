@@ -298,7 +298,6 @@
     <string name="flash_failed_message">فشل التركيب</string>
     <!-- lkm/gki install -->
     <string name="Lkm_install_methods">إصلاح/تثبيت LKM</string>
-    <string name="GKI_install_methods">GKI/non-GKI installation</string>
     <string name="kernel_version_log">إصدار النواة：%1$s</string>
     <string name="tool_version_log">استخدام أداة التصحيح：%1$s</string>
     <string name="configuration">تعيين</string>

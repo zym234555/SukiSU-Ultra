@@ -298,7 +298,6 @@
     <string name="flash_failed_message">Schreiben fehlgeschlagen</string>
     <!-- lkm/gki install -->
     <string name="Lkm_install_methods">LKM Reparatur/Installation</string>
-    <string name="GKI_install_methods">GKI/non-GKI installation</string>
     <string name="kernel_version_log">Kernel</string>
     <string name="tool_version_log">Benutze das Patchwerkzeug：%1$s</string>
     <string name="configuration">Konfigurieren</string>

@@ -296,7 +296,7 @@
     <string name="flash_failed_message">刷写失败</string>
     <!-- lkm/gki install -->
     <string name="Lkm_install_methods">LKM修补/安装</string>
-    <string name="GKI_install_methods">GKI/non-GKI安装</string>
+    <string name="GKI_install_methods">刷写 AnyKernel3</string>
     <string name="kernel_version_log">内核版本：%1$s</string>
     <string name="tool_version_log">使用修补工具：%1$s</string>
     <string name="configuration">配置</string>
@@ -365,4 +365,5 @@
     <string name="installing_module">正在安装模块 %1$d/%2$d</string>
     <string name="module_failed_count">%d 个模块安装失败</string>
     <string name="module_download_error">模块下载失败</string>
+    <string name="kernel_flashing">内核刷写</string>
 </resources>

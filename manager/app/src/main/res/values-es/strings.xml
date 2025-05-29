@@ -296,7 +296,6 @@
     <string name="flash_failed_message">Flash falló</string>
     <!-- lkm/gki install -->
     <string name="Lkm_install_methods">Reparación/instalación de LKM</string>
-    <string name="GKI_install_methods">GKI/non-GKI installation</string>
     <string name="kernel_version_log">Versión del kernel</string>
     <string name="tool_version_log">Usando la herramienta de parches：%1$s</string>
     <string name="configuration">Configurar</string>

@@ -296,7 +296,6 @@
     <string name="flash_failed_message">Flash thất bại</string>
     <!-- lkm/gki install -->
     <string name="Lkm_install_methods">LKM cài đặt</string>
-    <string name="GKI_install_methods">GKI/non-GKI cài đặt</string>
     <string name="kernel_version_log">Phiên bản Kernel：%1$s</string>
     <string name="tool_version_log">Sử dụng công cụ vá lỗi：%1$s</string>
     <string name="configuration">Cấu hình</string>
