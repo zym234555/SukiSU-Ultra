@@ -72,6 +72,8 @@ import com.sukisu.ultra.ui.theme.CardConfig.cardElevation
 import com.sukisu.ultra.ui.webui.WebUIXActivity
 import com.dergoogler.mmrl.platform.Platform
 import androidx.core.net.toUri
+import com.dergoogler.mmrl.platform.model.ModuleConfig
+import com.dergoogler.mmrl.platform.model.ModuleConfig.Companion.asModuleConfig
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -83,6 +85,7 @@ fun ModuleScreen(navigator: DestinationsNavigator) {
     val snackBarHost = LocalSnackbarHost.current
     val scope = rememberCoroutineScope()
     val confirmDialog = rememberConfirmDialog()
+    var lastClickTime by remember { mutableStateOf(0L) }
 
     val selectZipLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
@@ -142,7 +145,7 @@ fun ModuleScreen(navigator: DestinationsNavigator) {
                 }
             } else {
                 val uri = data.data ?: return@launch
-                    // 单个安装模块
+                // 单个安装模块
                 try {
                     if (!ModuleUtils.isUriAccessible(context, uri)) {
                         snackBarHost.showSnackbar("Unable to access selected module files")
@@ -371,24 +374,48 @@ fun ModuleScreen(navigator: DestinationsNavigator) {
                         navigator.navigate(FlashScreenDestination(FlashIt.FlashModule(it)))
                     },
                     onClickModule = { id, name, hasWebUi ->
+                        val currentTime = System.currentTimeMillis()
+                        if (currentTime - lastClickTime < 600) {
+                            Log.d("ModuleScreen", "Click too fast, ignoring")
+                            return@ModuleList
+                        }
+                        lastClickTime = currentTime
+
                         if (hasWebUi) {
-                            val wxEngine = Intent(context, WebUIXActivity::class.java)
-                                .setData("kernelsu://webuix/$id".toUri())
-                                .putExtra("id", id)
-                                .putExtra("name", name)
+                            try {
+                                val wxEngine = Intent(context, WebUIXActivity::class.java)
+                                    .setData("kernelsu://webuix/$id".toUri())
+                                    .putExtra("id", id)
+                                    .putExtra("name", name)
 
-                            val ksuEngine = Intent(context, WebUIActivity::class.java)
-                                .setData("kernelsu://webui/$id".toUri())
-                                .putExtra("id", id)
-                                .putExtra("name", name)
+                                val ksuEngine = Intent(context, WebUIActivity::class.java)
+                                    .setData("kernelsu://webui/$id".toUri())
+                                    .putExtra("id", id)
+                                    .putExtra("name", name)
 
-                            webUILauncher.launch(
-                                if (prefs.getBoolean("use_webuix", true) && Platform.isAlive) {
-                                    wxEngine
-                                } else {
-                                    ksuEngine
+                                val config = try {
+                                    id.asModuleConfig
+                                } catch (e: Exception) {
+                                    Log.e("ModuleScreen", "Failed to get config from id: $id", e)
+                                    null
                                 }
-                            )
+
+                                val engine = config?.getWebuiEngine(context)
+                                val selectedEngine = when (engine) {
+                                    "wx" -> wxEngine
+                                    "ksu" -> ksuEngine
+                                    null -> if (prefs.getBoolean("use_webuix", true) && Platform.isAlive) wxEngine else ksuEngine
+                                    else -> ksuEngine
+                                }
+
+                                webUILauncher.launch(selectedEngine)
+                            } catch (e: Exception) {
+                                Log.e("ModuleScreen", "Error launching WebUI: ${e.message}", e)
+                                scope.launch {
+                                    snackBarHost.showSnackbar("Error launching WebUI: ${e.message}")
+                                }
+                            }
+                            return@ModuleList
                         }
                     },
                     context = context,
@@ -902,7 +929,8 @@ fun ModuleItemPreview() {
         updateJson = "",
         hasWebUi = false,
         hasActionScript = false,
-        dirId = "dirId"
+        dirId = "dirId",
+        config = ModuleConfig(),
     )
     ModuleItem(EmptyDestinationsNavigator, module, "", {}, {}, {}, {})
 }
