@@ -59,13 +59,14 @@ import com.sukisu.ultra.*
 import com.sukisu.ultra.ui.component.*
 import com.sukisu.ultra.ui.theme.*
 import com.sukisu.ultra.ui.theme.CardConfig.cardAlpha
-import com.sukisu.ultra.ui.theme.CardConfig.cardElevation
 import com.sukisu.ultra.ui.util.LocalSnackbarHost
 import com.sukisu.ultra.ui.util.getBugreportFile
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import com.sukisu.ultra.ui.component.KsuIsValid
 import com.dergoogler.mmrl.platform.Platform
+import com.dergoogler.mmrl.ui.component.LabelItem
+import com.dergoogler.mmrl.ui.component.text.TextRow
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -119,9 +120,9 @@ fun SettingScreen(navigator: DestinationsNavigator) {
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 8.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = cardAlpha)
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = cardAlpha)
                 ),
-                elevation = CardDefaults.cardElevation(defaultElevation = cardElevation)
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
             ) {
                 Column(modifier = Modifier.padding(vertical = 8.dp)) {
                     Text(
@@ -192,9 +193,9 @@ fun SettingScreen(navigator: DestinationsNavigator) {
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 8.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = cardAlpha)
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = cardAlpha)
                 ),
-                elevation = CardDefaults.cardElevation(defaultElevation = cardElevation)
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
             ) {
                 Column(modifier = Modifier.padding(vertical = 8.dp)) {
                     Text(
@@ -306,9 +307,9 @@ fun SettingScreen(navigator: DestinationsNavigator) {
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 8.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = cardAlpha)
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = cardAlpha)
                 ),
-                elevation = CardDefaults.cardElevation(defaultElevation = cardElevation)
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
             ) {
                 Column(modifier = Modifier.padding(vertical = 8.dp)) {
                     Text(
@@ -399,15 +400,15 @@ fun SettingScreen(navigator: DestinationsNavigator) {
                 }
             }
 
-            // 设置分组卡片 - 关于
+            // 关于
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 8.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = cardAlpha)
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = cardAlpha)
                 ),
-                elevation = CardDefaults.cardElevation(defaultElevation = cardElevation)
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
             ) {
                 Column(modifier = Modifier.padding(vertical = 8.dp)) {
                     Text(
@@ -504,7 +505,6 @@ fun SettingItem(
                 )
             }
         }
-
         Icon(
             imageVector = Icons.Filled.ChevronRight,
             contentDescription = null,
