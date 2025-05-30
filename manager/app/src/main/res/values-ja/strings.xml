@@ -328,8 +328,7 @@
     <string name="show_kpm_info">KPM 機能を表示</string>
     <string name="show_kpm_info_summary">KPM の情報と機能をホームとボトムバーに表示します (アプリを開き直す必要があります)</string>
     <!-- Webui X settings -->
-    <string name="use_webuix">WebUI X を使用する</string>
-    <string name="use_webuix_summary">より多くの API をサポートする WebUI の代わりに WebUI X を使用します。開発者はモジュール設定でこの機能をオーバーライドできることに注意してください。</string>
+    
     <string name="use_webuix_eruda">WebUI に Eruda をインジェクトする</string>
     <string name="use_webuix_eruda_summary">デバッグを容易にするために WebUI X にデバッグコンソールを挿入します。Web デバッグが ON になっている必要があります。</string>
     <!-- DPI setting related strings -->

@@ -400,14 +400,26 @@ fun ModuleScreen(navigator: DestinationsNavigator) {
                                     null
                                 }
 
-                                val engine = config?.getWebuiEngine(context)
-                                val selectedEngine = when (engine) {
+                                val globalEngine = prefs.getString("webui_engine", "default") ?: "default"
+                                val moduleEngine = config?.getWebuiEngine(context)
+                                val selectedEngine = when (globalEngine) {
                                     "wx" -> wxEngine
                                     "ksu" -> ksuEngine
-                                    null -> if (prefs.getBoolean("use_webuix", true) && Platform.isAlive) wxEngine else ksuEngine
+                                    "default" -> {
+                                        when (moduleEngine) {
+                                            "wx" -> wxEngine
+                                            "ksu" -> ksuEngine
+                                            else -> {
+                                                if (Platform.isAlive) {
+                                                    wxEngine
+                                                } else {
+                                                    ksuEngine
+                                                }
+                                            }
+                                        }
+                                    }
                                     else -> ksuEngine
                                 }
-
                                 webUILauncher.launch(selectedEngine)
                             } catch (e: Exception) {
                                 Log.e("ModuleScreen", "Error launching WebUI: ${e.message}", e)
