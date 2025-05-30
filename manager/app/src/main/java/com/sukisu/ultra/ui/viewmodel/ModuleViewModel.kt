@@ -10,7 +10,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import com.sukisu.ultra.ui.util.HanziToPinyin
 import com.sukisu.ultra.ui.util.listModules
 import org.json.JSONArray
@@ -18,8 +17,6 @@ import org.json.JSONObject
 import java.text.Collator
 import java.util.Locale
 import java.util.concurrent.TimeUnit
-import com.dergoogler.mmrl.platform.model.ModuleConfig
-import com.dergoogler.mmrl.platform.model.ModuleConfig.Companion.asModuleConfig
 
 class ModuleViewModel : ViewModel() {
 
@@ -43,7 +40,6 @@ class ModuleViewModel : ViewModel() {
         val hasWebUi: Boolean,
         val hasActionScript: Boolean,
         val dirId: String, // real module id (dir name)
-        var config: ModuleConfig? = null,
     )
 
     var isRefreshing by mutableStateOf(false)
@@ -91,14 +87,13 @@ class ModuleViewModel : ViewModel() {
                     .asSequence()
                     .map { array.getJSONObject(it) }
                     .map { obj ->
-                        val id = obj.getString("id")
                         ModuleInfo(
-                            id,
-                            obj.optString("name", "Unknown"),
+                            obj.getString("id"),
+                            obj.optString("name"),
                             obj.optString("author", "Unknown"),
                             obj.optString("version", "Unknown"),
                             obj.optInt("versionCode", 0),
-                            obj.optString("description", ""),
+                            obj.optString("description"),
                             obj.getBoolean("enabled"),
                             obj.getBoolean("update"),
                             obj.getBoolean("remove"),
@@ -108,19 +103,6 @@ class ModuleViewModel : ViewModel() {
                             obj.getString("dir_id")
                         )
                     }.toList()
-                launch {
-                    // load WebUI config
-                    modules.forEach { module ->
-                        withContext(Dispatchers.IO) {
-                            try {
-                                module.config = module.id.asModuleConfig
-                            } catch (e: Exception) {
-                                Log.e(TAG, "Failed to load config for module ${module.id}", e)
-                            }
-                        }
-                    }
-                }
-
                 isNeedRefresh = false
             }.onFailure { e ->
                 Log.e(TAG, "fetchModuleList: ", e)
