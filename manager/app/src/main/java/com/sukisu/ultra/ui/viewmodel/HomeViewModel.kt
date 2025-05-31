@@ -33,13 +33,12 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import com.topjohnwu.superuser.internal.Utils.context
 
-/**
- * @author ShirkNeko
- * @date 2025/5/31.
- */
 class HomeViewModel : ViewModel() {
     companion object {
         private const val TAG = "HomeViewModel"
+        private val systemStatusCache = mutableMapOf<String, SystemStatus>()
+        private val systemInfoCache = mutableMapOf<String, SystemInfo>()
+        private val versionInfoCache = mutableMapOf<String, LatestVersionInfo>()
     }
 
     // 系统状态
@@ -117,8 +116,20 @@ class HomeViewModel : ViewModel() {
     // 初始化数据
     fun initializeData() {
         viewModelScope.launch {
-            fetchSystemStatus()
-            fetchSystemInfo()
+            val cachedStatus = systemStatusCache["status"]
+            val cachedInfo = systemInfoCache["info"]
+
+            if (cachedStatus != null) {
+                systemStatus = cachedStatus
+            } else {
+                fetchSystemStatus()
+            }
+
+            if (cachedInfo != null) {
+                systemInfo = cachedInfo
+            } else {
+                fetchSystemInfo()
+            }
         }
     }
 
@@ -130,8 +141,17 @@ class HomeViewModel : ViewModel() {
                     .getBoolean("check_update", true)
 
                 if (checkUpdate) {
+                    val cachedVersion = versionInfoCache["version"]
+
+                    if (cachedVersion != null) {
+                        latestVersionInfo = cachedVersion
+                        return@launch
+                    }
+
                     val start = SystemClock.elapsedRealtime()
-                    latestVersionInfo = checkNewVersion()
+                    val newVersionInfo = checkNewVersion()
+                    latestVersionInfo = newVersionInfo
+                    versionInfoCache["version"] = newVersionInfo
                     Log.i(TAG, "Update check completed in ${SystemClock.elapsedRealtime() - start}ms")
                 }
             } catch (e: Exception) {
@@ -145,6 +165,9 @@ class HomeViewModel : ViewModel() {
         isRefreshing = true
         viewModelScope.launch {
             try {
+                systemStatusCache.clear()
+                systemInfoCache.clear()
+                versionInfoCache.clear()
                 fetchSystemStatus()
                 fetchSystemInfo()
                 checkForUpdates(context)
@@ -165,7 +188,7 @@ class HomeViewModel : ViewModel() {
                     if (it >= Natives.MINIMAL_SUPPORTED_KERNEL_LKM && kernelVersion.isGKI()) Natives.isLkmMode else null
                 }
 
-                systemStatus = SystemStatus(
+                val newStatus = SystemStatus(
                     isManager = isManager,
                     ksuVersion = ksuVersion,
                     lkmMode = lkmMode,
@@ -174,6 +197,9 @@ class HomeViewModel : ViewModel() {
                     isKpmConfigured = Natives.isKPMEnabled(),
                     requireNewKernel = isManager && Natives.requireNewKernel()
                 )
+
+                systemStatus = newStatus
+                systemStatusCache["status"] = newStatus
             } catch (e: Exception) {
                 Log.e(TAG, "Error fetching system status", e)
             }
@@ -209,7 +235,7 @@ class HomeViewModel : ViewModel() {
                     }
                 }
 
-                systemInfo = SystemInfo(
+                val newInfo = SystemInfo(
                     kernelRelease = uname.release,
                     androidVersion = Build.VERSION.RELEASE,
                     deviceModel = getDeviceModel(),
@@ -225,6 +251,9 @@ class HomeViewModel : ViewModel() {
                     moduleCount = getModuleCount(),
                     kpmModuleCount = getKpmModuleCount()
                 )
+
+                systemInfo = newInfo
+                systemInfoCache["info"] = newInfo
             } catch (e: Exception) {
                 Log.e(TAG, "Error fetching system info", e)
             }

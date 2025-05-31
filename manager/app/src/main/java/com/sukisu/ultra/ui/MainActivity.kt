@@ -44,8 +44,15 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.lifecycle.lifecycleScope
+import com.sukisu.ultra.ui.viewmodel.HomeViewModel
+import com.sukisu.ultra.ui.viewmodel.SuperUserViewModel
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
+    private lateinit var superUserViewModel: SuperUserViewModel
+    private lateinit var homeViewModel: HomeViewModel
+
     private inner class ThemeChangeContentObserver(
         handler: Handler,
         private val onThemeChanged: () -> Unit
@@ -110,6 +117,21 @@ class MainActivity : ComponentActivity() {
         }
 
         super.onCreate(savedInstanceState)
+
+        // 初始化 SuperUserViewModel
+        superUserViewModel = SuperUserViewModel()
+
+        lifecycleScope.launch {
+            superUserViewModel.fetchAppList()
+        }
+
+        // 初始化 HomeViewModel
+        homeViewModel = HomeViewModel()
+
+        // 预加载数据
+        lifecycleScope.launch {
+            homeViewModel.initializeData()
+        }
 
         val prefs = getSharedPreferences("settings", MODE_PRIVATE)
         val isFirstRun = prefs.getBoolean("is_first_run", true)
@@ -236,6 +258,14 @@ class MainActivity : ComponentActivity() {
 
         if (!ThemeConfig.backgroundImageLoaded && !ThemeConfig.preventBackgroundRefresh) {
             loadCustomBackground()
+        }
+
+        lifecycleScope.launch {
+            superUserViewModel.fetchAppList()
+        }
+
+        lifecycleScope.launch {
+            homeViewModel.initializeData()
         }
     }
 

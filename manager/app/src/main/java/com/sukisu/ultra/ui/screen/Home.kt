@@ -42,7 +42,7 @@ import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.SettingsSuggest
 import androidx.compose.material.icons.filled.Storage
 import androidx.compose.material.icons.outlined.Block
-import androidx.compose.material.icons.outlined.CheckCircle
+import androidx.compose.material.icons.outlined.TaskAlt
 import androidx.compose.material.icons.outlined.Warning
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
@@ -121,11 +121,8 @@ fun HomeScreen(navigator: DestinationsNavigator) {
     val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
-        // 初始化加载用户设置
         viewModel.loadUserSettings(context)
-        // 初始化数据
         viewModel.initializeData()
-        // 检查更新
         viewModel.checkForUpdates(context)
     }
 
@@ -370,7 +367,7 @@ private fun StatusCard(
                     }
 
                     Icon(
-                        Icons.Outlined.CheckCircle,
+                        Icons.Outlined.TaskAlt,
                         contentDescription = stringResource(R.string.home_working),
                         tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(24.dp)
