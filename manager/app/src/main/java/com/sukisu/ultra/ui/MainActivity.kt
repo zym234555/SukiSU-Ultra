@@ -131,7 +131,6 @@ class MainActivity : ComponentActivity() {
         // 预加载数据
         lifecycleScope.launch {
             homeViewModel.initializeData()
-            homeViewModel.isRefreshing
         }
 
         val prefs = getSharedPreferences("settings", MODE_PRIVATE)
@@ -192,6 +191,8 @@ class MainActivity : ComponentActivity() {
                 LaunchedEffect(Unit) {
                     initPlatform()
                 }
+
+                homeViewModel.refreshAllData(this)
 
                 Scaffold(
                     bottomBar = {
