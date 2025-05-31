@@ -27,7 +27,7 @@ import androidx.core.content.edit
 class HomeViewModel : ViewModel() {
     companion object {
         private const val TAG = "HomeViewModel"
-        private const val CACHE_DURATION = 12 * 60 * 60 * 1000L
+        private const val CACHE_DURATION = 5 * 60 * 1000L
         private const val PREFS_NAME = "home_cache"
         private const val KEY_SYSTEM_STATUS = "system_status"
         private const val KEY_SYSTEM_INFO = "system_info"
@@ -66,9 +66,6 @@ class HomeViewModel : ViewModel() {
 
     private val gson = Gson()
     private val prefs by lazy { ksuApp.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE) }
-
-    var isRefreshing by mutableStateOf(false)
-        private set
 
     var systemStatus by mutableStateOf(SystemStatus())
         private set
@@ -169,13 +166,12 @@ class HomeViewModel : ViewModel() {
     }
 
     fun refreshAllData(context: Context) {
-        isRefreshing = true
         viewModelScope.launch {
             try {
                 fetchAndSaveData()
                 checkForUpdates(context)
-            } finally {
-                isRefreshing = false
+            } catch (e: Exception) {
+                Log.e(TAG, "Error refreshing data", e)
             }
         }
     }

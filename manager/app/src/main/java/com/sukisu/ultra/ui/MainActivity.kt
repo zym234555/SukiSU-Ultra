@@ -102,6 +102,7 @@ class MainActivity : ComponentActivity() {
         super.attachBaseContext(context)
     }
 
+    @SuppressLint("RestrictedApi")
     override fun onCreate(savedInstanceState: Bundle?) {
         // 确保应用正确的语言设置
         applyLanguageSetting()
@@ -191,8 +192,6 @@ class MainActivity : ComponentActivity() {
                 LaunchedEffect(Unit) {
                     initPlatform()
                 }
-
-                homeViewModel.refreshAllData(this)
 
                 Scaffold(
                     bottomBar = {
