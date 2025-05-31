@@ -14,13 +14,13 @@
 
 在内核源码的根目录下执行以下命令：
 
-使用 main 分支 (不支持非 GKI 设备构建)
+使用 main 分支 (不支持非 GKI 设备构建) (需要手动集成 susfs)
 
 ```
 curl -LSs "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/main/kernel/setup.sh" | bash -s main
 ```
 
-使用支持非 GKI 设备的分支
+使用支持非 GKI 设备的分支 (需要手动集成 susfs)
 
 ```
 curl -LSs "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/main/kernel/setup.sh" | bash -s nongki

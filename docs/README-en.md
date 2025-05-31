@@ -12,12 +12,12 @@ Android device root solution based on [KernelSU](https://github.com/tiann/Kernel
 
 ## How to add
 
-Using main branching (non-GKI device builds are not supported)
+Using main branching (non-GKI device builds are not supported) (requires manual integration of susfs)
 ```
 curl -LSs "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/main/kernel/setup.sh" | bash -s main
 ```
 
-Using branches that support non-GKI devices
+Using branches that support non-GKI devices (requires manual integration of susfs)
 ```
 curl -LSs "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/main/kernel/setup.sh" | bash -s nongki
 ```

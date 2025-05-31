@@ -13,12 +13,12 @@
 
 ## 追加方法
 
-メイン分岐の使用（GKI デバイス以外のビルドはサポートされていません。）
+メイン分岐の使用（GKI デバイス以外のビルドはサポートされていません。） (手動によるサスフ統合が必要)
 ```
 curl -LSs "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/main/kernel/setup.sh" | bash -s main
 ```
 
-GKI以外のデバイスをサポートするブランチを使用する
+GKI以外のデバイスをサポートするブランチを使用する (手動によるサスフ統合が必要)
 ```
 curl -LSs "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/main/kernel/setup.sh" | bash -s nongki
 ```
