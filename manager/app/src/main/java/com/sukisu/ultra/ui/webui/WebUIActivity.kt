@@ -19,12 +19,11 @@ import com.dergoogler.mmrl.platform.model.ModId
 import com.topjohnwu.superuser.Shell
 import com.sukisu.ultra.ui.util.createRootShell
 import java.io.File
-import com.dergoogler.mmrl.webui.interfaces.WXOptions
+import com.dergoogler.mmrl.webui.util.WebUIOptions
+import com.dergoogler.mmrl.webui.view.WebUIView
 
 @SuppressLint("SetJavaScriptEnabled")
 class WebUIActivity : ComponentActivity() {
-    private lateinit var webviewInterface: WebViewInterface
-
     private var rootShell: Shell? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -41,10 +40,10 @@ class WebUIActivity : ComponentActivity() {
         val name = intent.getStringExtra("name")!!
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
             @Suppress("DEPRECATION")
-            setTaskDescription(ActivityManager.TaskDescription("KernelSU - $name"))
+            setTaskDescription(ActivityManager.TaskDescription("SukiSU Ultra - $name"))
         } else {
             val taskDescription =
-                ActivityManager.TaskDescription.Builder().setLabel("KernelSU - $name").build()
+                ActivityManager.TaskDescription.Builder().setLabel("SukiSU Ultra - $name").build()
             setTaskDescription(taskDescription)
         }
 
@@ -65,13 +64,18 @@ class WebUIActivity : ComponentActivity() {
         val webViewClient = object : WebViewClient() {
             override fun shouldInterceptRequest(
                 view: WebView,
-                request: WebResourceRequest
+                request: WebResourceRequest,
             ): WebResourceResponse? {
                 return webViewAssetLoader.shouldInterceptRequest(request.url)
             }
         }
 
-        val webView = WebView(this).apply {
+        val options = WebUIOptions(
+            modId = ModId(moduleId),
+            context = this,
+        )
+
+        val webView = WebUIView(options).apply {
             ViewCompat.setOnApplyWindowInsetsListener(this) { view, insets ->
                 val inset = insets.getInsets(WindowInsetsCompat.Type.systemBars())
                 view.updateLayoutParams<MarginLayoutParams> {
@@ -82,13 +86,15 @@ class WebUIActivity : ComponentActivity() {
                 }
                 return@setOnApplyWindowInsetsListener insets
             }
+
+            val factory = WebViewInterface.factory()
+
             settings.javaScriptEnabled = true
             settings.domStorageEnabled = true
             settings.allowFileAccess = false
-            webviewInterface = WebViewInterface(WXOptions(this@WebUIActivity, this, ModId(moduleId)))
-            addJavascriptInterface(webviewInterface, "ksu")
+            addJavascriptInterface(factory)
             setWebViewClient(webViewClient)
-            loadUrl("https://mui.kernelsu.org/index.html")
+            loadDomain()
         }
 
         setContentView(webView)

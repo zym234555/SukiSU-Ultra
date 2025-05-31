@@ -2,6 +2,8 @@ package com.sukisu.ultra.ui.theme
 
 import android.content.ContentResolver
 import android.content.Context
+import android.content.res.Configuration
+import android.content.res.Resources
 import android.net.Uri
 import android.os.Build
 import android.util.Log
@@ -34,6 +36,7 @@ import androidx.compose.ui.zIndex
 import coil.compose.AsyncImagePainter
 import coil.compose.rememberAsyncImagePainter
 import androidx.compose.foundation.background
+import androidx.compose.material3.ColorScheme
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
@@ -44,11 +47,7 @@ import androidx.core.content.edit
 import androidx.core.net.toUri
 import com.sukisu.ultra.ui.util.BackgroundTransformation
 import com.sukisu.ultra.ui.util.saveTransformedBackground
-import androidx.activity.SystemBarStyle
-import androidx.activity.ComponentActivity
-import androidx.activity.enableEdgeToEdge
-import androidx.compose.runtime.SideEffect
-import androidx.compose.ui.graphics.toArgb
+import com.dergoogler.mmrl.ui.component.StatusBarStyle
 
 /**
  * 主题配置对象，管理应用的主题相关状态
@@ -118,7 +117,7 @@ fun KernelSUTheme(
         }
     }
 
-    SystemBarStyle(
+    StatusBarStyle(
         darkMode = darkTheme
     )
 
@@ -576,31 +575,98 @@ fun Context.loadDynamicColorState() {
     ThemeConfig.useDynamicColor = enabled
 }
 
-@Composable
-private fun SystemBarStyle(
-    darkMode: Boolean,
-    statusBarScrim: Color = Color.Transparent,
-    navigationBarScrim: Color = Color.Transparent,
-) {
-    val context = LocalContext.current
-    val activity = context as ComponentActivity
+internal fun isSystemInDarkTheme(): Boolean {
+    val uiMode = Resources.getSystem().configuration.uiMode
+    return (uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
+}
 
-    SideEffect {
-        activity.enableEdgeToEdge(
-            statusBarStyle = SystemBarStyle.auto(
-                statusBarScrim.toArgb(),
-                statusBarScrim.toArgb(),
-            ) { darkMode },
-            navigationBarStyle = when {
-                darkMode -> SystemBarStyle.dark(
-                    navigationBarScrim.toArgb()
-                )
+fun Context.getColorScheme(): ColorScheme {
+    val darkTheme = when(ThemeConfig.forceDarkMode) {
+        true -> true
+        false -> false
+        null -> {
+            val uiMode = resources.configuration.uiMode
+            (uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
+        }
+    }
 
-                else -> SystemBarStyle.light(
-                    navigationBarScrim.toArgb(),
-                    navigationBarScrim.toArgb(),
-                )
-            }
+    return when {
+        ThemeConfig.useDynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
+            if (darkTheme) dynamicDarkColorScheme(this) else dynamicLightColorScheme(this)
+        }
+        darkTheme -> darkColorScheme(
+            primary = ThemeConfig.currentTheme.primaryDark,
+            onPrimary = ThemeConfig.currentTheme.onPrimaryDark,
+            primaryContainer = ThemeConfig.currentTheme.primaryContainerDark,
+            onPrimaryContainer = ThemeConfig.currentTheme.onPrimaryContainerDark,
+            secondary = ThemeConfig.currentTheme.secondaryDark,
+            onSecondary = ThemeConfig.currentTheme.onSecondaryDark,
+            secondaryContainer = ThemeConfig.currentTheme.secondaryContainerDark,
+            onSecondaryContainer = ThemeConfig.currentTheme.onSecondaryContainerDark,
+            tertiary = ThemeConfig.currentTheme.tertiaryDark,
+            onTertiary = ThemeConfig.currentTheme.onTertiaryDark,
+            tertiaryContainer = ThemeConfig.currentTheme.tertiaryContainerDark,
+            onTertiaryContainer = ThemeConfig.currentTheme.onTertiaryContainerDark,
+            error = ThemeConfig.currentTheme.errorDark,
+            onError = ThemeConfig.currentTheme.onErrorDark,
+            errorContainer = ThemeConfig.currentTheme.errorContainerDark,
+            onErrorContainer = ThemeConfig.currentTheme.onErrorContainerDark,
+            background = ThemeConfig.currentTheme.backgroundDark,
+            onBackground = ThemeConfig.currentTheme.onBackgroundDark,
+            surface = ThemeConfig.currentTheme.surfaceDark,
+            onSurface = ThemeConfig.currentTheme.onSurfaceDark,
+            surfaceVariant = ThemeConfig.currentTheme.surfaceVariantDark,
+            onSurfaceVariant = ThemeConfig.currentTheme.onSurfaceVariantDark,
+            outline = ThemeConfig.currentTheme.outlineDark,
+            outlineVariant = ThemeConfig.currentTheme.outlineVariantDark,
+            scrim = ThemeConfig.currentTheme.scrimDark,
+            inverseSurface = ThemeConfig.currentTheme.inverseSurfaceDark,
+            inverseOnSurface = ThemeConfig.currentTheme.inverseOnSurfaceDark,
+            inversePrimary = ThemeConfig.currentTheme.inversePrimaryDark,
+            surfaceDim = ThemeConfig.currentTheme.surfaceDimDark,
+            surfaceBright = ThemeConfig.currentTheme.surfaceBrightDark,
+            surfaceContainerLowest = ThemeConfig.currentTheme.surfaceContainerLowestDark,
+            surfaceContainerLow = ThemeConfig.currentTheme.surfaceContainerLowDark,
+            surfaceContainer = ThemeConfig.currentTheme.surfaceContainerDark,
+            surfaceContainerHigh = ThemeConfig.currentTheme.surfaceContainerHighDark,
+            surfaceContainerHighest = ThemeConfig.currentTheme.surfaceContainerHighestDark
+        )
+        else -> lightColorScheme(
+            primary = ThemeConfig.currentTheme.primaryLight,
+            onPrimary = ThemeConfig.currentTheme.onPrimaryLight,
+            primaryContainer = ThemeConfig.currentTheme.primaryContainerLight,
+            onPrimaryContainer = ThemeConfig.currentTheme.onPrimaryContainerLight,
+            secondary = ThemeConfig.currentTheme.secondaryLight,
+            onSecondary = ThemeConfig.currentTheme.onSecondaryLight,
+            secondaryContainer = ThemeConfig.currentTheme.secondaryContainerLight,
+            onSecondaryContainer = ThemeConfig.currentTheme.onSecondaryContainerLight,
+            tertiary = ThemeConfig.currentTheme.tertiaryLight,
+            onTertiary = ThemeConfig.currentTheme.onTertiaryLight,
+            tertiaryContainer = ThemeConfig.currentTheme.tertiaryContainerLight,
+            onTertiaryContainer = ThemeConfig.currentTheme.onTertiaryContainerLight,
+            error = ThemeConfig.currentTheme.errorLight,
+            onError = ThemeConfig.currentTheme.onErrorLight,
+            errorContainer = ThemeConfig.currentTheme.errorContainerLight,
+            onErrorContainer = ThemeConfig.currentTheme.onErrorContainerLight,
+            background = ThemeConfig.currentTheme.backgroundLight,
+            onBackground = ThemeConfig.currentTheme.onBackgroundLight,
+            surface = ThemeConfig.currentTheme.surfaceLight,
+            onSurface = ThemeConfig.currentTheme.onSurfaceLight,
+            surfaceVariant = ThemeConfig.currentTheme.surfaceVariantLight,
+            onSurfaceVariant = ThemeConfig.currentTheme.onSurfaceVariantLight,
+            outline = ThemeConfig.currentTheme.outlineLight,
+            outlineVariant = ThemeConfig.currentTheme.outlineVariantLight,
+            scrim = ThemeConfig.currentTheme.scrimLight,
+            inverseSurface = ThemeConfig.currentTheme.inverseSurfaceLight,
+            inverseOnSurface = ThemeConfig.currentTheme.inverseOnSurfaceLight,
+            inversePrimary = ThemeConfig.currentTheme.inversePrimaryLight,
+            surfaceDim = ThemeConfig.currentTheme.surfaceDimLight,
+            surfaceBright = ThemeConfig.currentTheme.surfaceBrightLight,
+            surfaceContainerLowest = ThemeConfig.currentTheme.surfaceContainerLowestLight,
+            surfaceContainerLow = ThemeConfig.currentTheme.surfaceContainerLowLight,
+            surfaceContainer = ThemeConfig.currentTheme.surfaceContainerLight,
+            surfaceContainerHigh = ThemeConfig.currentTheme.surfaceContainerHighLight,
+            surfaceContainerHighest = ThemeConfig.currentTheme.surfaceContainerHighestLight
         )
     }
 }
