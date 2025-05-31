@@ -277,16 +277,9 @@ fun UpdateCard() {
 @Composable
 fun RebootDropdownItem(@StringRes id: Int, reason: String = "") {
     DropdownMenuItem(
-        text = { Text(stringResource(id)) },
-        onClick = { reboot(reason) },
-        leadingIcon = {
-            Icon(
-                imageVector = Icons.Filled.Refresh,
-                contentDescription = null,
-            )
-        }
-    )
-}
+        text = {Text(stringResource(id))}, 
+        onClick = {reboot(reason)})
+    }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
