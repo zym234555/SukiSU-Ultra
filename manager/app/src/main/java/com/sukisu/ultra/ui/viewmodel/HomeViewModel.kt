@@ -11,34 +11,28 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.dergoogler.mmrl.platform.Platform.Companion.context
+import com.google.gson.Gson
 import com.sukisu.ultra.KernelVersion
 import com.sukisu.ultra.Natives
 import com.sukisu.ultra.getKernelVersion
 import com.sukisu.ultra.ksuApp
-import com.sukisu.ultra.ui.util.checkNewVersion
-import com.sukisu.ultra.ui.util.getKpmModuleCount
-import com.sukisu.ultra.ui.util.getKpmVersion
-import com.sukisu.ultra.ui.util.getModuleCount
-import com.sukisu.ultra.ui.util.getSELinuxStatus
-import com.sukisu.ultra.ui.util.getSuSFS
-import com.sukisu.ultra.ui.util.getSuSFSFeatures
-import com.sukisu.ultra.ui.util.getSuSFSVariant
-import com.sukisu.ultra.ui.util.getSuSFSVersion
-import com.sukisu.ultra.ui.util.getSuperuserCount
+import com.sukisu.ultra.ui.util.*
 import com.sukisu.ultra.ui.util.module.LatestVersionInfo
-import com.sukisu.ultra.ui.util.rootAvailable
-import com.sukisu.ultra.ui.util.susfsSUS_SU_Mode
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import com.topjohnwu.superuser.internal.Utils.context
+import androidx.core.content.edit
 
 class HomeViewModel : ViewModel() {
     companion object {
         private const val TAG = "HomeViewModel"
-        private val systemStatusCache = mutableMapOf<String, SystemStatus>()
-        private val systemInfoCache = mutableMapOf<String, SystemInfo>()
-        private val versionInfoCache = mutableMapOf<String, LatestVersionInfo>()
+        private const val CACHE_DURATION = 12 * 60 * 60 * 1000L
+        private const val PREFS_NAME = "home_cache"
+        private const val KEY_SYSTEM_STATUS = "system_status"
+        private const val KEY_SYSTEM_INFO = "system_info"
+        private const val KEY_VERSION_INFO = "version_info"
+        private const val KEY_LAST_UPDATE = "last_update_time"
     }
 
     // 系统状态
@@ -70,23 +64,21 @@ class HomeViewModel : ViewModel() {
         val kpmModuleCount: Int = 0
     )
 
-    // UI状态
+    private val gson = Gson()
+    private val prefs by lazy { ksuApp.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE) }
+
     var isRefreshing by mutableStateOf(false)
         private set
 
-    // 系统状态信息
     var systemStatus by mutableStateOf(SystemStatus())
         private set
 
-    // 系统详细信息
     var systemInfo by mutableStateOf(SystemInfo())
         private set
 
-    // 更新信息
     var latestVersionInfo by mutableStateOf(LatestVersionInfo())
         private set
 
-    // 用户设置
     var isSimpleMode by mutableStateOf(false)
         private set
     var isHideVersion by mutableStateOf(false)
@@ -100,7 +92,6 @@ class HomeViewModel : ViewModel() {
     var showKpmInfo by mutableStateOf(true)
         private set
 
-    // 加载用户设置
     fun loadUserSettings(context: Context) {
         viewModelScope.launch(Dispatchers.IO) {
             val prefs = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
@@ -113,27 +104,45 @@ class HomeViewModel : ViewModel() {
         }
     }
 
-    // 初始化数据
     fun initializeData() {
         viewModelScope.launch {
-            val cachedStatus = systemStatusCache["status"]
-            val cachedInfo = systemInfoCache["info"]
+            val currentTime = System.currentTimeMillis()
+            val lastUpdateTime = prefs.getLong(KEY_LAST_UPDATE, 0)
+            val shouldRefresh = currentTime - lastUpdateTime > CACHE_DURATION
 
-            if (cachedStatus != null) {
-                systemStatus = cachedStatus
+            if (!shouldRefresh) {
+                loadCachedData()
             } else {
-                fetchSystemStatus()
-            }
-
-            if (cachedInfo != null) {
-                systemInfo = cachedInfo
-            } else {
-                fetchSystemInfo()
+                fetchAndSaveData()
             }
         }
     }
 
-    // 检查更新
+    private fun loadCachedData() {
+        prefs.getString(KEY_SYSTEM_STATUS, null)?.let {
+            systemStatus = gson.fromJson(it, SystemStatus::class.java)
+        }
+        prefs.getString(KEY_SYSTEM_INFO, null)?.let {
+            systemInfo = gson.fromJson(it, SystemInfo::class.java)
+        }
+        prefs.getString(KEY_VERSION_INFO, null)?.let {
+            latestVersionInfo = gson.fromJson(it, LatestVersionInfo::class.java)
+        }
+    }
+
+    private suspend fun fetchAndSaveData() {
+        fetchSystemStatus()
+        fetchSystemInfo()
+        withContext(Dispatchers.IO) {
+            prefs.edit {
+                putString(KEY_SYSTEM_STATUS, gson.toJson(systemStatus))
+                putString(KEY_SYSTEM_INFO, gson.toJson(systemInfo))
+                putString(KEY_VERSION_INFO, gson.toJson(latestVersionInfo))
+                putLong(KEY_LAST_UPDATE, System.currentTimeMillis())
+            }
+        }
+    }
+
     fun checkForUpdates(context: Context) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
@@ -141,18 +150,17 @@ class HomeViewModel : ViewModel() {
                     .getBoolean("check_update", true)
 
                 if (checkUpdate) {
-                    val cachedVersion = versionInfoCache["version"]
+                    val currentTime = System.currentTimeMillis()
+                    val lastUpdateTime = prefs.getLong(KEY_LAST_UPDATE, 0)
+                    val shouldRefresh = currentTime - lastUpdateTime > CACHE_DURATION
 
-                    if (cachedVersion != null) {
-                        latestVersionInfo = cachedVersion
-                        return@launch
+                    if (shouldRefresh) {
+                        val start = SystemClock.elapsedRealtime()
+                        val newVersionInfo = checkNewVersion()
+                        latestVersionInfo = newVersionInfo
+                        prefs.edit { putString(KEY_VERSION_INFO, gson.toJson(newVersionInfo)) }
+                        Log.i(TAG, "Update check completed in ${SystemClock.elapsedRealtime() - start}ms")
                     }
-
-                    val start = SystemClock.elapsedRealtime()
-                    val newVersionInfo = checkNewVersion()
-                    latestVersionInfo = newVersionInfo
-                    versionInfoCache["version"] = newVersionInfo
-                    Log.i(TAG, "Update check completed in ${SystemClock.elapsedRealtime() - start}ms")
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Error checking for updates", e)
@@ -160,16 +168,11 @@ class HomeViewModel : ViewModel() {
         }
     }
 
-    // 刷新所有数据
     fun refreshAllData(context: Context) {
         isRefreshing = true
         viewModelScope.launch {
             try {
-                systemStatusCache.clear()
-                systemInfoCache.clear()
-                versionInfoCache.clear()
-                fetchSystemStatus()
-                fetchSystemInfo()
+                fetchAndSaveData()
                 checkForUpdates(context)
             } finally {
                 isRefreshing = false
@@ -177,7 +180,6 @@ class HomeViewModel : ViewModel() {
         }
     }
 
-    // 获取系统状态
     private suspend fun fetchSystemStatus() {
         withContext(Dispatchers.IO) {
             try {
@@ -188,7 +190,7 @@ class HomeViewModel : ViewModel() {
                     if (it >= Natives.MINIMAL_SUPPORTED_KERNEL_LKM && kernelVersion.isGKI()) Natives.isLkmMode else null
                 }
 
-                val newStatus = SystemStatus(
+                systemStatus = SystemStatus(
                     isManager = isManager,
                     ksuVersion = ksuVersion,
                     lkmMode = lkmMode,
@@ -197,16 +199,12 @@ class HomeViewModel : ViewModel() {
                     isKpmConfigured = Natives.isKPMEnabled(),
                     requireNewKernel = isManager && Natives.requireNewKernel()
                 )
-
-                systemStatus = newStatus
-                systemStatusCache["status"] = newStatus
             } catch (e: Exception) {
                 Log.e(TAG, "Error fetching system status", e)
             }
         }
     }
 
-    // 获取系统信息
     @SuppressLint("RestrictedApi")
     private suspend fun fetchSystemInfo() {
         withContext(Dispatchers.IO) {
@@ -235,7 +233,7 @@ class HomeViewModel : ViewModel() {
                     }
                 }
 
-                val newInfo = SystemInfo(
+                systemInfo = SystemInfo(
                     kernelRelease = uname.release,
                     androidVersion = Build.VERSION.RELEASE,
                     deviceModel = getDeviceModel(),
@@ -251,16 +249,12 @@ class HomeViewModel : ViewModel() {
                     moduleCount = getModuleCount(),
                     kpmModuleCount = getKpmModuleCount()
                 )
-
-                systemInfo = newInfo
-                systemInfoCache["info"] = newInfo
             } catch (e: Exception) {
                 Log.e(TAG, "Error fetching system info", e)
             }
         }
     }
 
-    // 获取设备型号
     @SuppressLint("PrivateApi")
     private fun getDeviceModel(): String {
         return try {
@@ -287,7 +281,6 @@ class HomeViewModel : ViewModel() {
         }
     }
 
-    // 获取管理器版本
     private fun getManagerVersion(context: Context): Pair<String, Long> {
         return try {
             val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)!!
