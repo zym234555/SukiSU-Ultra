@@ -493,10 +493,6 @@ fun SuperUserScreen(navigator: DestinationsNavigator) {
 
                 // 显示ROOT权限应用组
                 if (rootApps.isNotEmpty()) {
-                    item {
-                        GroupHeader(title = stringResource(R.string.apps_with_root))
-                    }
-
                     items(rootApps, key = { "root_" + it.packageName + it.uid }) { app ->
                         AppItem(
                             app = app,
@@ -532,10 +528,6 @@ fun SuperUserScreen(navigator: DestinationsNavigator) {
 
                 // 显示自定义配置应用组
                 if (customApps.isNotEmpty()) {
-                    item {
-                        GroupHeader(title = stringResource(R.string.apps_with_custom_profile))
-                    }
-
                     items(customApps, key = { "custom_" + it.packageName + it.uid }) { app ->
                         AppItem(
                             app = app,
@@ -571,10 +563,6 @@ fun SuperUserScreen(navigator: DestinationsNavigator) {
 
                 // 显示其他应用组
                 if (otherApps.isNotEmpty()) {
-                    item {
-                        GroupHeader(title = stringResource(R.string.other_apps))
-                    }
-
                     items(otherApps, key = { "other_" + it.packageName + it.uid }) { app ->
                         AppItem(
                             app = app,

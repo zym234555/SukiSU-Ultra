@@ -510,7 +510,6 @@ fun MoreSettingsScreen() {
             // 外观设置部分
             SettingsCard(
                 title = stringResource(R.string.appearance_settings),
-                icon = Icons.Default.Palette
             ) {
                 // 语言设置
                 SettingItem(
@@ -846,8 +845,7 @@ fun MoreSettingsScreen() {
 
             // 自定义设置部分
             SettingsCard(
-                title = stringResource(R.string.custom_settings),
-                icon = Icons.Default.Settings
+                title = stringResource(R.string.custom_settings)
             ) {
                 // 添加简洁模式开关
                 SwitchItem(
@@ -914,8 +912,7 @@ fun MoreSettingsScreen() {
 
             // 高级设置部分
             SettingsCard(
-                title = stringResource(R.string.advanced_settings),
-                icon = Icons.Default.AdminPanelSettings
+                title = stringResource(R.string.advanced_settings)
             ) {
                 // SELinux 开关
                 KsuIsValid {
@@ -1164,7 +1161,7 @@ fun MoreSettingsScreen() {
 @Composable
 fun SettingsCard(
     title: String,
-    icon: ImageVector,
+    icon: ImageVector? = null,
     content: @Composable () -> Unit
 ) {
     Card(
@@ -1180,13 +1177,15 @@ fun SettingsCard(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
             ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(24.dp)
-                )
-                Spacer(modifier = Modifier.width(12.dp))
+                if (icon != null) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                }
                 Text(
                     text = title,
                     style = MaterialTheme.typography.titleLarge,
