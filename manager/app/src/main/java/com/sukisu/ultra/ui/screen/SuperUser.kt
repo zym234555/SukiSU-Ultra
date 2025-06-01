@@ -1,10 +1,8 @@
 package com.sukisu.ultra.ui.screen
 
-import android.graphics.Color.alpha
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -29,7 +27,6 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -47,6 +44,9 @@ import com.sukisu.ultra.ui.component.SearchAppBar
 import com.sukisu.ultra.ui.util.ModuleModify
 import com.sukisu.ultra.ui.viewmodel.SuperUserViewModel
 import com.dergoogler.mmrl.ui.component.LabelItem
+import com.sukisu.ultra.ui.theme.CardConfig
+import com.sukisu.ultra.ui.theme.getCardColors
+import com.sukisu.ultra.ui.theme.getCardElevation
 
 /**
  * @author ShirkNeko
@@ -195,7 +195,8 @@ fun SuperUserScreen(navigator: DestinationsNavigator) {
                         modifier = Modifier.size(if (isCancelPressed) 56.dp else 40.dp),
                         shape = CircleShape,
                         interactionSource = cancelInteractionSource,
-                        elevation = FloatingActionButtonDefaults.elevation(4.dp, 6.dp)
+                        elevation = FloatingActionButtonDefaults.elevation(4.dp, 6.dp),
+                        containerColor = Color.Gray
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
@@ -233,7 +234,8 @@ fun SuperUserScreen(navigator: DestinationsNavigator) {
                         modifier = Modifier.size(if (isUnauthorizePressed) 56.dp else 40.dp),
                         shape = CircleShape,
                         interactionSource = unauthorizeInteractionSource,
-                        elevation = FloatingActionButtonDefaults.elevation(4.dp, 6.dp)
+                        elevation = FloatingActionButtonDefaults.elevation(4.dp, 6.dp),
+                        containerColor = MaterialTheme.colorScheme.error
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
@@ -360,7 +362,8 @@ fun SuperUserScreen(navigator: DestinationsNavigator) {
                     modifier = Modifier.size(if (isUmountDisablePressed) 56.dp else 40.dp),
                     shape = CircleShape,
                     interactionSource = umountDisableInteractionSource,
-                    elevation = FloatingActionButtonDefaults.elevation(4.dp, 6.dp)
+                    elevation = FloatingActionButtonDefaults.elevation(4.dp, 6.dp),
+                    containerColor = MaterialTheme.colorScheme.error
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
@@ -631,23 +634,6 @@ fun SuperUserScreen(navigator: DestinationsNavigator) {
     }
 }
 
-@Composable
-fun GroupHeader(title: String) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp)
-    ) {
-        Text(
-            text = title,
-            style = TextStyle(
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Bold,
-            )
-        )
-    }
-}
-
 @OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 @Composable
 private fun AppItem(
@@ -660,9 +646,10 @@ private fun AppItem(
     viewModel: SuperUserViewModel
 ) {
     Card(
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0f)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        colors = getCardColors(if (CardConfig.isCustomBackgroundEnabled) Color.Transparent else MaterialTheme.colorScheme.surfaceContainerHigh),
+        elevation = getCardElevation(),
         modifier = Modifier
+            .padding(vertical = 8.dp)
             .pointerInput(Unit) {
                 detectTapGestures(
                     onLongPress = { onLongClick() },
