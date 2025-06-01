@@ -617,7 +617,7 @@ private fun KpmModuleItem(
 
     Card(
         colors = getCardColors(MaterialTheme.colorScheme.surfaceContainerHigh),
-        elevation = CardDefaults.cardElevation(defaultElevation = cardElevation)
+        elevation = getCardElevation()
     ) {
         Column(
             modifier = Modifier.padding(20.dp)

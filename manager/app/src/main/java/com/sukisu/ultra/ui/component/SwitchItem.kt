@@ -21,7 +21,7 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun SwitchItem(
-    icon: ImageVector,
+    icon: ImageVector? = null,
     title: String,
     summary: String? = null,
     checked: Boolean,
@@ -55,47 +55,55 @@ fun SwitchItem(
         disabledUncheckedIconColor = MaterialTheme.colorScheme.surfaceVariant
     )
 
-    ListItem(
-        headlineContent = {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleMedium,
-                maxLines = Int.MAX_VALUE,
-                overflow = TextOverflow.Ellipsis
-            )
-        },
-        supportingContent = summary?.let {
-            {
+    MaterialTheme(
+        colorScheme = MaterialTheme.colorScheme.copy(
+            surface = MaterialTheme.colorScheme.surfaceContainerHigh
+        )
+    ) {
+        ListItem(
+            headlineContent = {
                 Text(
-                    text = it,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    text = title,
+                    style = MaterialTheme.typography.titleMedium,
                     maxLines = Int.MAX_VALUE,
                     overflow = TextOverflow.Ellipsis
                 )
-            }
-        },
-        leadingContent = {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                modifier = Modifier.size(24.dp),
-                tint = iconTint
-            )
-        },
-        trailingContent = {
-            Switch(
-                checked = checked,
-                onCheckedChange = null,
-                enabled = enabled,
-                colors = switchColors
-            )
-        },
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(enabled = enabled) {
-                onCheckedChange(!checked)
-            }
-            .padding(vertical = 4.dp)
-    )
+            },
+            supportingContent = summary?.let {
+                {
+                    Text(
+                        text = it,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = Int.MAX_VALUE,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            },
+            leadingContent = icon?.let {
+                {
+                    Icon(
+                        imageVector = it,
+                        contentDescription = null,
+                        modifier = Modifier.size(24.dp),
+                        tint = iconTint
+                    )
+                }
+            },
+            trailingContent = {
+                Switch(
+                    checked = checked,
+                    onCheckedChange = null,
+                    enabled = enabled,
+                    colors = switchColors
+                )
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(enabled = enabled) {
+                    onCheckedChange(!checked)
+                }
+                .padding(vertical = 4.dp)
+        )
+    }
 }

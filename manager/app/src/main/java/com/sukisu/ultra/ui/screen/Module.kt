@@ -72,6 +72,7 @@ import com.dergoogler.mmrl.platform.Platform
 import androidx.core.net.toUri
 import com.dergoogler.mmrl.platform.model.ModuleConfig
 import com.dergoogler.mmrl.platform.model.ModuleConfig.Companion.asModuleConfig
+import com.sukisu.ultra.ui.theme.getCardElevation
 
 /**
  * @author ShirkNeko
@@ -711,7 +712,7 @@ fun ModuleItem(
 ) {
     ElevatedCard(
         colors = getCardColors(MaterialTheme.colorScheme.surfaceContainerHigh),
-        elevation = CardDefaults.cardElevation(defaultElevation = cardElevation),
+        elevation = getCardElevation(),
     ) {
         val textDecoration = if (!module.remove) null else TextDecoration.LineThrough
         val interactionSource = remember { MutableInteractionSource() }

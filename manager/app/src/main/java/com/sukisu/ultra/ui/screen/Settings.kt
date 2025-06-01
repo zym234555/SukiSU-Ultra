@@ -63,7 +63,6 @@ import com.sukisu.ultra.ui.util.getBugreportFile
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import com.sukisu.ultra.ui.component.KsuIsValid
-import com.sukisu.ultra.ui.theme.CardConfig.cardElevation
 
 /**
  * @author ShirkNeko
@@ -127,7 +126,7 @@ fun SettingScreen(navigator: DestinationsNavigator) {
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 8.dp),
                 colors = getCardColors(MaterialTheme.colorScheme.surfaceContainerHigh),
-                elevation = CardDefaults.cardElevation(defaultElevation = cardElevation)
+                elevation = getCardElevation()
             ) {
                 Column(modifier = Modifier.padding(vertical = 8.dp)) {
                     Text(
@@ -195,7 +194,7 @@ fun SettingScreen(navigator: DestinationsNavigator) {
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 8.dp),
                     colors = getCardColors(MaterialTheme.colorScheme.surfaceContainerHigh),
-                elevation = CardDefaults.cardElevation(defaultElevation = cardElevation)
+                elevation = getCardElevation()
             ) {
                 Column(modifier = Modifier.padding(vertical = 8.dp)) {
                     Text(
@@ -340,7 +339,7 @@ fun SettingScreen(navigator: DestinationsNavigator) {
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 8.dp),
                 colors = getCardColors(MaterialTheme.colorScheme.surfaceContainerHigh),
-                elevation = CardDefaults.cardElevation(defaultElevation = cardElevation)
+                elevation = getCardElevation()
             ) {
                 Column(modifier = Modifier.padding(vertical = 8.dp)) {
                     Text(
@@ -436,7 +435,7 @@ fun SettingScreen(navigator: DestinationsNavigator) {
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 8.dp),
                 colors = getCardColors(MaterialTheme.colorScheme.surfaceContainerHigh),
-                elevation = CardDefaults.cardElevation(defaultElevation = cardElevation)
+                elevation = getCardElevation()
             ) {
                 Column(modifier = Modifier.padding(vertical = 8.dp)) {
                     Text(
@@ -740,14 +739,12 @@ fun rememberUninstallDialog(onSelected: (UninstallType) -> Unit): DialogHandle {
 private fun TopBar(
     scrollBehavior: TopAppBarScrollBehavior? = null
 ) {
-    val systemIsDark = isSystemInDarkTheme()
-    val cardColor = MaterialTheme.colorScheme.surfaceContainerLow
-    val cardAlpha = if (ThemeConfig.customBackgroundUri != null) {
-        cardAlpha
+    val colorScheme = MaterialTheme.colorScheme
+    val cardColor = if (CardConfig.isCustomBackgroundEnabled) {
+        colorScheme.surfaceContainerLow
     } else {
-        if (systemIsDark) 0.8f else 1f
+        colorScheme.background
     }
-
     TopAppBar(
         title = {
             Text(

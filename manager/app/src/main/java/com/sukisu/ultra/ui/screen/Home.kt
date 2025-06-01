@@ -90,9 +90,11 @@ import com.sukisu.ultra.Natives
 import com.sukisu.ultra.R
 import com.sukisu.ultra.ui.component.KsuIsValid
 import com.sukisu.ultra.ui.component.rememberConfirmDialog
+import com.sukisu.ultra.ui.theme.CardConfig
 import com.sukisu.ultra.ui.theme.CardConfig.cardAlpha
 import com.sukisu.ultra.ui.theme.CardConfig.cardElevation
 import com.sukisu.ultra.ui.theme.getCardColors
+import com.sukisu.ultra.ui.theme.getCardElevation
 import com.sukisu.ultra.ui.util.checkNewVersion
 import com.sukisu.ultra.ui.util.getKpmModuleCount
 import com.sukisu.ultra.ui.util.getKpmVersion
@@ -281,7 +283,12 @@ private fun TopBar(
     onInstallClick: () -> Unit,
     scrollBehavior: TopAppBarScrollBehavior? = null
 ) {
-    val cardColor = MaterialTheme.colorScheme.surfaceContainerLow
+    val colorScheme = MaterialTheme.colorScheme
+    val cardColor = if (CardConfig.isCustomBackgroundEnabled) {
+        colorScheme.surfaceContainerLow
+    } else {
+        colorScheme.background
+    }
 
     TopAppBar(
         title = {
@@ -336,7 +343,7 @@ private fun StatusCard(
     ElevatedCard(
         colors = getCardColors( if (systemStatus.ksuVersion != null)MaterialTheme.colorScheme.secondaryContainer
         else MaterialTheme.colorScheme.errorContainer),
-        elevation = CardDefaults.cardElevation(defaultElevation = cardElevation),
+        elevation = getCardElevation(),
     ) {
         Row(
             modifier = Modifier
@@ -510,7 +517,7 @@ fun WarningCard(
 ) {
     ElevatedCard(
         colors = getCardColors(color),
-        elevation = CardDefaults.cardElevation(defaultElevation = cardElevation),
+        elevation = getCardElevation(),
     ) {
         Row(
             modifier = Modifier
@@ -534,7 +541,7 @@ fun ContributionCard() {
 
     ElevatedCard(
         colors = getCardColors(MaterialTheme.colorScheme.surfaceContainer),
-        elevation = CardDefaults.cardElevation(defaultElevation = cardElevation),
+        elevation = getCardElevation(),
     ) {
         Row(
             modifier = Modifier
@@ -602,7 +609,7 @@ fun DonateCard() {
 
     ElevatedCard(
         colors = getCardColors(MaterialTheme.colorScheme.surfaceContainer),
-        elevation = CardDefaults.cardElevation(defaultElevation = cardElevation),
+        elevation = getCardElevation(),
     ) {
         Row(
             modifier = Modifier
@@ -641,7 +648,7 @@ private fun InfoCard(
 ) {
     ElevatedCard(
         colors = getCardColors(MaterialTheme.colorScheme.surfaceContainer),
-        elevation = CardDefaults.cardElevation(defaultElevation = cardElevation),
+        elevation = getCardElevation(),
     ) {
         Column(
             modifier = Modifier

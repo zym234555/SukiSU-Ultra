@@ -33,7 +33,6 @@ import androidx.compose.material.icons.filled.FileUpload
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -92,6 +91,8 @@ import com.sukisu.ultra.ui.util.isAbDevice
 import com.sukisu.ultra.ui.util.isInitBoot
 import com.sukisu.ultra.ui.util.rootAvailable
 import com.sukisu.ultra.getKernelVersion
+import com.sukisu.ultra.ui.theme.CardConfig
+import com.sukisu.ultra.ui.theme.getCardElevation
 
 /**
  * @author ShirkNeko
@@ -253,7 +254,7 @@ fun InstallScreen(navigator: DestinationsNavigator) {
                 (lkmSelection as? LkmSelection.LkmUri)?.let {
                     ElevatedCard(
                         colors = getCardColors(MaterialTheme.colorScheme.surfaceVariant),
-                        elevation = CardDefaults.cardElevation(defaultElevation = cardElevation),
+                        elevation = getCardElevation(),
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(bottom = 12.dp)
@@ -279,7 +280,7 @@ fun InstallScreen(navigator: DestinationsNavigator) {
                     if (method.slot != null) {
                         ElevatedCard(
                             colors = getCardColors(MaterialTheme.colorScheme.surfaceVariant),
-                            elevation = CardDefaults.cardElevation(defaultElevation = cardElevation),
+                            elevation = getCardElevation(),
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(bottom = 12.dp)
@@ -478,7 +479,7 @@ private fun SelectInstallMethod(
         if (isGKI) {
             ElevatedCard(
                 colors = getCardColors(MaterialTheme.colorScheme.surfaceVariant),
-                elevation = CardDefaults.cardElevation(defaultElevation = cardElevation),
+                elevation = getCardElevation(),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(bottom = 12.dp)
@@ -489,24 +490,30 @@ private fun SelectInstallMethod(
                         spotColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
                     )
             ) {
-                ListItem(
-                    leadingContent = {
-                        Icon(
-                            Icons.Filled.AutoFixHigh,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                    },
-                    headlineContent = {
-                        Text(
-                            stringResource(R.string.Lkm_install_methods),
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                    },
-                    modifier = Modifier.clickable {
-                        LKMExpanded = !LKMExpanded
-                    }
-                )
+                MaterialTheme(
+                    colorScheme = MaterialTheme.colorScheme.copy(
+                        surface = MaterialTheme.colorScheme.surfaceVariant
+                    )
+                ) {
+                    ListItem(
+                        leadingContent = {
+                            Icon(
+                                Icons.Filled.AutoFixHigh,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        },
+                        headlineContent = {
+                            Text(
+                                stringResource(R.string.Lkm_install_methods),
+                                style = MaterialTheme.typography.titleMedium
+                            )
+                        },
+                        modifier = Modifier.clickable {
+                            LKMExpanded = !LKMExpanded
+                        }
+                    )
+                }
 
                 AnimatedVisibility(
                     visible = LKMExpanded,
@@ -584,7 +591,7 @@ private fun SelectInstallMethod(
         if (rootAvailable) {
             ElevatedCard(
                 colors = getCardColors(MaterialTheme.colorScheme.surfaceVariant),
-                elevation = CardDefaults.cardElevation(defaultElevation = cardElevation),
+                elevation = getCardElevation(),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(bottom = 12.dp)
@@ -595,24 +602,30 @@ private fun SelectInstallMethod(
                         spotColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
                     )
             ) {
-                ListItem(
-                    leadingContent = {
-                        Icon(
-                            Icons.Filled.FileUpload,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                    },
-                    headlineContent = {
-                        Text(
-                            stringResource(R.string.GKI_install_methods),
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                    },
-                    modifier = Modifier.clickable {
-                        GKIExpanded = !GKIExpanded
-                    }
-                )
+                MaterialTheme(
+                    colorScheme = MaterialTheme.colorScheme.copy(
+                        surface = MaterialTheme.colorScheme.surfaceVariant
+                    )
+                ) {
+                    ListItem(
+                        leadingContent = {
+                            Icon(
+                                Icons.Filled.FileUpload,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        },
+                        headlineContent = {
+                            Text(
+                                stringResource(R.string.GKI_install_methods),
+                                style = MaterialTheme.typography.titleMedium
+                            )
+                        },
+                        modifier = Modifier.clickable {
+                            GKIExpanded = !GKIExpanded
+                        }
+                    )
+                }
 
                 AnimatedVisibility(
                     visible = GKIExpanded,
@@ -732,7 +745,12 @@ private fun TopBar(
     onLkmUpload: () -> Unit = {},
     scrollBehavior: TopAppBarScrollBehavior? = null
 ) {
-    val cardColor = MaterialTheme.colorScheme.surfaceContainerLow
+    val colorScheme = MaterialTheme.colorScheme
+    val cardColor = if (CardConfig.isCustomBackgroundEnabled) {
+        colorScheme.surfaceContainerLow
+    } else {
+        colorScheme.background
+    }
     val cardAlpha = cardAlpha
 
     TopAppBar(
