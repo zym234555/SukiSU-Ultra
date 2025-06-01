@@ -15,9 +15,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.sukisu.ultra.ui.theme.CardConfig
 
 @Composable
 fun SwitchItem(
@@ -57,7 +59,7 @@ fun SwitchItem(
 
     MaterialTheme(
         colorScheme = MaterialTheme.colorScheme.copy(
-            surface = MaterialTheme.colorScheme.surfaceContainerHigh
+            surface = if (CardConfig.isCustomBackgroundEnabled) Color.Transparent else MaterialTheme.colorScheme.surfaceContainerHigh
         )
     ) {
         ListItem(

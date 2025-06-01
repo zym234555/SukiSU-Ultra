@@ -59,6 +59,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
@@ -83,6 +84,7 @@ import com.sukisu.ultra.ui.component.profile.AppProfileConfig
 import com.sukisu.ultra.ui.component.profile.RootProfileConfig
 import com.sukisu.ultra.ui.component.profile.TemplateConfig
 import com.sukisu.ultra.ui.theme.CardConfig
+import com.sukisu.ultra.ui.theme.CardConfig.cardAlpha
 import com.sukisu.ultra.ui.theme.getCardColors
 import com.sukisu.ultra.ui.theme.getCardElevation
 import com.sukisu.ultra.ui.util.LocalSnackbarHost
@@ -213,7 +215,7 @@ private fun AppProfileInner(
 
     MaterialTheme(
         colorScheme = MaterialTheme.colorScheme.copy(
-            surface = MaterialTheme.colorScheme.surfaceContainerHigh
+            surface = if (CardConfig.isCustomBackgroundEnabled) Color.Transparent else MaterialTheme.colorScheme.surfaceContainerHigh
         )
     ) {
         Column(modifier = modifier) {
@@ -597,7 +599,7 @@ private fun AppProfilePreview() {
     var profile by remember { mutableStateOf(Natives.Profile("")) }
     MaterialTheme(
         colorScheme = MaterialTheme.colorScheme.copy(
-            surface = MaterialTheme.colorScheme.surfaceContainerHigh
+            surface = if (CardConfig.isCustomBackgroundEnabled) Color.Transparent else MaterialTheme.colorScheme.surfaceContainerHigh
         )
     ) {
         Surface {
