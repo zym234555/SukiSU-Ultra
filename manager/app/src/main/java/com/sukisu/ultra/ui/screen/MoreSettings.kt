@@ -561,14 +561,42 @@ fun MoreSettingsScreen() {
                         },
                         onClick = { showThemeColorDialog = true },
                         trailingContent = {
-                            Row {
-                                themeColorOptions.take(4).forEach { (_, theme) ->
-                                    ColorCircle(
-                                        color = if (isDarkTheme) theme.primaryDark else theme.primaryLight,
-                                        isSelected = ThemeConfig.currentTheme::class == theme::class,
-                                        modifier = Modifier.padding(horizontal = 2.dp)
-                                    )
-                                }
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.padding(start = 8.dp)
+                            ) {
+                                // 显示当前主题的三种主题色调
+                                val theme = ThemeConfig.currentTheme
+                                val isDark = isSystemInDarkTheme()
+
+                                // Primary color
+                                ColorCircle(
+                                    color = if (isDark) theme.primaryDark else theme.primaryLight,
+                                    isSelected = false,
+                                    modifier = Modifier.padding(horizontal = 2.dp)
+                                )
+
+                                // Secondary color
+                                ColorCircle(
+                                    color = if (isDark) theme.secondaryDark else theme.secondaryLight,
+                                    isSelected = false,
+                                    modifier = Modifier.padding(horizontal = 2.dp)
+                                )
+
+                                // Tertiary color
+                                ColorCircle(
+                                    color = if (isDark) theme.tertiaryDark else theme.tertiaryLight,
+                                    isSelected = false,
+                                    modifier = Modifier.padding(horizontal = 2.dp)
+                                )
+
+                                Spacer(modifier = Modifier.width(8.dp))
+
+                                Icon(
+                                    Icons.AutoMirrored.Filled.NavigateNext,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
                             }
                         }
                     )
@@ -1188,7 +1216,7 @@ fun SettingsCard(
                 }
                 Text(
                     text = title,
-                    style = MaterialTheme.typography.titleLarge,
+                    style = MaterialTheme.typography.titleMedium,
                 )
             }
             content()
