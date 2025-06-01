@@ -646,10 +646,11 @@ private fun AppItem(
     viewModel: SuperUserViewModel
 ) {
     Card(
-        colors = getCardColors(if (CardConfig.isCustomBackgroundEnabled) Color.Transparent else MaterialTheme.colorScheme.surfaceContainerHigh),
+        colors = getCardColors(MaterialTheme.colorScheme.surfaceContainerHigh),
         elevation = getCardElevation(),
         modifier = Modifier
-            .padding(vertical = 8.dp)
+            .padding(horizontal = 24.dp)
+            .padding(vertical = 2.dp)
             .pointerInput(Unit) {
                 detectTapGestures(
                     onLongPress = { onLongClick() },

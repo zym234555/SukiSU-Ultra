@@ -406,16 +406,21 @@ private fun StatusCard(
                             Spacer(Modifier.width(6.dp))
 
                             // 架构标签
-                            Surface(
-                                shape = RoundedCornerShape(4.dp),
-                                color = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier
-                            ) {
-                                Text(
-                                    text = Os.uname().machine,
-                                    style = MaterialTheme.typography.labelMedium,
-                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                                )
+                            if (Os.uname().machine != "aarch64") {
+                                Surface(
+                                    shape = RoundedCornerShape(4.dp),
+                                    color = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier
+                                ) {
+                                    Text(
+                                        text = Os.uname().machine,
+                                        style = MaterialTheme.typography.labelMedium,
+                                        modifier = Modifier.padding(
+                                            horizontal = 6.dp,
+                                            vertical = 2.dp
+                                        )
+                                    )
+                                }
                             }
                         }
 
@@ -671,7 +676,7 @@ private fun InfoCard(
                         imageVector = icon,
                         contentDescription = label,
                         modifier = Modifier.size(24.dp),
-                        tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
+                        tint = MaterialTheme.colorScheme.primary,
                     )
                     Spacer(modifier = Modifier.width(16.dp))
                     Column(

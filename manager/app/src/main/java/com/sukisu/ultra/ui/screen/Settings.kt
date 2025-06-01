@@ -13,7 +13,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -54,7 +53,6 @@ import kotlinx.coroutines.withContext
 import com.sukisu.ultra.BuildConfig
 import com.sukisu.ultra.Natives
 import com.sukisu.ultra.R
-import com.sukisu.ultra.*
 import com.sukisu.ultra.ui.component.*
 import com.sukisu.ultra.ui.theme.*
 import com.sukisu.ultra.ui.theme.CardConfig.cardAlpha
@@ -521,6 +519,7 @@ fun SettingItem(
                 text = title,
                 style = MaterialTheme.typography.titleMedium,
             )
+            Spacer(modifier = Modifier.height(3.dp))
             if (summary != null) {
                 Text(
                     text = summary,

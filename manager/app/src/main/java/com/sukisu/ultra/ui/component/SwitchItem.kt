@@ -3,7 +3,10 @@ package com.sukisu.ultra.ui.component
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
@@ -73,13 +76,16 @@ fun SwitchItem(
             },
             supportingContent = summary?.let {
                 {
-                    Text(
-                        text = it,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = Int.MAX_VALUE,
-                        overflow = TextOverflow.Ellipsis
-                    )
+                    Column {
+                        Spacer(modifier = Modifier.height(3.dp))
+                        Text(
+                            text = it,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = Int.MAX_VALUE,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
                 }
             },
             leadingContent = icon?.let {
