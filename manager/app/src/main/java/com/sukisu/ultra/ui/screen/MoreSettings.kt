@@ -49,11 +49,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.edit
 import com.ramcosta.composedestinations.annotation.Destination
@@ -66,8 +64,10 @@ import com.sukisu.ultra.ui.component.ImageEditorDialog
 import com.sukisu.ultra.ui.component.KsuIsValid
 import com.sukisu.ultra.ui.component.SwitchItem
 import com.sukisu.ultra.ui.theme.CardConfig
+import com.sukisu.ultra.ui.theme.CardConfig.cardElevation
 import com.sukisu.ultra.ui.theme.ThemeColors
 import com.sukisu.ultra.ui.theme.ThemeConfig
+import com.sukisu.ultra.ui.theme.getCardColors
 import com.sukisu.ultra.ui.theme.saveAndApplyCustomBackground
 import com.sukisu.ultra.ui.theme.saveCustomBackground
 import com.sukisu.ultra.ui.theme.saveDynamicColorState
@@ -331,11 +331,6 @@ fun MoreSettingsScreen(navigator: DestinationsNavigator) {
     var showImageEditor by remember { mutableStateOf(false) }
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
 
-    // 展开/折叠状态
-    var isCustomizeExpanded by remember { mutableStateOf(false) }
-    var isAppearanceExpanded by remember { mutableStateOf(true) }
-    var isAdvancedExpanded by remember { mutableStateOf(false) }
-
     // DPI 设置
     val systemDpi = remember { context.resources.displayMetrics.densityDpi }
     var currentDpi by remember {
@@ -466,7 +461,7 @@ fun MoreSettingsScreen(navigator: DestinationsNavigator) {
             onConfirm = { transformedUri ->
                 context.saveAndApplyCustomBackground(transformedUri)
                 isCustomBackgroundEnabled = true
-                CardConfig.cardElevation = 0.dp
+                cardElevation = 0.dp
                 CardConfig.isCustomBackgroundEnabled = true
                 saveCardConfig(context)
                 showImageEditor = false
@@ -483,7 +478,6 @@ fun MoreSettingsScreen(navigator: DestinationsNavigator) {
     }
 
     val cardColor = MaterialTheme.colorScheme.surfaceContainerHigh
-    val cardAlphaUse = CardConfig.cardAlpha
     val isDarkTheme = isSystemInDarkTheme()
 
     Scaffold(
@@ -492,8 +486,8 @@ fun MoreSettingsScreen(navigator: DestinationsNavigator) {
             TopAppBar(
                 title = { Text(stringResource(R.string.more_settings)) },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = cardColor.copy(alpha = cardAlphaUse),
-                    scrolledContainerColor = cardColor.copy(alpha = cardAlphaUse)),
+                    containerColor = cardColor.copy(alpha = cardAlpha),
+                    scrolledContainerColor = cardColor.copy(alpha = cardAlpha)),
                 navigationIcon = {
                     IconButton(onClick = { navigator.popBackStack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack,
@@ -511,27 +505,19 @@ fun MoreSettingsScreen(navigator: DestinationsNavigator) {
                 .padding(horizontal = 16.dp, vertical = 8.dp)
         ) {
             // 外观设置部分
-            SectionHeader(
-                title = stringResource(R.string.appearance_settings),
-                expanded = isAppearanceExpanded,
-                onToggle = { isAppearanceExpanded = !isAppearanceExpanded }
-            )
-
-            AnimatedVisibility(
-                visible = isAppearanceExpanded,
-                enter = fadeIn() + expandVertically(),
-                exit = fadeOut() + shrinkVertically()
-            ) {
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(bottom = 16.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = cardAlpha)
-                    ),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                    colors = getCardColors(MaterialTheme.colorScheme.surfaceContainerHigh),
+                    elevation = CardDefaults.cardElevation(defaultElevation = cardElevation)
                 ) {
                     Column(modifier = Modifier.padding(vertical = 8.dp)) {
+                        Text(
+                            text = stringResource(R.string.appearance_settings),
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                        )
                         // 语言设置
                         ListItem(
                             headlineContent = { Text(stringResource(R.string.language_setting)) },
@@ -553,9 +539,6 @@ fun MoreSettingsScreen(navigator: DestinationsNavigator) {
                                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             },
-                            colors = ListItemDefaults.colors(
-                                containerColor = Color.Transparent
-                            ),
                             modifier = Modifier.clickable { showLanguageDialog = true }
                         )
 
@@ -577,9 +560,6 @@ fun MoreSettingsScreen(navigator: DestinationsNavigator) {
                                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             },
-                            colors = ListItemDefaults.colors(
-                                containerColor = Color.Transparent
-                            ),
                             modifier = Modifier.clickable { showThemeModeDialog = true }
                         )
 
@@ -631,9 +611,6 @@ fun MoreSettingsScreen(navigator: DestinationsNavigator) {
                                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
                                     },
-                                    colors = ListItemDefaults.colors(
-                                        containerColor = Color.Transparent
-                                    ),
                                     modifier = Modifier.clickable { showThemeColorDialog = true }
                                 )
                             }
@@ -654,12 +631,8 @@ fun MoreSettingsScreen(navigator: DestinationsNavigator) {
                                 Text(
                                     text = getDpiFriendlyName(tempDpi),
                                     style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.primary
                                 )
-                            },
-                            colors = ListItemDefaults.colors(
-                                containerColor = Color.Transparent
-                            )
+                            }
                         )
 
                         // DPI 滑动条
@@ -722,7 +695,6 @@ fun MoreSettingsScreen(navigator: DestinationsNavigator) {
                                 else
                                     "${getDpiFriendlyName(tempDpi)}: $tempDpi",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.padding(top = 4.dp)
                             )
                         }
@@ -739,7 +711,7 @@ fun MoreSettingsScreen(navigator: DestinationsNavigator) {
                             } else {
                                 context.saveCustomBackground(null)
                                 isCustomBackgroundEnabled = false
-                                CardConfig.cardElevation
+                                cardElevation
                                 CardConfig.cardAlpha = 1f
                                 CardConfig.cardDim = 0f
                                 CardConfig.isCustomAlphaSet = false
@@ -797,7 +769,6 @@ fun MoreSettingsScreen(navigator: DestinationsNavigator) {
                                     Text(
                                         text = "${(cardAlpha * 100).roundToInt()}%",
                                         style = MaterialTheme.typography.labelMedium,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
 
@@ -846,7 +817,6 @@ fun MoreSettingsScreen(navigator: DestinationsNavigator) {
                                     Text(
                                         text = "${(cardDim * 100).roundToInt()}%",
                                         style = MaterialTheme.typography.labelMedium,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
 
@@ -878,30 +848,21 @@ fun MoreSettingsScreen(navigator: DestinationsNavigator) {
                         }
                     }
                 }
-            }
 
-            // 自定义设置部分
-            SectionHeader(
-                title = stringResource(R.string.custom_settings),
-                expanded = isCustomizeExpanded,
-                onToggle = { isCustomizeExpanded = !isCustomizeExpanded }
-            )
-
-            AnimatedVisibility(
-                visible = isCustomizeExpanded,
-                enter = fadeIn() + expandVertically(),
-                exit = fadeOut() + shrinkVertically()
-            ) {
+                // 自定义设置部分
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(bottom = 16.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = cardAlpha)
-                    ),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                    colors = getCardColors(MaterialTheme.colorScheme.surfaceContainerHigh),
+                    elevation = CardDefaults.cardElevation(defaultElevation = cardElevation)
                 ) {
-                    Column(modifier = Modifier.padding(vertical = 8.dp)) {
+                    Column(Modifier.padding(vertical = 8.dp)) {
+                        Text(
+                            text = stringResource(R.string.custom_settings),
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                        )
                         // 添加简洁模式开关
                         SwitchItem(
                             icon = Icons.Filled.Brush,
@@ -911,8 +872,6 @@ fun MoreSettingsScreen(navigator: DestinationsNavigator) {
                         ) {
                             onSimpleModeChange(it)
                         }
-
-                        
 
                         // 隐藏内核部分版本号
                         SwitchItem(
@@ -967,30 +926,21 @@ fun MoreSettingsScreen(navigator: DestinationsNavigator) {
                         }
                     }
                 }
-            }
 
-            // 高级设置部分
-            SectionHeader(
-                title = stringResource(R.string.advanced_settings),
-                expanded = isAdvancedExpanded,
-                onToggle = { isAdvancedExpanded = !isAdvancedExpanded }
-            )
-
-            AnimatedVisibility(
-                visible = isAdvancedExpanded,
-                enter = fadeIn() + expandVertically(),
-                exit = fadeOut() + shrinkVertically()
-            ) {
+                // 高级设置部分
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(bottom = 16.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = cardAlpha)
-                    ),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                    colors = getCardColors(MaterialTheme.colorScheme.surfaceContainerHigh),
+                    elevation = CardDefaults.cardElevation(defaultElevation = cardElevation)
                 ) {
-                    Column(modifier = Modifier.padding(vertical = 8.dp)) {
+                    Column( Modifier.padding(vertical = 8.dp)) {
+                        Text(
+                            text = stringResource(R.string.advanced_settings),
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                        )
                         // SELinux 开关
                         KsuIsValid {
                             SwitchItem(
@@ -1077,7 +1027,6 @@ fun MoreSettingsScreen(navigator: DestinationsNavigator) {
                 }
             }
         }
-    }
 
     // 主题模式选择对话框
     if (showThemeModeDialog) {
@@ -1173,7 +1122,6 @@ fun MoreSettingsScreen(navigator: DestinationsNavigator) {
                     Text(
                         stringResource(R.string.dpi_confirm_summary),
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(top = 8.dp)
                     )
                 }
@@ -1249,38 +1197,6 @@ fun MoreSettingsScreen(navigator: DestinationsNavigator) {
                     Text(stringResource(R.string.cancel))
                 }
             }
-        )
-    }
-}
-
-@Composable
-fun SectionHeader(
-    title: String,
-    expanded: Boolean,
-    onToggle: () -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onToggle() }
-            .padding(vertical = 12.dp, horizontal = 4.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleMedium.copy(
-                fontWeight = FontWeight.Bold
-            ),
-            color = MaterialTheme.colorScheme.primary
-        )
-        Spacer(modifier = Modifier.weight(1f))
-        Icon(
-            imageVector = if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-            contentDescription = if (expanded)
-                stringResource(R.string.collapse)
-            else
-                stringResource(R.string.expand),
-            tint = MaterialTheme.colorScheme.primary
         )
     }
 }

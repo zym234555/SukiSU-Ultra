@@ -290,9 +290,7 @@ fun KernelSUTheme(
 private fun createDynamicDarkColorScheme(context: Context) =
     dynamicDarkColorScheme(context).copy(
         background = Color.Transparent,
-        surface = Color.Transparent,
-        onBackground = Color.White,
-        onSurface = Color.White
+        surface = Color.Transparent
     )
 
 /**

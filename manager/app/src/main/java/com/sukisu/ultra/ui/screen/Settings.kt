@@ -12,7 +12,6 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
@@ -64,6 +63,7 @@ import com.sukisu.ultra.ui.util.getBugreportFile
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import com.sukisu.ultra.ui.component.KsuIsValid
+import com.sukisu.ultra.ui.theme.CardConfig.cardElevation
 
 /**
  * @author ShirkNeko
@@ -126,16 +126,13 @@ fun SettingScreen(navigator: DestinationsNavigator) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 8.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = cardAlpha)
-                ),
-                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                colors = getCardColors(MaterialTheme.colorScheme.surfaceContainerHigh),
+                elevation = CardDefaults.cardElevation(defaultElevation = cardElevation)
             ) {
                 Column(modifier = Modifier.padding(vertical = 8.dp)) {
                     Text(
                         text = stringResource(R.string.configuration),
                         style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                     )
 
@@ -197,16 +194,13 @@ fun SettingScreen(navigator: DestinationsNavigator) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 8.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = cardAlpha)
-                ),
-                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                    colors = getCardColors(MaterialTheme.colorScheme.surfaceContainerHigh),
+                elevation = CardDefaults.cardElevation(defaultElevation = cardElevation)
             ) {
                 Column(modifier = Modifier.padding(vertical = 8.dp)) {
                     Text(
                         text = stringResource(R.string.app_settings),
                         style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                     )
 
@@ -345,16 +339,13 @@ fun SettingScreen(navigator: DestinationsNavigator) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 8.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = cardAlpha)
-                ),
-                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                colors = getCardColors(MaterialTheme.colorScheme.surfaceContainerHigh),
+                elevation = CardDefaults.cardElevation(defaultElevation = cardElevation)
             ) {
                 Column(modifier = Modifier.padding(vertical = 8.dp)) {
                     Text(
                         text = stringResource(R.string.tools),
                         style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                     )
 
@@ -444,16 +435,13 @@ fun SettingScreen(navigator: DestinationsNavigator) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 8.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = cardAlpha)
-                ),
-                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                colors = getCardColors(MaterialTheme.colorScheme.surfaceContainerHigh),
+                elevation = CardDefaults.cardElevation(defaultElevation = cardElevation)
             ) {
                 Column(modifier = Modifier.padding(vertical = 8.dp)) {
                     Text(
                         text = stringResource(R.string.about),
                         style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                     )
 
@@ -502,7 +490,6 @@ fun LogActionButton(
         Text(
             text = text,
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurface
         )
     }
 }
@@ -534,13 +521,11 @@ fun SettingItem(
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface
             )
             if (summary != null) {
                 Text(
                     text = summary,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
@@ -642,7 +627,6 @@ fun rememberUninstallDialog(onSelected: (UninstallType) -> Unit): DialogHandle {
                 Text(
                     text = stringResource(R.string.settings_uninstall),
                     style = MaterialTheme.typography.headlineSmall,
-                    color = MaterialTheme.colorScheme.onSurface
                 )
             },
             text = {
@@ -670,11 +654,6 @@ fun rememberUninstallDialog(onSelected: (UninstallType) -> Unit): DialogHandle {
                                 .fillMaxWidth()
                                 .clip(MaterialTheme.shapes.medium)
                                 .background(backgroundColor)
-                                .border(
-                                    width = 1.dp,
-                                    color = borderColor,
-                                    shape = MaterialTheme.shapes.medium
-                                )
                                 .clickable {
                                     selectedOption = option
                                 }
@@ -684,10 +663,7 @@ fun rememberUninstallDialog(onSelected: (UninstallType) -> Unit): DialogHandle {
                             Icon(
                                 imageVector = option.icon,
                                 contentDescription = null,
-                                tint = if (isSelected)
-                                    MaterialTheme.colorScheme.primary
-                                else
-                                    MaterialTheme.colorScheme.primary,
+                                tint = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier
                                     .padding(end = 16.dp)
                                     .size(24.dp)
@@ -698,7 +674,6 @@ fun rememberUninstallDialog(onSelected: (UninstallType) -> Unit): DialogHandle {
                                 Text(
                                     text = listOptions[index].titleText,
                                     style = MaterialTheme.typography.titleMedium,
-                                    color = contentColor
                                 )
                                 listOptions[index].subtitleText?.let {
                                     Text(
@@ -737,12 +712,6 @@ fun rememberUninstallDialog(onSelected: (UninstallType) -> Unit): DialogHandle {
                         dismiss()
                     },
                     enabled = selectedOption != null,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        contentColor = MaterialTheme.colorScheme.onPrimary,
-                        disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                        disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
                 ) {
                     Text(
                         text = stringResource(android.R.string.ok)
@@ -757,11 +726,9 @@ fun rememberUninstallDialog(onSelected: (UninstallType) -> Unit): DialogHandle {
                 ) {
                     Text(
                         text = stringResource(android.R.string.cancel),
-                        color = MaterialTheme.colorScheme.primary
                     )
                 }
             },
-            containerColor = MaterialTheme.colorScheme.secondaryContainer,
             shape = MaterialTheme.shapes.extraLarge,
             tonalElevation = 4.dp
         )

@@ -1,6 +1,5 @@
 package com.sukisu.ultra.ui.screen
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Build
 import android.os.PowerManager
@@ -29,7 +28,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -63,7 +61,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -75,12 +72,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.composed
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
@@ -97,7 +90,7 @@ import com.sukisu.ultra.Natives
 import com.sukisu.ultra.R
 import com.sukisu.ultra.ui.component.KsuIsValid
 import com.sukisu.ultra.ui.component.rememberConfirmDialog
-import com.sukisu.ultra.ui.theme.CardConfig
+import com.sukisu.ultra.ui.theme.CardConfig.cardAlpha
 import com.sukisu.ultra.ui.theme.CardConfig.cardElevation
 import com.sukisu.ultra.ui.theme.getCardColors
 import com.sukisu.ultra.ui.util.checkNewVersion
@@ -257,7 +250,7 @@ fun UpdateCard() {
         val updateDialog = rememberConfirmDialog(onConfirm = { uriHandler.openUri(newVersionUrl) })
         WarningCard(
             message = stringResource(id = R.string.new_version_available).format(newVersionCode),
-            color = MaterialTheme.colorScheme.surfaceVariant,
+            color = MaterialTheme.colorScheme.outlineVariant,
             onClick = {
                 if (changelog.isEmpty()) {
                     uriHandler.openUri(newVersionUrl)
@@ -289,7 +282,6 @@ private fun TopBar(
     scrollBehavior: TopAppBarScrollBehavior? = null
 ) {
     val cardColor = MaterialTheme.colorScheme.surfaceContainerLow
-    val cardAlpha = CardConfig.cardAlpha
 
     TopAppBar(
         title = {
@@ -342,16 +334,9 @@ private fun StatusCard(
     onClickInstall: () -> Unit = {}
 ) {
     ElevatedCard(
-        colors = getCardColors(MaterialTheme.colorScheme.secondaryContainer),
+        colors = getCardColors( if (systemStatus.ksuVersion != null)MaterialTheme.colorScheme.secondaryContainer
+        else MaterialTheme.colorScheme.errorContainer),
         elevation = CardDefaults.cardElevation(defaultElevation = cardElevation),
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(MaterialTheme.shapes.large)
-            .shadow(
-                elevation = cardElevation,
-                shape = MaterialTheme.shapes.large,
-                spotColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.1f)
-            )
     ) {
         Row(
             modifier = Modifier
@@ -394,7 +379,6 @@ private fun StatusCard(
                             Text(
                                 text = workingModeText,
                                 style = MaterialTheme.typography.titleMedium,
-                                color = MaterialTheme.colorScheme.onSurface
                             )
 
                             Spacer(Modifier.width(8.dp))
@@ -408,13 +392,13 @@ private fun StatusCard(
                                 Text(
                                     text = workingModeSurfaceText,
                                     style = MaterialTheme.typography.labelMedium,
-                                    color = MaterialTheme.colorScheme.onSecondary,
                                     modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                                 )
                             }
 
                             Spacer(Modifier.width(6.dp))
 
+                            // 架构标签
                             Surface(
                                 shape = RoundedCornerShape(4.dp),
                                 color = MaterialTheme.colorScheme.primary,
@@ -423,7 +407,6 @@ private fun StatusCard(
                                 Text(
                                     text = Os.uname().machine,
                                     style = MaterialTheme.typography.labelMedium,
-                                    color = MaterialTheme.colorScheme.onSecondary,
                                     modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                                 )
                             }
@@ -443,7 +426,6 @@ private fun StatusCard(
                             Text(
                                 text = stringResource(R.string.home_working_version, systemStatus.ksuVersion),
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
 
@@ -452,14 +434,12 @@ private fun StatusCard(
                             Text(
                                 text = stringResource(R.string.home_superuser_count, getSuperuserCount()),
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
 
                             Spacer(Modifier.height(4.dp))
                             Text(
                                 text = stringResource(R.string.home_module_count, getModuleCount()),
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
 
                             val kpmVersion = getKpmVersion()
@@ -468,7 +448,6 @@ private fun StatusCard(
                                 Text(
                                     text = stringResource(R.string.home_kpm_module, getKpmModuleCount()),
                                     style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                         }
@@ -487,14 +466,12 @@ private fun StatusCard(
                         Text(
                             text = stringResource(R.string.home_not_installed),
                             style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.error
                         )
 
                         Spacer(Modifier.height(4.dp))
                         Text(
                             text = stringResource(R.string.home_click_to_install),
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -511,14 +488,12 @@ private fun StatusCard(
                         Text(
                             text = stringResource(R.string.home_unsupported),
                             style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.error
                         )
 
                         Spacer(Modifier.height(4.dp))
                         Text(
                             text = stringResource(R.string.home_unsupported_reason),
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -536,13 +511,6 @@ fun WarningCard(
     ElevatedCard(
         colors = getCardColors(color),
         elevation = CardDefaults.cardElevation(defaultElevation = cardElevation),
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(MaterialTheme.shapes.large)
-            .shadow(
-                elevation = cardElevation,
-                shape = MaterialTheme.shapes.large,
-            )
     ) {
         Row(
             modifier = Modifier
@@ -554,7 +522,6 @@ fun WarningCard(
             Text(
                 text = message,
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onErrorContainer
             )
         }
     }
@@ -568,15 +535,6 @@ fun ContributionCard() {
     ElevatedCard(
         colors = getCardColors(MaterialTheme.colorScheme.surfaceContainer),
         elevation = CardDefaults.cardElevation(defaultElevation = cardElevation),
-        modifier = Modifier
-            .fillMaxWidth()
-            .wrapContentHeight()
-            .clip(MaterialTheme.shapes.large)
-            .shadow(
-                elevation = cardElevation,
-                shape = MaterialTheme.shapes.large,
-                spotColor = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.1f)
-            )
     ) {
         Row(
             modifier = Modifier
@@ -592,14 +550,12 @@ fun ContributionCard() {
                 Text(
                     text = stringResource(R.string.home_ContributionCard_kernelsu),
                     style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
                 Spacer(Modifier.height(4.dp))
                 Text(
                     text = stringResource(R.string.home_click_to_ContributionCard_kernelsu),
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
                 )
             }
         }
@@ -613,15 +569,7 @@ fun LearnMoreCard() {
 
     ElevatedCard(
         colors = getCardColors(MaterialTheme.colorScheme.surfaceContainer),
-        elevation = CardDefaults.cardElevation(defaultElevation = cardElevation),
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(MaterialTheme.shapes.large)
-            .shadow(
-                elevation = cardElevation,
-                shape = MaterialTheme.shapes.large,
-                spotColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
-            )
+        elevation = CardDefaults.cardElevation(defaultElevation = cardElevation)
     ) {
         Row(
             modifier = Modifier
@@ -636,14 +584,12 @@ fun LearnMoreCard() {
                 Text(
                     text = stringResource(R.string.home_learn_kernelsu),
                     style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
                 Spacer(Modifier.height(4.dp))
                 Text(
                     text = stringResource(R.string.home_click_to_learn_kernelsu),
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
                 )
             }
         }
@@ -657,14 +603,6 @@ fun DonateCard() {
     ElevatedCard(
         colors = getCardColors(MaterialTheme.colorScheme.surfaceContainer),
         elevation = CardDefaults.cardElevation(defaultElevation = cardElevation),
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(MaterialTheme.shapes.large)
-            .shadow(
-                elevation = cardElevation,
-                shape = MaterialTheme.shapes.large,
-                spotColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.1f)
-            )
     ) {
         Row(
             modifier = Modifier
@@ -679,14 +617,12 @@ fun DonateCard() {
                 Text(
                     text = stringResource(R.string.home_support_title),
                     style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
                 Spacer(Modifier.height(4.dp))
                 Text(
                     text = stringResource(R.string.home_support_content),
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
                 )
             }
         }
@@ -706,14 +642,6 @@ private fun InfoCard(
     ElevatedCard(
         colors = getCardColors(MaterialTheme.colorScheme.surfaceContainer),
         elevation = CardDefaults.cardElevation(defaultElevation = cardElevation),
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(MaterialTheme.shapes.large)
-            .shadow(
-                elevation = cardElevation,
-                shape = MaterialTheme.shapes.large,
-                spotColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.05f)
-            )
     ) {
         Column(
             modifier = Modifier
@@ -747,12 +675,10 @@ private fun InfoCard(
                         Text(
                             text = label,
                             style = MaterialTheme.typography.labelLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Text(
                             text = content,
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurface,
                             softWrap = true
                         )
                     }
@@ -902,14 +828,5 @@ private fun WarningCardPreview() {
             message = "Warning message ",
             MaterialTheme.colorScheme.outlineVariant,
             onClick = {})
-    }
-}
-
-@SuppressLint("UnnecessaryComposedModifier")
-fun Modifier.disableOverscroll(): Modifier = composed {
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-        this
-    } else {
-        this
     }
 }

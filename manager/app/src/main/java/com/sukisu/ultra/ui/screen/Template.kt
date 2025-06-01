@@ -207,13 +207,13 @@ private fun TemplateItem(
                 )
                 Text(template.description)
                 FlowRow {
-                    LabelText(label = "UID: ${template.uid}", backgroundColor = MaterialTheme.colorScheme.surface)
-                    LabelText(label = "GID: ${template.gid}", backgroundColor = MaterialTheme.colorScheme.surface)
-                    LabelText(label = template.context, backgroundColor = MaterialTheme.colorScheme.surface)
+                    LabelText(label = "UID: ${template.uid}")
+                    LabelText(label = "GID: ${template.gid}")
+                    LabelText(label = template.context,)
                     if (template.local) {
-                        LabelText(label = "local", backgroundColor = MaterialTheme.colorScheme.surface)
+                        LabelText(label = "local")
                     } else {
-                        LabelText(label = "remote", backgroundColor = MaterialTheme.colorScheme.surface)
+                        LabelText(label = "remote")
                     }
                 }
             }
