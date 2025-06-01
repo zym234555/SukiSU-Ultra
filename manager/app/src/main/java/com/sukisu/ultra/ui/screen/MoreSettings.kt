@@ -21,34 +21,26 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.WindowInsetsSides
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.only
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawing
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.NavigateNext
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Card
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.*
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -57,13 +49,10 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -77,37 +66,46 @@ import com.sukisu.ultra.R
 import com.sukisu.ultra.ui.MainActivity
 import com.sukisu.ultra.ui.component.ImageEditorDialog
 import com.sukisu.ultra.ui.component.KsuIsValid
-import com.sukisu.ultra.ui.component.SwitchItem
-import com.sukisu.ultra.ui.theme.CardConfig
 import com.sukisu.ultra.ui.theme.CardConfig.cardElevation
-import com.sukisu.ultra.ui.theme.ThemeColors
-import com.sukisu.ultra.ui.theme.ThemeConfig
-import com.sukisu.ultra.ui.theme.getCardColors
-import com.sukisu.ultra.ui.theme.getCardElevation
-import com.sukisu.ultra.ui.theme.saveAndApplyCustomBackground
-import com.sukisu.ultra.ui.theme.saveCustomBackground
-import com.sukisu.ultra.ui.theme.saveDynamicColorState
-import com.sukisu.ultra.ui.theme.saveThemeColors
-import com.sukisu.ultra.ui.theme.saveThemeMode
-import com.sukisu.ultra.ui.util.getSuSFS
-import com.sukisu.ultra.ui.util.getSuSFSFeatures
-import com.sukisu.ultra.ui.util.susfsSUS_SU_0
-import com.sukisu.ultra.ui.util.susfsSUS_SU_2
-import com.sukisu.ultra.ui.util.susfsSUS_SU_Mode
+import com.sukisu.ultra.ui.theme.*
+import com.sukisu.ultra.ui.util.*
 import com.topjohnwu.superuser.Shell
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.util.Locale
 import kotlin.math.roundToInt
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.automirrored.filled.NavigateNext
+import androidx.compose.material3.Card
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Switch
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import com.sukisu.ultra.ui.theme.getCardColors
+import com.sukisu.ultra.ui.theme.getCardElevation
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.saveable.rememberSaveable
 
 /**
  * @author ShirkNeko
  * @date 2025/5/31.
  */
+private val SETTINGS_ITEM_HEIGHT = 56.dp
+private val SETTINGS_GROUP_SPACING = 16.dp
+
+/**
+ * 保存卡片配置
+ */
 fun saveCardConfig(context: Context) {
     CardConfig.save(context)
 }
 
+/**
+ * 切换启动器图标
+ */
 fun toggleLauncherIcon(context: Context, useAlt: Boolean) {
     val pm = context.packageManager
     val main = ComponentName(context, MainActivity::class.java.name)
@@ -121,16 +119,21 @@ fun toggleLauncherIcon(context: Context, useAlt: Boolean) {
     }
 }
 
+/**
+ * 更多设置屏幕
+ */
 @SuppressLint("LocalContextConfigurationRead", "ObsoleteSdkInt")
 @OptIn(ExperimentalMaterial3Api::class)
 @Destination<RootGraph>
 @Composable
 fun MoreSettingsScreen() {
+    // 顶部滚动行为
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     val prefs = remember { context.getSharedPreferences("settings", Context.MODE_PRIVATE) }
     val systemIsDark = isSystemInDarkTheme()
+
 
     // 主题模式选择
     var themeMode by remember {
@@ -148,7 +151,13 @@ fun MoreSettingsScreen() {
         mutableStateOf(ThemeConfig.useDynamicColor)
     }
 
+    // 对话框显示状态
     var showThemeModeDialog by remember { mutableStateOf(false) }
+    var showLanguageDialog by remember { mutableStateOf(false) }
+    var showThemeColorDialog by remember { mutableStateOf(false) }
+    var showDpiConfirmDialog by remember { mutableStateOf(false) }
+    var showImageEditor by remember { mutableStateOf(false) }
+
     // 主题模式选项
     val themeOptions = listOf(
         stringResource(R.string.theme_follow_system),
@@ -206,88 +215,9 @@ fun MoreSettingsScreen() {
         languages
     }
 
-    var showLanguageDialog by remember { mutableStateOf(false) }
-
-    // 语言切换对话框
-    if (showLanguageDialog) {
-        AlertDialog(
-            onDismissRequest = { showLanguageDialog = false },
-            title = { Text(stringResource(R.string.language_setting)) },
-            text = {
-                Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
-                    supportedLanguages.forEach { (code, name) ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable {
-                                    if (currentLanguage != code) {
-                                        prefs.edit {
-                                            putString("app_language", code)
-                                            commit()
-                                        }
-
-                                        currentLanguage = code
-
-                                        Toast.makeText(
-                                            context,
-                                            context.getString(R.string.language_changed),
-                                            Toast.LENGTH_SHORT
-                                        ).show()
-
-                                        val locale = if (code.isEmpty()) Locale.getDefault() else Locale.forLanguageTag(code)
-                                        Locale.setDefault(locale)
-                                        val config = Configuration(context.resources.configuration)
-                                        config.setLocale(locale)
-
-                                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                                            context.createConfigurationContext(config)
-                                        } else {
-                                            @Suppress("DEPRECATION")
-                                            context.resources.updateConfiguration(config, context.resources.displayMetrics)
-                                        }
-
-                                        val intent = Intent(context, MainActivity::class.java)
-                                        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK)
-                                        context.startActivity(intent)
-
-                                        if (context is Activity) {
-                                            context.finish()
-                                        }
-                                    }
-                                    showLanguageDialog = false
-                                }
-                                .padding(vertical = 12.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            RadioButton(
-                                selected = currentLanguage == code,
-                                onClick = null
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(name)
-                        }
-                    }
-                }
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = { showLanguageDialog = false }
-                ) {
-                    Text(stringResource(R.string.cancel))
-                }
-            }
-        )
-    }
-
     // 简洁模式开关状态
     var isSimpleMode by remember {
         mutableStateOf(prefs.getBoolean("is_simple_mode", false))
-    }
-
-    // 更新简洁模式开关状态
-    val onSimpleModeChange = { newValue: Boolean ->
-        prefs.edit { putBoolean("is_simple_mode", newValue) }
-        isSimpleMode = newValue
     }
 
     // 隐藏内核版本号开关状态
@@ -295,21 +225,9 @@ fun MoreSettingsScreen() {
         mutableStateOf(prefs.getBoolean("is_hide_version", false))
     }
 
-    // 隐藏内核版本号开关状态
-    val onHideVersionChange = { newValue: Boolean ->
-        prefs.edit { putBoolean("is_hide_version", newValue) }
-        isHideVersion = newValue
-    }
-
     // 隐藏模块数量等信息开关状态
     var isHideOtherInfo by remember {
         mutableStateOf(prefs.getBoolean("is_hide_other_info", false))
-    }
-
-    // 隐藏模块数量等信息开关状态
-    val onHideOtherInfoChange = { newValue: Boolean ->
-        prefs.edit { putBoolean("is_hide_other_info", newValue) }
-        isHideOtherInfo = newValue
     }
 
     // 显示KPM开关状态
@@ -317,31 +235,14 @@ fun MoreSettingsScreen() {
         mutableStateOf(prefs.getBoolean("show_kpm_info", true))
     }
 
-    // 更新显示KPM开关状态
-    val onShowKpmInfoChange = { newValue: Boolean ->
-        prefs.edit { putBoolean("show_kpm_info", newValue) }
-        isShowKpmInfo = newValue
-    }
-
     // 隐藏SuSFS状态开关状态
     var isHideSusfsStatus by remember {
         mutableStateOf(prefs.getBoolean("is_hide_susfs_status", false))
     }
 
-    // 隐藏SuSFS状态开关状态
-    val onHideSusfsStatusChange = { newValue: Boolean ->
-        prefs.edit { putBoolean("is_hide_susfs_status", newValue) }
-        isHideSusfsStatus = newValue
-    }
-
     // 隐藏链接状态开关状态
     var isHideLinkCard by remember {
         mutableStateOf(prefs.getBoolean("is_hide_link_card", false))
-    }
-
-    val onHideLinkCardChange = { newValue: Boolean ->
-        prefs.edit { putBoolean("is_hide_link_card", newValue) }
-        isHideLinkCard = newValue
     }
 
     // SELinux状态
@@ -356,18 +257,10 @@ fun MoreSettingsScreen() {
         mutableStateOf(ThemeConfig.customBackgroundUri != null)
     }
 
-    // Alternate icon state
+    // 备用图标状态
     var useAltIcon by remember { mutableStateOf(prefs.getBoolean("use_alt_icon", false)) }
 
-    val onUseAltIconChange = { newValue: Boolean ->
-        prefs.edit { putBoolean("use_alt_icon", newValue) }
-        useAltIcon = newValue
-        toggleLauncherIcon(context, newValue)
-        Toast.makeText(context, context.getString(R.string.icon_switched), Toast.LENGTH_SHORT).show()
-    }
-
-    // 图片编辑状态
-    var showImageEditor by remember { mutableStateOf(false) }
+    // 图片选择状态
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
 
     // DPI 设置
@@ -377,7 +270,6 @@ fun MoreSettingsScreen() {
     }
     var tempDpi by remember { mutableIntStateOf(currentDpi) }
     var isDpiCustom by remember { mutableStateOf(true) }
-    var showDpiConfirmDialog by remember { mutableStateOf(false) }
 
     // 预设 DPI 选项
     val dpiPresets = mapOf(
@@ -387,7 +279,64 @@ fun MoreSettingsScreen() {
         stringResource(R.string.dpi_size_extra_large) to 560
     )
 
-    // 获取DPI大小
+    // 主题色选项
+    val themeColorOptions = listOf(
+        stringResource(R.string.color_default) to ThemeColors.Default,
+        stringResource(R.string.color_green) to ThemeColors.Green,
+        stringResource(R.string.color_purple) to ThemeColors.Purple,
+        stringResource(R.string.color_orange) to ThemeColors.Orange,
+        stringResource(R.string.color_pink) to ThemeColors.Pink,
+        stringResource(R.string.color_gray) to ThemeColors.Gray,
+        stringResource(R.string.color_yellow) to ThemeColors.Yellow
+    )
+
+
+    // 更新简洁模式开关状态
+    val onSimpleModeChange = { newValue: Boolean ->
+        prefs.edit { putBoolean("is_simple_mode", newValue) }
+        isSimpleMode = newValue
+    }
+
+    // 隐藏内核版本号开关状态
+    val onHideVersionChange = { newValue: Boolean ->
+        prefs.edit { putBoolean("is_hide_version", newValue) }
+        isHideVersion = newValue
+    }
+
+    // 隐藏模块数量等信息开关状态
+    val onHideOtherInfoChange = { newValue: Boolean ->
+        prefs.edit { putBoolean("is_hide_other_info", newValue) }
+        isHideOtherInfo = newValue
+    }
+
+    // 更新显示KPM开关状态
+    val onShowKpmInfoChange = { newValue: Boolean ->
+        prefs.edit { putBoolean("show_kpm_info", newValue) }
+        isShowKpmInfo = newValue
+    }
+
+    // 隐藏SuSFS状态开关状态
+    val onHideSusfsStatusChange = { newValue: Boolean ->
+        prefs.edit { putBoolean("is_hide_susfs_status", newValue) }
+        isHideSusfsStatus = newValue
+    }
+
+    // 隐藏链接状态开关状态
+    val onHideLinkCardChange = { newValue: Boolean ->
+        prefs.edit { putBoolean("is_hide_link_card", newValue) }
+        isHideLinkCard = newValue
+    }
+
+    // 备用图标开关状态
+    val onUseAltIconChange = { newValue: Boolean ->
+        prefs.edit { putBoolean("use_alt_icon", newValue) }
+        useAltIcon = newValue
+        toggleLauncherIcon(context, newValue)
+        Toast.makeText(context, context.getString(R.string.icon_switched), Toast.LENGTH_SHORT).show()
+    }
+
+
+    // 获取DPI大小友好名称
     @Composable
     fun getDpiFriendlyName(dpi: Int): String {
         return when (dpi) {
@@ -398,6 +347,71 @@ fun MoreSettingsScreen() {
             else -> stringResource(R.string.dpi_size_custom)
         }
     }
+
+    // 应用 DPI 设置
+    val applyDpiSetting = { dpi: Int ->
+        if (dpi != currentDpi) {
+            // 保存到 SharedPreferences
+            prefs.edit {
+                putInt("app_dpi", dpi)
+            }
+
+            // 只修改应用级别的DPI设置
+            currentDpi = dpi
+            tempDpi = dpi
+            Toast.makeText(
+                context,
+                context.getString(R.string.dpi_applied_success, dpi),
+                Toast.LENGTH_SHORT
+            ).show()
+
+            val restartIntent = context.packageManager.getLaunchIntentForPackage(context.packageName)
+            restartIntent?.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK)
+            context.startActivity(restartIntent)
+
+            showDpiConfirmDialog = false
+        }
+    }
+
+    // 应用语言设置
+    val applyLanguageSetting = { code: String ->
+        if (currentLanguage != code) {
+            prefs.edit {
+                putString("app_language", code)
+                commit()
+            }
+
+            currentLanguage = code
+
+            Toast.makeText(
+                context,
+                context.getString(R.string.language_changed),
+                Toast.LENGTH_SHORT
+            ).show()
+
+            val locale = if (code.isEmpty()) Locale.getDefault() else Locale.forLanguageTag(code)
+            Locale.setDefault(locale)
+            val config = Configuration(context.resources.configuration)
+            config.setLocale(locale)
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                context.createConfigurationContext(config)
+            } else {
+                @Suppress("DEPRECATION")
+                context.resources.updateConfiguration(config, context.resources.displayMetrics)
+            }
+
+            val intent = Intent(context, MainActivity::class.java)
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK)
+            context.startActivity(intent)
+
+            if (context is Activity) {
+                context.finish()
+            }
+        }
+    }
+
+    // ========== 初始化 ==========
 
     // 初始化卡片配置
     LaunchedEffect(Unit) {
@@ -441,44 +455,6 @@ fun MoreSettingsScreen() {
         CardConfig.save(context)
     }
 
-    // 应用 DPI 设置
-    val applyDpiSetting = { dpi: Int ->
-        if (dpi != currentDpi) {
-            // 保存到 SharedPreferences
-            prefs.edit {
-                putInt("app_dpi", dpi)
-            }
-
-            // 只修改应用级别的DPI设置
-            currentDpi = dpi
-            tempDpi = dpi
-            Toast.makeText(
-                context,
-                context.getString(R.string.dpi_applied_success, dpi),
-                Toast.LENGTH_SHORT
-            ).show()
-
-            val restartIntent = context.packageManager.getLaunchIntentForPackage(context.packageName)
-            restartIntent?.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK)
-            context.startActivity(restartIntent)
-
-            showDpiConfirmDialog = false
-        }
-    }
-
-    // 主题色选项
-    val themeColorOptions = listOf(
-        stringResource(R.string.color_default) to ThemeColors.Default,
-        stringResource(R.string.color_green) to ThemeColors.Green,
-        stringResource(R.string.color_purple) to ThemeColors.Purple,
-        stringResource(R.string.color_orange) to ThemeColors.Orange,
-        stringResource(R.string.color_pink) to ThemeColors.Pink,
-        stringResource(R.string.color_gray) to ThemeColors.Gray,
-        stringResource(R.string.color_yellow) to ThemeColors.Yellow
-    )
-
-    var showThemeColorDialog by remember { mutableStateOf(false) }
-
     // 图片选择器
     val pickImageLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.GetContent()
@@ -488,6 +464,8 @@ fun MoreSettingsScreen() {
             showImageEditor = true
         }
     }
+
+    // ========== UI 构建 ==========
 
     // 显示图片编辑对话框
     if (showImageEditor && selectedImageUri != null) {
@@ -515,12 +493,169 @@ fun MoreSettingsScreen() {
             }
         )
     }
-    val isDarkTheme = isSystemInDarkTheme()
+
+    // 主题模式选择对话框
+    if (showThemeModeDialog) {
+        SingleChoiceDialog(
+            title = stringResource(R.string.theme_mode),
+            options = themeOptions,
+            selectedIndex = themeMode,
+            onOptionSelected = { index ->
+                themeMode = index
+                val newThemeMode = when(index) {
+                    0 -> null // 跟随系统
+                    1 -> false // 浅色
+                    2 -> true // 深色
+                    else -> null
+                }
+                context.saveThemeMode(newThemeMode)
+                when (index) {
+                    2 -> { // 深色
+                        ThemeConfig.forceDarkMode = true
+                        CardConfig.isUserDarkModeEnabled = true
+                        CardConfig.isUserLightModeEnabled = false
+                        CardConfig.setThemeDefaults(true)
+                        CardConfig.save(context)
+                    }
+                    1 -> { // 浅色
+                        ThemeConfig.forceDarkMode = false
+                        CardConfig.isUserLightModeEnabled = true
+                        CardConfig.isUserDarkModeEnabled = false
+                        CardConfig.setThemeDefaults(false)
+                        CardConfig.save(context)
+                    }
+                    0 -> { // 跟随系统
+                        ThemeConfig.forceDarkMode = null
+                        CardConfig.isUserLightModeEnabled = false
+                        CardConfig.isUserDarkModeEnabled = false
+                        val isNightModeActive = (context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
+                        CardConfig.setThemeDefaults(isNightModeActive)
+                        CardConfig.save(context)
+                    }
+                }
+            },
+            onDismiss = { showThemeModeDialog = false }
+        )
+    }
+
+    // 语言切换对话框
+    if (showLanguageDialog) {
+        KeyValueChoiceDialog(
+            title = stringResource(R.string.language_setting),
+            options = supportedLanguages,
+            selectedCode = currentLanguage,
+            onOptionSelected = { code ->
+                applyLanguageSetting(code)
+            },
+            onDismiss = { showLanguageDialog = false }
+        )
+    }
+
+    // DPI 设置确认对话框
+    if (showDpiConfirmDialog) {
+        ConfirmDialog(
+            title = stringResource(R.string.dpi_confirm_title),
+            message = stringResource(R.string.dpi_confirm_message, currentDpi, tempDpi),
+            summaryText = stringResource(R.string.dpi_confirm_summary),
+            confirmText = stringResource(R.string.confirm),
+            dismissText = stringResource(R.string.cancel),
+            onConfirm = { applyDpiSetting(tempDpi) },
+            onDismiss = {
+                showDpiConfirmDialog = false
+                tempDpi = currentDpi
+            }
+        )
+    }
+
+    // 主题色选择对话框
+    if (showThemeColorDialog) {
+        AlertDialog(
+            onDismissRequest = { showThemeColorDialog = false },
+            title = { Text(stringResource(R.string.choose_theme_color)) },
+            text = {
+                Column {
+                    themeColorOptions.forEach { (name, theme) ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    context.saveThemeColors(when (theme) {
+                                        ThemeColors.Green -> "green"
+                                        ThemeColors.Purple -> "purple"
+                                        ThemeColors.Orange -> "orange"
+                                        ThemeColors.Pink -> "pink"
+                                        ThemeColors.Gray -> "gray"
+                                        ThemeColors.Yellow -> "yellow"
+                                        else -> "default"
+                                    })
+                                    showThemeColorDialog = false
+                                }
+                                .padding(vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            val isDark = isSystemInDarkTheme()
+                            Box(
+                                modifier = Modifier.padding(end = 12.dp)
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    ColorCircle(
+                                        color = if (isDark) theme.primaryDark else theme.primaryLight,
+                                        isSelected = false,
+                                        modifier = Modifier.padding(horizontal = 2.dp)
+                                    )
+                                    ColorCircle(
+                                        color = if (isDark) theme.secondaryDark else theme.secondaryLight,
+                                        isSelected = false,
+                                        modifier = Modifier.padding(horizontal = 2.dp)
+                                    )
+                                    ColorCircle(
+                                        color = if (isDark) theme.tertiaryDark else theme.tertiaryLight,
+                                        isSelected = false,
+                                        modifier = Modifier.padding(horizontal = 2.dp)
+                                    )
+                                }
+                            }
+                            Text(name)
+                            Spacer(modifier = Modifier.weight(1f))
+                            // 当前选中的主题显示选中标记
+                            if (ThemeConfig.currentTheme::class == theme::class) {
+                                Icon(
+                                    Icons.Default.Check,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = { showThemeColorDialog = false }
+                ) {
+                    Text(stringResource(R.string.cancel))
+                }
+            }
+        )
+    }
 
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            TopBar(scrollBehavior = scrollBehavior)
+            TopAppBar(
+                title = {
+                    Text(
+                        text = stringResource(R.string.more_settings),
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = CardConfig.cardAlpha),
+                    scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = CardConfig.cardAlpha)
+                ),
+                windowInsets = WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal),
+                scrollBehavior = scrollBehavior
+            )
         },
         contentWindowInsets = WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)
     ) { paddingValues ->
@@ -532,7 +667,7 @@ fun MoreSettingsScreen() {
                 .padding(horizontal = 16.dp)
                 .padding(top = 8.dp)
         ) {
-            // 外观设置部分
+            // ========== 外观设置部分 ==========
             SettingsCard(
                 title = stringResource(R.string.appearance_settings),
             ) {
@@ -555,15 +690,16 @@ fun MoreSettingsScreen() {
 
                 // 动态颜色开关
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                    SwitchItem(
+                    SwitchSettingItem(
                         icon = Icons.Filled.ColorLens,
                         title = stringResource(R.string.dynamic_color_title),
                         summary = stringResource(R.string.dynamic_color_summary),
-                        checked = useDynamicColor
-                    ) { enabled ->
-                        useDynamicColor = enabled
-                        context.saveDynamicColorState(enabled)
-                    }
+                        checked = useDynamicColor,
+                        onChange = { enabled ->
+                            useDynamicColor = enabled
+                            context.saveDynamicColorState(enabled)
+                        }
+                    )
                 }
 
                 // 只在未启用动态颜色时显示主题色选择
@@ -614,22 +750,12 @@ fun MoreSettingsScreen() {
                                     isSelected = false,
                                     modifier = Modifier.padding(horizontal = 2.dp)
                                 )
-
-                                Spacer(modifier = Modifier.width(8.dp))
-
-                                Icon(
-                                    Icons.AutoMirrored.Filled.NavigateNext,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
                             }
                         }
                     )
                 }
 
-                HorizontalDivider(
-                    modifier = Modifier.padding(vertical = 8.dp)
-                )
+                SettingsDivider()
 
                 // DPI 设置
                 SettingItem(
@@ -737,48 +863,47 @@ fun MoreSettingsScreen() {
                     }
                 }
 
-                HorizontalDivider(
-                    modifier = Modifier.padding(vertical = 8.dp),
-                )
+                SettingsDivider()
 
                 // 自定义背景开关
-                SwitchItem(
+                SwitchSettingItem(
                     icon = Icons.Filled.Wallpaper,
                     title = stringResource(id = R.string.settings_custom_background),
                     summary = stringResource(id = R.string.settings_custom_background_summary),
-                    checked = isCustomBackgroundEnabled
-                ) { isChecked ->
-                    if (isChecked) {
-                        pickImageLauncher.launch("image/*")
-                    } else {
-                        context.saveCustomBackground(null)
-                        isCustomBackgroundEnabled = false
-                        CardConfig.cardAlpha = 1f
-                        CardConfig.cardDim = 0f
-                        CardConfig.isCustomAlphaSet = false
-                        CardConfig.isCustomDimSet = false
-                        CardConfig.isCustomBackgroundEnabled = false
-                        saveCardConfig(context)
+                    checked = isCustomBackgroundEnabled,
+                    onChange = { isChecked ->
+                        if (isChecked) {
+                            pickImageLauncher.launch("image/*")
+                        } else {
+                            context.saveCustomBackground(null)
+                            isCustomBackgroundEnabled = false
+                            CardConfig.cardAlpha = 1f
+                            CardConfig.cardDim = 0f
+                            CardConfig.isCustomAlphaSet = false
+                            CardConfig.isCustomDimSet = false
+                            CardConfig.isCustomBackgroundEnabled = false
+                            saveCardConfig(context)
 
-                        // 重置其他相关设置
-                        ThemeConfig.needsResetOnThemeChange = true
-                        ThemeConfig.preventBackgroundRefresh = false
+                            // 重置其他相关设置
+                            ThemeConfig.needsResetOnThemeChange = true
+                            ThemeConfig.preventBackgroundRefresh = false
 
-                        context.getSharedPreferences("theme_prefs", Context.MODE_PRIVATE)
-                            .edit {
-                                putBoolean(
-                                    "prevent_background_refresh",
-                                    false
-                                )
-                            }
+                            context.getSharedPreferences("theme_prefs", Context.MODE_PRIVATE)
+                                .edit {
+                                    putBoolean(
+                                        "prevent_background_refresh",
+                                        false
+                                    )
+                                }
 
-                        Toast.makeText(
-                            context,
-                            context.getString(R.string.background_removed),
-                            Toast.LENGTH_SHORT
-                        ).show()
+                            Toast.makeText(
+                                context,
+                                context.getString(R.string.background_removed),
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
                     }
-                }
+                )
 
                 // 透明度和亮度调节滑动条
                 AnimatedVisibility(
@@ -896,118 +1021,112 @@ fun MoreSettingsScreen() {
                 }
             }
 
-            // 自定义设置部分
+            // 自定义设置
             SettingsCard(
                 title = stringResource(R.string.custom_settings)
             ) {
-                // 图标切换by lshwjgpt
-                SwitchItem(
+                // 图标切换
+                SwitchSettingItem(
                     icon = Icons.Default.Android,
                     title = stringResource(R.string.icon_switch_title),
                     summary = stringResource(R.string.icon_switch_summary),
-                    checked = useAltIcon
-                ) {
-                    onUseAltIconChange(it)
-                }
+                    checked = useAltIcon,
+                    onChange = onUseAltIconChange
+                )
 
                 // 添加简洁模式开关
-                SwitchItem(
+                SwitchSettingItem(
                     icon = Icons.Filled.Brush,
                     title = stringResource(R.string.simple_mode),
                     summary = stringResource(R.string.simple_mode_summary),
-                    checked = isSimpleMode
-                ) {
-                    onSimpleModeChange(it)
-                }
+                    checked = isSimpleMode,
+                    onChange = onSimpleModeChange
+                )
 
                 // 隐藏内核部分版本号
-                SwitchItem(
+                SwitchSettingItem(
                     icon = Icons.Filled.VisibilityOff,
                     title = stringResource(R.string.hide_kernel_kernelsu_version),
                     summary = stringResource(R.string.hide_kernel_kernelsu_version_summary),
-                    checked = isHideVersion
-                ) {
-                    onHideVersionChange(it)
-                }
+                    checked = isHideVersion,
+                    onChange = onHideVersionChange
+                )
 
                 // 模块数量等信息
-                SwitchItem(
+                SwitchSettingItem(
                     icon = Icons.Filled.VisibilityOff,
                     title = stringResource(R.string.hide_other_info),
                     summary = stringResource(R.string.hide_other_info_summary),
-                    checked = isHideOtherInfo
-                ) {
-                    onHideOtherInfoChange(it)
-                }
+                    checked = isHideOtherInfo,
+                    onChange = onHideOtherInfoChange
+                )
 
                 // SuSFS 状态信息
-                SwitchItem(
+                SwitchSettingItem(
                     icon = Icons.Filled.VisibilityOff,
                     title = stringResource(R.string.hide_susfs_status),
                     summary = stringResource(R.string.hide_susfs_status_summary),
-                    checked = isHideSusfsStatus
-                ) {
-                    onHideSusfsStatusChange(it)
-                }
+                    checked = isHideSusfsStatus,
+                    onChange = onHideSusfsStatusChange
+                )
 
                 if (Natives.version >= Natives.MINIMAL_SUPPORTED_KPM) {
                     // 显示KPM开关
-                    SwitchItem(
+                    SwitchSettingItem(
                         icon = Icons.Filled.Visibility,
                         title = stringResource(R.string.show_kpm_info),
                         summary = stringResource(R.string.show_kpm_info_summary),
-                        checked = isShowKpmInfo
-                    ) {
-                        onShowKpmInfoChange(it)
-                    }
+                        checked = isShowKpmInfo,
+                        onChange = onShowKpmInfoChange
+                    )
                 }
 
                 // 隐藏链接信息
-                SwitchItem(
+                SwitchSettingItem(
                     icon = Icons.Filled.VisibilityOff,
                     title = stringResource(R.string.hide_link_card),
                     summary = stringResource(R.string.hide_link_card_summary),
-                    checked = isHideLinkCard
-                ) {
-                    onHideLinkCardChange(it)
-                }
+                    checked = isHideLinkCard,
+                    onChange = onHideLinkCardChange
+                )
             }
 
-            // 高级设置部分
+            // 高级设置
             SettingsCard(
                 title = stringResource(R.string.advanced_settings)
             ) {
                 // SELinux 开关
                 KsuIsValid {
-                    SwitchItem(
+                    SwitchSettingItem(
                         icon = Icons.Filled.Security,
                         title = stringResource(R.string.selinux),
                         summary = if (selinuxEnabled)
                             stringResource(R.string.selinux_enabled) else
                             stringResource(R.string.selinux_disabled),
-                        checked = selinuxEnabled
-                    ) { enabled ->
-                        val command = if (enabled) "setenforce 1" else "setenforce 0"
-                        Shell.getShell().newJob().add(command).exec().let { result ->
-                            if (result.isSuccess) {
-                                selinuxEnabled = enabled
-                                // 显示成功提示
-                                val message = if (enabled)
-                                    context.getString(R.string.selinux_enabled_toast)
-                                else
-                                    context.getString(R.string.selinux_disabled_toast)
+                        checked = selinuxEnabled,
+                        onChange = { enabled ->
+                            val command = if (enabled) "setenforce 1" else "setenforce 0"
+                            Shell.getShell().newJob().add(command).exec().let { result ->
+                                if (result.isSuccess) {
+                                    selinuxEnabled = enabled
+                                    // 显示成功提示
+                                    val message = if (enabled)
+                                        context.getString(R.string.selinux_enabled_toast)
+                                    else
+                                        context.getString(R.string.selinux_disabled_toast)
 
-                                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-                            } else {
-                                // 显示失败提示
-                                Toast.makeText(
-                                    context,
-                                    context.getString(R.string.selinux_change_failed),
-                                    Toast.LENGTH_SHORT
-                                ).show()
+                                    Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                                } else {
+                                    // 显示失败提示
+                                    Toast.makeText(
+                                        context,
+                                        context.getString(R.string.selinux_change_failed),
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
                             }
                         }
-                    }
+                    )
                 }
 
                 // SuSFS 配置（仅在支持时显示）
@@ -1031,195 +1150,41 @@ fun MoreSettingsScreen() {
                         isEnabled = currentMode == "2"
                     }
 
-                    SwitchItem(
+                    SwitchSettingItem(
                         icon = Icons.Filled.Security,
                         title = stringResource(id = R.string.settings_susfs_toggle),
                         summary = stringResource(id = R.string.settings_susfs_toggle_summary),
-                        checked = isEnabled
-                    ) {
-                        if (it) {
-                            // 手动启用
-                            susfsSUS_SU_2()
-                            prefs.edit { putBoolean("enable_sus_su", true) }
-                            Toast.makeText(
-                                context,
-                                context.getString(R.string.susfs_enabled),
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        } else {
-                            // 手动关闭
-                            susfsSUS_SU_0()
-                            prefs.edit { putBoolean("enable_sus_su", false) }
-                            Toast.makeText(
-                                context,
-                                context.getString(R.string.susfs_disabled),
-                                Toast.LENGTH_SHORT
-                            ).show()
+                        checked = isEnabled,
+                        onChange = {
+                            if (it) {
+                                // 手动启用
+                                susfsSUS_SU_2()
+                                prefs.edit { putBoolean("enable_sus_su", true) }
+                                Toast.makeText(
+                                    context,
+                                    context.getString(R.string.susfs_enabled),
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            } else {
+                                // 手动关闭
+                                susfsSUS_SU_0()
+                                prefs.edit { putBoolean("enable_sus_su", false) }
+                                Toast.makeText(
+                                    context,
+                                    context.getString(R.string.susfs_disabled),
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                            isEnabled = it
                         }
-                        isEnabled = it
-                    }
+                    )
                 }
             }
         }
     }
-
-    // 主题模式选择对话框
-    if (showThemeModeDialog) {
-        AlertDialog(
-            onDismissRequest = { showThemeModeDialog = false },
-            title = { Text(stringResource(R.string.theme_mode)) },
-            text = {
-                Column {
-                    themeOptions.forEachIndexed { index, option ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable {
-                                    themeMode = index
-                                    val newThemeMode = when(index) {
-                                        0 -> null // 跟随系统
-                                        1 -> false // 浅色
-                                        2 -> true // 深色
-                                        else -> null
-                                    }
-                                    context.saveThemeMode(newThemeMode)
-                                    when (index) {
-                                        2 -> { // 深色
-                                            ThemeConfig.forceDarkMode = true
-                                            CardConfig.isUserDarkModeEnabled = true
-                                            CardConfig.isUserLightModeEnabled = false
-                                            CardConfig.setThemeDefaults(true)
-                                            CardConfig.save(context)
-                                        }
-                                        1 -> { // 浅色
-                                            ThemeConfig.forceDarkMode = false
-                                            CardConfig.isUserLightModeEnabled = true
-                                            CardConfig.isUserDarkModeEnabled = false
-                                            CardConfig.setThemeDefaults(false)
-                                            CardConfig.save(context)
-                                        }
-                                        0 -> { // 跟随系统
-                                            ThemeConfig.forceDarkMode = null
-                                            CardConfig.isUserLightModeEnabled = false
-                                            CardConfig.isUserDarkModeEnabled = false
-                                            CardConfig.setThemeDefaults(isDarkTheme)
-                                            CardConfig.save(context)
-                                        }
-                                    }
-                                    showThemeModeDialog = false
-                                }
-                                .padding(vertical = 12.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            RadioButton(
-                                selected = themeMode == index,
-                                onClick = null
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(option)
-                        }
-                    }
-                }
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = { showThemeModeDialog = false }
-                ) {
-                    Text(stringResource(R.string.cancel))
-                }
-            }
-        )
-    }
-
-    // DPI 设置确认对话框
-    if (showDpiConfirmDialog) {
-        AlertDialog(
-            onDismissRequest = { showDpiConfirmDialog = false },
-            title = { Text(stringResource(R.string.dpi_confirm_title)) },
-            text = {
-                Column {
-                    Text(stringResource(R.string.dpi_confirm_message, currentDpi, tempDpi))
-                    Text(
-                        stringResource(R.string.dpi_confirm_summary),
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.padding(top = 8.dp)
-                    )
-                }
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = { applyDpiSetting(tempDpi) }
-                ) {
-                    Text(stringResource(R.string.confirm))
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = {
-                        showDpiConfirmDialog = false
-                        tempDpi = currentDpi
-                    }
-                ) {
-                    Text(stringResource(R.string.cancel))
-                }
-            }
-        )
-    }
-
-    // 主题色选择对话框
-    if (showThemeColorDialog) {
-        AlertDialog(
-            onDismissRequest = { showThemeColorDialog = false },
-            title = { Text(stringResource(R.string.choose_theme_color)) },
-            text = {
-                Column {
-                    themeColorOptions.forEach { (name, theme) ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable {
-                                    context.saveThemeColors(when (theme) {
-                                        ThemeColors.Green -> "green"
-                                        ThemeColors.Purple -> "purple"
-                                        ThemeColors.Orange -> "orange"
-                                        ThemeColors.Pink -> "pink"
-                                        ThemeColors.Gray -> "gray"
-                                        ThemeColors.Yellow -> "yellow"
-                                        else -> "default"
-                                    })
-                                    showThemeColorDialog = false
-                                }
-                                .padding(vertical = 12.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            RadioButton(
-                                selected = ThemeConfig.currentTheme::class == theme::class,
-                                onClick = null
-                            )
-                            Spacer(modifier = Modifier.width(12.dp))
-                            val isDark = isSystemInDarkTheme()
-                            Box(
-                                modifier = Modifier
-                                    .size(24.dp)
-                                    .clip(CircleShape)
-                                    .background(if (isDark) theme.primaryDark else theme.primaryLight)
-                            )
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Text(name)
-                        }
-                    }
-                }
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = { showThemeColorDialog = false }
-                ) {
-                    Text(stringResource(R.string.cancel))
-                }
-            }
-        )
-    }
 }
+
+
 
 @Composable
 fun SettingsCard(
@@ -1230,7 +1195,7 @@ fun SettingsCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(bottom = 16.dp),
+            .padding(bottom = SETTINGS_GROUP_SPACING),
         colors = getCardColors(MaterialTheme.colorScheme.surfaceContainerHigh),
         elevation = getCardElevation(),
         shape = MaterialTheme.shapes.medium
@@ -1238,7 +1203,10 @@ fun SettingsCard(
         Column(modifier = Modifier.padding(vertical = 8.dp)) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp)
+                    .padding(horizontal = 16.dp)
             ) {
                 if (icon != null) {
                     Icon(
@@ -1277,8 +1245,9 @@ fun SettingItem(
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .height(if (subtitle != null) SETTINGS_ITEM_HEIGHT + 12.dp else SETTINGS_ITEM_HEIGHT)
             .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .padding(horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
@@ -1291,17 +1260,23 @@ fun SettingItem(
         )
 
         Column(
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.Center
         ) {
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleMedium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
             if (subtitle != null) {
+                Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = subtitle,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
         }
@@ -1310,6 +1285,66 @@ fun SettingItem(
     }
 }
 
+@Composable
+fun SwitchSettingItem(
+    icon: ImageVector,
+    title: String,
+    summary: String? = null,
+    checked: Boolean,
+    onChange: (Boolean) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(if (summary != null) SETTINGS_ITEM_HEIGHT + 12.dp else SETTINGS_ITEM_HEIGHT)
+            .clickable { onChange(!checked) }
+            .padding(horizontal = 16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = if (checked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier
+                .padding(end = 16.dp)
+                .size(24.dp)
+        )
+
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            if (summary != null) {
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = summary,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        }
+
+        Switch(
+            checked = checked,
+            onCheckedChange = onChange
+        )
+    }
+}
+
+@Composable
+fun SettingsDivider() {
+    HorizontalDivider(
+        modifier = Modifier.padding(vertical = 8.dp)
+    )
+}
 
 @Composable
 fun ColorCircle(
@@ -1336,29 +1371,124 @@ fun ColorCircle(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun TopBar(
-    scrollBehavior: TopAppBarScrollBehavior? = null
+fun SingleChoiceDialog(
+    title: String,
+    options: List<String>,
+    selectedIndex: Int,
+    onOptionSelected: (Int) -> Unit,
+    onDismiss: () -> Unit
 ) {
-    val colorScheme = MaterialTheme.colorScheme
-    val cardColor = if (CardConfig.isCustomBackgroundEnabled) {
-        colorScheme.surfaceContainerLow
-    } else {
-        colorScheme.background
-    }
-    TopAppBar(
-        title = {
-            Text(
-                text = stringResource(R.string.more_settings),
-                style = MaterialTheme.typography.titleLarge
-            )
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(title) },
+        text = {
+            Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                options.forEachIndexed { index, option ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                onOptionSelected(index)
+                                onDismiss()
+                            }
+                            .padding(vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        RadioButton(
+                            selected = selectedIndex == index,
+                            onClick = null
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(option)
+                    }
+                }
+            }
         },
-        colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = cardColor.copy(alpha = CardConfig.cardAlpha),
-            scrolledContainerColor = cardColor.copy(alpha = CardConfig.cardAlpha)
-        ),
-        windowInsets = WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal),
-        scrollBehavior = scrollBehavior
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.cancel))
+            }
+        }
+    )
+}
+
+@Composable
+fun ConfirmDialog(
+    title: String,
+    message: String,
+    summaryText: String? = null,
+    confirmText: String = stringResource(R.string.confirm),
+    dismissText: String = stringResource(R.string.cancel),
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(title) },
+        text = {
+            Column {
+                Text(message)
+                if (summaryText != null) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        summaryText,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text(confirmText)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(dismissText)
+            }
+        }
+    )
+}
+
+@Composable
+fun KeyValueChoiceDialog(
+    title: String,
+    options: List<Pair<String, String>>,
+    selectedCode: String,
+    onOptionSelected: (String) -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(title) },
+        text = {
+            Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                options.forEach { (code, name) ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                onOptionSelected(code)
+                                onDismiss()
+                            }
+                            .padding(vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        RadioButton(
+                            selected = selectedCode == code,
+                            onClick = null
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(name)
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.cancel))
+            }
+        }
     )
 }
