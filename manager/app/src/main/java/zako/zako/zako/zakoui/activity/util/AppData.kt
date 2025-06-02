@@ -1,16 +1,16 @@
-package com.sukisu.ultra.ui.data
+package zako.zako.zako.zakoui.activity.util
 
 import com.sukisu.ultra.Natives
 import com.sukisu.ultra.ui.util.getKpmModuleCount
 import com.sukisu.ultra.ui.util.getKpmVersion
+import com.sukisu.ultra.ui.util.getModuleCount
+import com.sukisu.ultra.ui.util.getSuperuserCount
 import com.sukisu.ultra.ui.util.rootAvailable
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.withContext
-import com.sukisu.ultra.ui.util.getModuleCount
-import com.sukisu.ultra.ui.util.getSuperuserCount
 
 object AppData {
     object DataRefreshManager {

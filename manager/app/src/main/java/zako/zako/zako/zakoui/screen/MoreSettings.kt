@@ -1,4 +1,4 @@
-package com.sukisu.ultra.ui.screen
+package zako.zako.zako.zakoui.screen
 
 import android.annotation.SuppressLint
 import android.app.Activity
