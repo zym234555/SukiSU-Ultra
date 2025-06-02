@@ -33,15 +33,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Android
-import androidx.compose.material.icons.filled.Archive
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Memory
-import androidx.compose.material.icons.filled.PhoneAndroid
-import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Security
-import androidx.compose.material.icons.filled.SettingsSuggest
-import androidx.compose.material.icons.filled.Storage
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.Block
 import androidx.compose.material.icons.outlined.TaskAlt
 import androidx.compose.material.icons.outlined.Warning
@@ -96,10 +88,6 @@ import com.sukisu.ultra.ui.theme.CardConfig.cardElevation
 import com.sukisu.ultra.ui.theme.getCardColors
 import com.sukisu.ultra.ui.theme.getCardElevation
 import com.sukisu.ultra.ui.util.checkNewVersion
-import com.sukisu.ultra.ui.util.getKpmModuleCount
-import com.sukisu.ultra.ui.util.getKpmVersion
-import com.sukisu.ultra.ui.util.getModuleCount
-import com.sukisu.ultra.ui.util.getSuperuserCount
 import com.sukisu.ultra.ui.util.module.LatestVersionInfo
 import com.sukisu.ultra.ui.util.reboot
 import com.sukisu.ultra.ui.viewmodel.HomeViewModel
@@ -138,8 +126,6 @@ fun HomeScreen(navigator: DestinationsNavigator) {
     Scaffold(
         topBar = {
             TopBar(
-                kernelVersion = viewModel.systemStatus.kernelVersion,
-                onInstallClick = { navigator.navigate(InstallScreenDestination) },
                 scrollBehavior = scrollBehavior
             )
         },
@@ -200,8 +186,6 @@ fun HomeScreen(navigator: DestinationsNavigator) {
                 InfoCard(
                     systemInfo = viewModel.systemInfo,
                     isSimpleMode = viewModel.isSimpleMode,
-                    isHideVersion = viewModel.isHideVersion,
-                    isHideOtherInfo = viewModel.isHideOtherInfo,
                     isHideSusfsStatus = viewModel.isHideSusfsStatus,
                     showKpmInfo = viewModel.showKpmInfo,
                     lkmMode = viewModel.systemStatus.lkmMode,
@@ -279,8 +263,6 @@ fun RebootDropdownItem(@StringRes id: Int, reason: String = "") {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun TopBar(
-    kernelVersion: KernelVersion,
-    onInstallClick: () -> Unit,
     scrollBehavior: TopAppBarScrollBehavior? = null
 ) {
     val colorScheme = MaterialTheme.colorScheme
@@ -308,7 +290,7 @@ private fun TopBar(
                     showDropdown = true
                 }) {
                     Icon(
-                        imageVector = Icons.Filled.Refresh,
+                        imageVector = Icons.Filled.PowerSettingsNew,
                         contentDescription = stringResource(id = R.string.reboot)
                     )
 
@@ -636,8 +618,6 @@ fun DonateCard() {
 private fun InfoCard(
     systemInfo: HomeViewModel.SystemInfo,
     isSimpleMode: Boolean,
-    isHideVersion: Boolean,
-    isHideOtherInfo: Boolean,
     isHideSusfsStatus: Boolean,
     showKpmInfo: Boolean,
     lkmMode: Boolean?
@@ -655,7 +635,7 @@ private fun InfoCard(
             fun InfoCardItem(
                 label: String,
                 content: String,
-                icon: ImageVector = Icons.Default.Info
+                icon: ImageVector? = null,
             ) {
                 Row(
                     verticalAlignment = Alignment.Top,
@@ -663,14 +643,15 @@ private fun InfoCard(
                         .fillMaxWidth()
                         .padding(vertical = 8.dp)
                 ) {
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = label,
-                        modifier = Modifier
-                            .size(28.dp)
-                            .padding(vertical = 4.dp),
-                        tint = MaterialTheme.colorScheme.primary,
-                    )
+                    if (icon != null) {
+                        Icon(
+                            imageVector = icon,
+                            contentDescription = label,
+                            modifier = Modifier
+                                .size(28.dp)
+                                .padding(vertical = 4.dp),
+                        )
+                    }
                     Spacer(modifier = Modifier.width(16.dp))
                     Column(
                         modifier = Modifier
