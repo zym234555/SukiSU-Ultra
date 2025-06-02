@@ -4,8 +4,6 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
-import android.content.ComponentName
-import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.net.Uri
 import android.os.Build
@@ -92,6 +90,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.unit.sp
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
+import com.sukisu.ultra.ui.util.restartApp
 
 /**
  * @author ShirkNeko
@@ -105,22 +104,6 @@ private val SETTINGS_GROUP_SPACING = 16.dp
  */
 fun saveCardConfig(context: Context) {
     CardConfig.save(context)
-}
-
-/**
- * 切换启动器图标
- */
-fun toggleLauncherIcon(context: Context, useAlt: Boolean) {
-    val pm = context.packageManager
-    val main = ComponentName(context, MainActivity::class.java.name)
-    val alt = ComponentName(context, "${MainActivity::class.java.name}Alias")
-    if (useAlt) {
-        pm.setComponentEnabledSetting(main, PackageManager.COMPONENT_ENABLED_STATE_DISABLED, PackageManager.DONT_KILL_APP)
-        pm.setComponentEnabledSetting(alt, PackageManager.COMPONENT_ENABLED_STATE_ENABLED, PackageManager.DONT_KILL_APP)
-    } else {
-        pm.setComponentEnabledSetting(alt, PackageManager.COMPONENT_ENABLED_STATE_DISABLED, PackageManager.DONT_KILL_APP)
-        pm.setComponentEnabledSetting(main, PackageManager.COMPONENT_ENABLED_STATE_ENABLED, PackageManager.DONT_KILL_APP)
-    }
 }
 
 /**
@@ -313,28 +296,14 @@ fun MoreSettingsScreen(
     val onHideOtherInfoChange = { newValue: Boolean ->
         prefs.edit { putBoolean("is_hide_other_info", newValue) }
         isHideOtherInfo = newValue
-
-        val intent = Intent(context, MainActivity::class.java)
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK)
-        context.startActivity(intent)
-
-        if (context is Activity) {
-            context.finish()
-        }
+        context.restartApp(MainActivity::class.java)
     }
 
     // 更新显示KPM开关状态
     val onShowKpmInfoChange = { newValue: Boolean ->
         prefs.edit { putBoolean("show_kpm_info", newValue) }
         isShowKpmInfo = newValue
-
-        val intent = Intent(context, MainActivity::class.java)
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK)
-        context.startActivity(intent)
-
-        if (context is Activity) {
-            context.finish()
-        }
+        context.restartApp(MainActivity::class.java)
     }
 
     // 隐藏SuSFS状态开关状态
