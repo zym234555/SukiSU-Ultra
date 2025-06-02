@@ -110,6 +110,10 @@ Please **all** refer to https://kernelsu.org/zh_CN/guide/installation.html
 5. More customization
 6. Support for KPM kernel modules
 
+## Troubleshooting
+
+1. Uninstalling the KernelSU Manager device is stuck. → Uninstall the application with package name com.sony.playmemories.mobile.
+
 ## License
 
 - The file in the “kernel” directory is under [GPL-2.0-only](https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html) license.

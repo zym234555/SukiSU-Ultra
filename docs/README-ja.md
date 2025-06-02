@@ -108,6 +108,10 @@ https://kernelsu.org/zh_CN/guide/installation.html をご参照ください。
 5. その他のカスタマイズ
 6. KPM カーネルモジュールに対応
 
+## トラブルシューティング
+
+1.KernelSU Managerのアンインストールができない。 →パッケージ名com.sony.playmemories.mobile.KernelSU Managerのアプリケーションをアンインストールする。
+
 ## ライセンス
 
 - `kernel` ディレクトリ以下のファイルは[GPL-2.0-only](https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html)です。
