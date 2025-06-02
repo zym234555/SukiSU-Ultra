@@ -47,7 +47,30 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.lifecycle.lifecycleScope
 import com.sukisu.ultra.ui.viewmodel.HomeViewModel
 import com.sukisu.ultra.ui.viewmodel.SuperUserViewModel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
+
+// 数据刷新管理
+object DataRefreshManager {
+    private val _superuserCount = MutableStateFlow(0)
+    private val _moduleCount = MutableStateFlow(0)
+    private val _kpmModuleCount = MutableStateFlow(0)
+
+    val superuserCount: StateFlow<Int> = _superuserCount.asStateFlow()
+    val moduleCount: StateFlow<Int> = _moduleCount.asStateFlow()
+    val kpmModuleCount: StateFlow<Int> = _kpmModuleCount.asStateFlow()
+
+    fun refreshData() {
+        _superuserCount.value = getSuperuserCount()
+        _moduleCount.value = getModuleCount()
+        _kpmModuleCount.value = getKpmModuleCount()
+    }
+}
 
 class MainActivity : ComponentActivity() {
     private lateinit var superUserViewModel: SuperUserViewModel
@@ -134,6 +157,9 @@ class MainActivity : ComponentActivity() {
             homeViewModel.initializeData()
         }
 
+        // 数据刷新协程
+        startDataRefreshCoroutine()
+
         val prefs = getSharedPreferences("settings", MODE_PRIVATE)
         val isFirstRun = prefs.getBoolean("is_first_run", true)
 
@@ -192,22 +218,22 @@ class MainActivity : ComponentActivity() {
                 LaunchedEffect(Unit) {
                     initPlatform()
                 }
-
-                Scaffold(
-                    bottomBar = {
-                        AnimatedVisibility(
-                            visible = showBottomBar,
-                            enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
-                            exit = slideOutVertically(targetOffsetY = { it }) + fadeOut()
-                        ) {
-                            BottomBar(navController)
-                        }
-                    },
-                    contentWindowInsets = WindowInsets(0, 0, 0, 0)
-                ) { innerPadding ->
-                    CompositionLocalProvider(
-                        LocalSnackbarHost provides snackBarHostState
-                    ) {
+                
+                CompositionLocalProvider(
+                    LocalSnackbarHost provides snackBarHostState
+                ) {
+                    Scaffold(
+                        bottomBar = {
+                            AnimatedVisibility(
+                                visible = showBottomBar,
+                                enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
+                                exit = slideOutVertically(targetOffsetY = { it }) + fadeOut()
+                            ) {
+                                BottomBar(navController)
+                            }
+                        },
+                        contentWindowInsets = WindowInsets(0, 0, 0, 0)
+                    ) { innerPadding ->
                         DestinationsNavHost(
                             modifier = Modifier.padding(innerPadding),
                             navGraph = NavGraphs.root as NavHostGraphSpec,
@@ -221,6 +247,16 @@ class MainActivity : ComponentActivity() {
                         )
                     }
                 }
+            }
+        }
+    }
+
+    // 数据刷新协程
+    private fun startDataRefreshCoroutine() {
+        lifecycleScope.launch(Dispatchers.IO) {
+            while (isActive) {
+                DataRefreshManager.refreshData()
+                delay(5000)
             }
         }
     }
@@ -268,6 +304,10 @@ class MainActivity : ComponentActivity() {
         lifecycleScope.launch {
             homeViewModel.initializeData()
         }
+
+        lifecycleScope.launch {
+            DataRefreshManager.refreshData()
+        }
     }
 
     private val destroyListeners = mutableListOf<() -> Unit>()
@@ -293,10 +333,10 @@ private fun BottomBar(navController: NavHostController) {
     val cardColor = MaterialTheme.colorScheme.surfaceContainer
     val context = LocalContext.current
 
-    // 获取计数数据
-    val superuserCount = getSuperuserCount()
-    val moduleCount = getModuleCount()
-    val kpmModuleCount = getKpmModuleCount()
+    // 收集计数数据
+    val superuserCount by DataRefreshManager.superuserCount.collectAsState()
+    val moduleCount by DataRefreshManager.moduleCount.collectAsState()
+    val kpmModuleCount by DataRefreshManager.kpmModuleCount.collectAsState()
 
     // 检查是否显示KPM
     val showKpmInfo = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
@@ -336,7 +376,7 @@ private fun BottomBar(navController: NavHostController) {
                                 badge = {
                                     if (kpmModuleCount > 0) {
                                         Badge(
-                                            containerColor = MaterialTheme.colorScheme.error
+                                            containerColor = MaterialTheme.colorScheme.secondary
                                         ) {
                                             Text(
                                                 text = kpmModuleCount.toString(),
@@ -380,7 +420,7 @@ private fun BottomBar(navController: NavHostController) {
                             badge = {
                                 if (superuserCount > 0) {
                                     Badge(
-                                        containerColor = MaterialTheme.colorScheme.error
+                                        containerColor = MaterialTheme.colorScheme.secondary
                                     ) {
                                         Text(
                                             text = superuserCount.toString(),
@@ -423,8 +463,7 @@ private fun BottomBar(navController: NavHostController) {
                             badge = {
                                 if (moduleCount > 0) {
                                     Badge(
-                                        containerColor = MaterialTheme.colorScheme.error
-                                    ) {
+                                        containerColor = MaterialTheme.colorScheme.secondary                              ) {
                                         Text(
                                             text = moduleCount.toString(),
                                             style = MaterialTheme.typography.labelSmall
