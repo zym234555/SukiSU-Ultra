@@ -32,11 +32,13 @@ import com.ramcosta.composedestinations.utils.rememberDestinationsNavigator
 import io.sukisu.ultra.UltraToolInstall
 import com.sukisu.ultra.Natives
 import com.sukisu.ultra.ksuApp
+import com.sukisu.ultra.ui.data.AppData
 import com.sukisu.ultra.ui.screen.BottomBarDestination
 import com.sukisu.ultra.ui.theme.*
 import com.sukisu.ultra.ui.theme.CardConfig.cardAlpha
 import com.sukisu.ultra.ui.util.*
 import androidx.core.content.edit
+import com.sukisu.ultra.ui.data.AppData.DataRefreshManager
 import com.sukisu.ultra.ui.theme.CardConfig.cardElevation
 import com.sukisu.ultra.ui.webui.initPlatform
 import java.util.Locale
@@ -45,32 +47,13 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.lifecycle.lifecycleScope
+import com.sukisu.ultra.ui.data.AppData.getKpmVersionUse
 import com.sukisu.ultra.ui.viewmodel.HomeViewModel
 import com.sukisu.ultra.ui.viewmodel.SuperUserViewModel
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.Dispatchers
-
-// 数据刷新管理
-object DataRefreshManager {
-    private val _superuserCount = MutableStateFlow(0)
-    private val _moduleCount = MutableStateFlow(0)
-    private val _kpmModuleCount = MutableStateFlow(0)
-
-    val superuserCount: StateFlow<Int> = _superuserCount.asStateFlow()
-    val moduleCount: StateFlow<Int> = _moduleCount.asStateFlow()
-    val kpmModuleCount: StateFlow<Int> = _kpmModuleCount.asStateFlow()
-
-    fun refreshData() {
-        _superuserCount.value = getSuperuserCount()
-        _moduleCount.value = getModuleCount()
-        _kpmModuleCount.value = getKpmModuleCount()
-    }
-}
 
 class MainActivity : ComponentActivity() {
     private lateinit var superUserViewModel: SuperUserViewModel
@@ -197,7 +180,7 @@ class MainActivity : ComponentActivity() {
             contentResolver.unregisterContentObserver(contentObserver)
         }
 
-        val isManager = Natives.becomeManager(ksuApp.packageName)
+        val isManager = AppData.isManager(ksuApp.packageName)
         if (isManager) {
             install()
             UltraToolInstall.tryToInstall()
@@ -218,7 +201,7 @@ class MainActivity : ComponentActivity() {
                 LaunchedEffect(Unit) {
                     initPlatform()
                 }
-                
+
                 CompositionLocalProvider(
                     LocalSnackbarHost provides snackBarHostState
                 ) {
@@ -327,9 +310,8 @@ class MainActivity : ComponentActivity() {
 @Composable
 private fun BottomBar(navController: NavHostController) {
     val navigator = navController.rememberDestinationsNavigator()
-    val isManager = Natives.becomeManager(ksuApp.packageName)
-    val fullFeatured = isManager && !Natives.requireNewKernel() && rootAvailable()
-    val kpmVersion = getKpmVersion()
+    val isFullFeatured = AppData.isFullFeatured(ksuApp.packageName)
+    val kpmVersion = getKpmVersionUse()
     val cardColor = MaterialTheme.colorScheme.surfaceContainer
     val context = LocalContext.current
 
@@ -355,7 +337,7 @@ private fun BottomBar(navController: NavHostController) {
         BottomBarDestination.entries.forEach { destination ->
             if (destination == BottomBarDestination.Kpm) {
                 if (kpmVersion.isNotEmpty() && !kpmVersion.startsWith("Error") && showKpmInfo && Natives.version >= Natives.MINIMAL_SUPPORTED_KPM) {
-                    if (!fullFeatured && destination.rootRequired) return@forEach
+                    if (!isFullFeatured && destination.rootRequired) return@forEach
                     val isCurrentDestOnBackStack by navController.isRouteOnBackStackAsState(destination.direction)
                     NavigationBarItem(
                         selected = isCurrentDestOnBackStack,
@@ -398,7 +380,7 @@ private fun BottomBar(navController: NavHostController) {
                     )
                 }
             } else if (destination == BottomBarDestination.SuperUser) {
-                if (!fullFeatured && destination.rootRequired) return@forEach
+                if (!isFullFeatured && destination.rootRequired) return@forEach
                 val isCurrentDestOnBackStack by navController.isRouteOnBackStackAsState(destination.direction)
 
                 NavigationBarItem(
@@ -441,7 +423,7 @@ private fun BottomBar(navController: NavHostController) {
                     alwaysShowLabel = false
                 )
             } else if (destination == BottomBarDestination.Module) {
-                if (!fullFeatured && destination.rootRequired) return@forEach
+                if (!isFullFeatured && destination.rootRequired) return@forEach
                 val isCurrentDestOnBackStack by navController.isRouteOnBackStackAsState(destination.direction)
 
                 NavigationBarItem(
@@ -483,7 +465,7 @@ private fun BottomBar(navController: NavHostController) {
                     alwaysShowLabel = false
                 )
             } else {
-                if (!fullFeatured && destination.rootRequired) return@forEach
+                if (!isFullFeatured && destination.rootRequired) return@forEach
                 val isCurrentDestOnBackStack by navController.isRouteOnBackStackAsState(destination.direction)
 
                 NavigationBarItem(
