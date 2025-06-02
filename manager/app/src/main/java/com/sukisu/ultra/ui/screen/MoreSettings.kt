@@ -90,7 +90,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.unit.sp
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
-import com.sukisu.ultra.ui.util.restartApp
 
 /**
  * @author ShirkNeko
@@ -296,14 +295,12 @@ fun MoreSettingsScreen(
     val onHideOtherInfoChange = { newValue: Boolean ->
         prefs.edit { putBoolean("is_hide_other_info", newValue) }
         isHideOtherInfo = newValue
-        context.restartApp(MainActivity::class.java)
     }
 
     // 更新显示KPM开关状态
     val onShowKpmInfoChange = { newValue: Boolean ->
         prefs.edit { putBoolean("show_kpm_info", newValue) }
         isShowKpmInfo = newValue
-        context.restartApp(MainActivity::class.java)
     }
 
     // 隐藏SuSFS状态开关状态

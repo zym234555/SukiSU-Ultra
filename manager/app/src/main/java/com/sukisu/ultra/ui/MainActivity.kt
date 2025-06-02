@@ -54,10 +54,17 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
 
 class MainActivity : ComponentActivity() {
     private lateinit var superUserViewModel: SuperUserViewModel
     private lateinit var homeViewModel: HomeViewModel
+    internal val settingsStateFlow = MutableStateFlow(SettingsState())
+
+    data class SettingsState(
+        val isHideOtherInfo: Boolean = false,
+        val showKpmInfo: Boolean = true
+    )
 
     private inner class ThemeChangeContentObserver(
         handler: Handler,
@@ -143,8 +150,15 @@ class MainActivity : ComponentActivity() {
         // 数据刷新协程
         startDataRefreshCoroutine()
 
+        startSettingsMonitorCoroutine()
+
         val prefs = getSharedPreferences("settings", MODE_PRIVATE)
         val isFirstRun = prefs.getBoolean("is_first_run", true)
+
+        settingsStateFlow.value = SettingsState(
+            isHideOtherInfo = prefs.getBoolean("is_hide_other_info", false),
+            showKpmInfo = prefs.getBoolean("show_kpm_info", true)
+        )
 
         if (isFirstRun) {
             ThemeConfig.preventBackgroundRefresh = false
@@ -244,6 +258,19 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    private fun startSettingsMonitorCoroutine() {
+        lifecycleScope.launch(Dispatchers.IO) {
+            while (isActive) {
+                val prefs = getSharedPreferences("settings", MODE_PRIVATE)
+                settingsStateFlow.value = SettingsState(
+                    isHideOtherInfo = prefs.getBoolean("is_hide_other_info", false),
+                    showKpmInfo = prefs.getBoolean("show_kpm_info", true)
+                )
+                delay(1000)
+            }
+        }
+    }
+
     // 应用自定义DPI设置
     private fun applyCustomDpi() {
         val prefs = getSharedPreferences("settings", MODE_PRIVATE)
@@ -313,19 +340,18 @@ private fun BottomBar(navController: NavHostController) {
     val isFullFeatured = AppData.isFullFeatured(ksuApp.packageName)
     val kpmVersion = getKpmVersionUse()
     val cardColor = MaterialTheme.colorScheme.surfaceContainer
-    val context = LocalContext.current
+    val activity = LocalContext.current as MainActivity
+    val settings by activity.settingsStateFlow.collectAsState()
+
+    // 检查是否隐藏红点
+    val isHideOtherInfo = settings.isHideOtherInfo
+    val showKpmInfo = settings.showKpmInfo
 
     // 收集计数数据
     val superuserCount by DataRefreshManager.superuserCount.collectAsState()
     val moduleCount by DataRefreshManager.moduleCount.collectAsState()
     val kpmModuleCount by DataRefreshManager.kpmModuleCount.collectAsState()
 
-    // 检查是否显示KPM
-    val showKpmInfo = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
-        .getBoolean("show_kpm_info", true)
-
-    val isHideOtherInfo = LocalContext.current.getSharedPreferences("settings", Context.MODE_PRIVATE)
-        .getBoolean("is_hide_other_info", false)
 
     NavigationBar(
         modifier = Modifier.windowInsetsPadding(
