@@ -354,7 +354,7 @@ private fun StatusCard(
                     }
                 }
                 .padding(24.dp),
-            verticalAlignment = Alignment.Top
+            verticalAlignment = Alignment.CenterVertically
         ) {
             when {
                 systemStatus.ksuVersion != null -> {
@@ -434,12 +434,6 @@ private fun StatusCard(
                         val isHideVersion = LocalContext.current.getSharedPreferences("settings", Context.MODE_PRIVATE)
                             .getBoolean("is_hide_version", false)
 
-                        val isHideOtherInfo = LocalContext.current.getSharedPreferences("settings", Context.MODE_PRIVATE)
-                            .getBoolean("is_hide_other_info", false)
-
-                        val showKpmInfo = LocalContext.current.getSharedPreferences("settings", Context.MODE_PRIVATE)
-                            .getBoolean("show_kpm_info", true)
-
                         if (!isHideVersion) {
                             Spacer(Modifier.height(4.dp))
                             Text(
@@ -447,32 +441,6 @@ private fun StatusCard(
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.secondary,
                             )
-                        }
-
-                        if (!isHideOtherInfo) {
-                            Spacer(Modifier.height(4.dp))
-                            Text(
-                                text = stringResource(R.string.home_superuser_count, getSuperuserCount()),
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.secondary,
-                            )
-
-                            Spacer(Modifier.height(4.dp))
-                            Text(
-                                text = stringResource(R.string.home_module_count, getModuleCount()),
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.secondary,
-                            )
-
-                            val kpmVersion = getKpmVersion()
-                            if (kpmVersion.isNotEmpty() && !kpmVersion.startsWith("Error") && showKpmInfo && Natives.version >= Natives.MINIMAL_SUPPORTED_KPM) {
-                                Spacer(Modifier.height(4.dp))
-                                Text(
-                                    text = stringResource(R.string.home_kpm_module, getKpmModuleCount()),
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.secondary,
-                                )
-                            }
                         }
                     }
                 }

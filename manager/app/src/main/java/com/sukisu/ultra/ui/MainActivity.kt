@@ -291,9 +291,15 @@ private fun BottomBar(navController: NavHostController) {
     val fullFeatured = isManager && !Natives.requireNewKernel() && rootAvailable()
     val kpmVersion = getKpmVersion()
     val cardColor = MaterialTheme.colorScheme.surfaceContainer
+    val context = LocalContext.current
+
+    // 获取计数数据
+    val superuserCount = getSuperuserCount()
+    val moduleCount = getModuleCount()
+    val kpmModuleCount = getKpmModuleCount()
 
     // 检查是否显示KPM
-    val showKpmInfo = LocalContext.current.getSharedPreferences("settings", Context.MODE_PRIVATE)
+    val showKpmInfo = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
         .getBoolean("show_kpm_info", true)
 
     NavigationBar(
@@ -326,19 +332,121 @@ private fun BottomBar(navController: NavHostController) {
                             }
                         },
                         icon = {
-                            if (isCurrentDestOnBackStack) {
-                                Icon(destination.iconSelected, stringResource(destination.label))
-                            } else {
-                                Icon(destination.iconNotSelected, stringResource(destination.label))
+                            BadgedBox(
+                                badge = {
+                                    if (kpmModuleCount > 0) {
+                                        Badge(
+                                            containerColor = MaterialTheme.colorScheme.error
+                                        ) {
+                                            Text(
+                                                text = kpmModuleCount.toString(),
+                                                style = MaterialTheme.typography.labelSmall
+                                            )
+                                        }
+                                    }
+                                }
+                            ) {
+                                if (isCurrentDestOnBackStack) {
+                                    Icon(destination.iconSelected, stringResource(destination.label))
+                                } else {
+                                    Icon(destination.iconNotSelected, stringResource(destination.label))
+                                }
                             }
                         },
                         label = { Text(stringResource(destination.label),style = MaterialTheme.typography.labelMedium) },
                         alwaysShowLabel = false
                     )
                 }
+            } else if (destination == BottomBarDestination.SuperUser) {
+                if (!fullFeatured && destination.rootRequired) return@forEach
+                val isCurrentDestOnBackStack by navController.isRouteOnBackStackAsState(destination.direction)
+
+                NavigationBarItem(
+                    selected = isCurrentDestOnBackStack,
+                    onClick = {
+                        if (isCurrentDestOnBackStack) {
+                            navigator.popBackStack(destination.direction, false)
+                        }
+                        navigator.navigate(destination.direction) {
+                            popUpTo(NavGraphs.root) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
+                    icon = {
+                        BadgedBox(
+                            badge = {
+                                if (superuserCount > 0) {
+                                    Badge(
+                                        containerColor = MaterialTheme.colorScheme.error
+                                    ) {
+                                        Text(
+                                            text = superuserCount.toString(),
+                                            style = MaterialTheme.typography.labelSmall
+                                        )
+                                    }
+                                }
+                            }
+                        ) {
+                            if (isCurrentDestOnBackStack) {
+                                Icon(destination.iconSelected, stringResource(destination.label))
+                            } else {
+                                Icon(destination.iconNotSelected, stringResource(destination.label))
+                            }
+                        }
+                    },
+                    label = { Text(stringResource(destination.label),style = MaterialTheme.typography.labelMedium) },
+                    alwaysShowLabel = false
+                )
+            } else if (destination == BottomBarDestination.Module) {
+                if (!fullFeatured && destination.rootRequired) return@forEach
+                val isCurrentDestOnBackStack by navController.isRouteOnBackStackAsState(destination.direction)
+
+                NavigationBarItem(
+                    selected = isCurrentDestOnBackStack,
+                    onClick = {
+                        if (isCurrentDestOnBackStack) {
+                            navigator.popBackStack(destination.direction, false)
+                        }
+                        navigator.navigate(destination.direction) {
+                            popUpTo(NavGraphs.root) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
+                    icon = {
+                        BadgedBox(
+                            badge = {
+                                if (moduleCount > 0) {
+                                    Badge(
+                                        containerColor = MaterialTheme.colorScheme.error
+                                    ) {
+                                        Text(
+                                            text = moduleCount.toString(),
+                                            style = MaterialTheme.typography.labelSmall
+                                        )
+                                    }
+                                }
+                            }
+                        ) {
+                            if (isCurrentDestOnBackStack) {
+                                Icon(destination.iconSelected, stringResource(destination.label))
+                            } else {
+                                Icon(destination.iconNotSelected, stringResource(destination.label))
+                            }
+                        }
+                    },
+                    label = { Text(stringResource(destination.label),style = MaterialTheme.typography.labelMedium) },
+                    alwaysShowLabel = false
+                )
             } else {
                 if (!fullFeatured && destination.rootRequired) return@forEach
                 val isCurrentDestOnBackStack by navController.isRouteOnBackStackAsState(destination.direction)
+
                 NavigationBarItem(
                     selected = isCurrentDestOnBackStack,
                     onClick = {
