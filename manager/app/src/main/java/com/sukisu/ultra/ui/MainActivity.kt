@@ -44,127 +44,170 @@ class MainActivity : ComponentActivity() {
 
     private lateinit var themeChangeObserver: ThemeChangeContentObserver
 
+    // 添加标记避免重复初始化
+    private var isInitialized = false
+
     override fun attachBaseContext(newBase: Context) {
         val context = LocaleUtils.applyLocale(newBase)
         super.attachBaseContext(context)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        // 确保应用正确的语言设置
-        LocaleUtils.applyLanguageSetting(this)
+        try {
+            // 确保应用正确的语言设置
+            LocaleUtils.applyLanguageSetting(this)
 
-        // 应用自定义 DPI
-        DisplayUtils.applyCustomDpi(this)
+            // 应用自定义 DPI
+            DisplayUtils.applyCustomDpi(this)
 
-        // Enable edge to edge
-        enableEdgeToEdge()
+            // Enable edge to edge
+            enableEdgeToEdge()
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            window.isNavigationBarContrastEnforced = false
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                window.isNavigationBarContrastEnforced = false
+            }
+
+            super.onCreate(savedInstanceState)
+
+            // 使用标记控制初始化流程
+            if (!isInitialized) {
+                initializeViewModels()
+                initializeData()
+                isInitialized = true
+            }
+
+            setContent {
+                KernelSUTheme {
+                    val navController = rememberNavController()
+                    val snackBarHostState = remember { SnackbarHostState() }
+                    val currentDestination = navController.currentBackStackEntryAsState().value?.destination
+
+                    val showBottomBar = when (currentDestination?.route) {
+                        ExecuteModuleActionScreenDestination.route -> false
+                        else -> true
+                    }
+
+                    LaunchedEffect(Unit) {
+                        initPlatform()
+                    }
+
+                    CompositionLocalProvider(
+                        LocalSnackbarHost provides snackBarHostState
+                    ) {
+                        Scaffold(
+                            bottomBar = {
+                                AnimatedBottomBar.AnimatedBottomBarWrapper(
+                                    showBottomBar = showBottomBar,
+                                    content = { BottomBar(navController) }
+                                )
+                            },
+                            contentWindowInsets = WindowInsets(0, 0, 0, 0)
+                        ) { innerPadding ->
+                            DestinationsNavHost(
+                                modifier = Modifier.padding(innerPadding),
+                                navGraph = NavGraphs.root as NavHostGraphSpec,
+                                navController = navController,
+                                defaultTransitions = NavigationUtils.defaultTransitions()
+                            )
+                        }
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
+    }
 
-        super.onCreate(savedInstanceState)
-
-        // 初始化 SuperUserViewModel
+    private fun initializeViewModels() {
         superUserViewModel = SuperUserViewModel()
-
-        lifecycleScope.launch {
-            superUserViewModel.fetchAppList()
-        }
-
-        // 初始化 HomeViewModel
         homeViewModel = HomeViewModel()
 
-        // 预加载数据
+        // 设置主题变化监听器
+        themeChangeObserver = ThemeUtils.registerThemeChangeObserver(this)
+    }
+
+    private fun initializeData() {
         lifecycleScope.launch {
-            homeViewModel.initializeData()
+            try {
+                superUserViewModel.fetchAppList()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+
+        lifecycleScope.launch {
+            try {
+                homeViewModel.initializeData()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
 
         // 数据刷新协程
         DataRefreshUtils.startDataRefreshCoroutine(lifecycleScope)
-
         DataRefreshUtils.startSettingsMonitorCoroutine(lifecycleScope, this, settingsStateFlow)
 
         // 初始化主题相关设置
         ThemeUtils.initializeThemeSettings(this, settingsStateFlow)
-
-        // 设置主题变化监听器
-        themeChangeObserver = ThemeUtils.registerThemeChangeObserver(this)
 
         val isManager = AppData.isManager(ksuApp.packageName)
         if (isManager) {
             install()
             UltraToolInstall.tryToInstall()
         }
+    }
 
-        setContent {
-            KernelSUTheme {
-                val navController = rememberNavController()
-                val snackBarHostState = remember { SnackbarHostState() }
-                val currentDestination = navController.currentBackStackEntryAsState().value?.destination
+    override fun onResume() {
+        try {
+            super.onResume()
+            LocaleUtils.applyLanguageSetting(this)
+            ThemeUtils.onActivityResume()
 
-                val showBottomBar = when (currentDestination?.route) {
-                    ExecuteModuleActionScreenDestination.route -> false // Hide for ExecuteModuleActionScreen
-                    else -> true
-                }
+            // 仅在需要时刷新数据
+            if (isInitialized) {
+                refreshData()
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
 
-                // pre-init platform to faster start WebUI X activities
-                LaunchedEffect(Unit) {
-                    initPlatform()
-                }
-
-                CompositionLocalProvider(
-                    LocalSnackbarHost provides snackBarHostState
-                ) {
-                    Scaffold(
-                        bottomBar = {
-                            AnimatedBottomBar.AnimatedBottomBarWrapper(
-                                showBottomBar = showBottomBar,
-                                content = { BottomBar(navController) }
-                            )
-                        },
-                        contentWindowInsets = WindowInsets(0, 0, 0, 0)
-                    ) { innerPadding ->
-                        DestinationsNavHost(
-                            modifier = Modifier.padding(innerPadding),
-                            navGraph = NavGraphs.root as NavHostGraphSpec,
-                            navController = navController,
-                            defaultTransitions = NavigationUtils.defaultTransitions()
-                        )
-                    }
-                }
+    private fun refreshData() {
+        lifecycleScope.launch {
+            try {
+                superUserViewModel.fetchAppList()
+                homeViewModel.initializeData()
+                DataRefreshUtils.refreshData(lifecycleScope)
+            } catch (e: Exception) {
+                e.printStackTrace()
             }
         }
     }
 
     override fun onPause() {
-        super.onPause()
-        ThemeUtils.onActivityPause(this)
-    }
-
-    override fun onResume() {
-        super.onResume()
-        LocaleUtils.applyLanguageSetting(this)
-        ThemeUtils.onActivityResume()
-
-        lifecycleScope.launch {
-            superUserViewModel.fetchAppList()
+        try {
+            super.onPause()
+            ThemeUtils.onActivityPause(this)
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
-
-        lifecycleScope.launch {
-            homeViewModel.initializeData()
-        }
-
-        DataRefreshUtils.refreshData(lifecycleScope)
     }
 
     override fun onDestroy() {
-        ThemeUtils.unregisterThemeChangeObserver(this, themeChangeObserver)
-        super.onDestroy()
+        try {
+            ThemeUtils.unregisterThemeChangeObserver(this, themeChangeObserver)
+            super.onDestroy()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
-        super.onConfigurationChanged(newConfig)
-        LocaleUtils.applyLanguageSetting(this)
+        try {
+            super.onConfigurationChanged(newConfig)
+            LocaleUtils.applyLanguageSetting(this)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 }

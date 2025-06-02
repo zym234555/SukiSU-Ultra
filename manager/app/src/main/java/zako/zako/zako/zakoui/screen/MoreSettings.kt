@@ -90,6 +90,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.unit.sp
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
+import com.sukisu.ultra.ksuApp
 
 /**
  * @author ShirkNeko
@@ -388,14 +389,7 @@ fun MoreSettingsScreen(
                 @Suppress("DEPRECATION")
                 context.resources.updateConfiguration(config, context.resources.displayMetrics)
             }
-
-            val intent = Intent(context, MainActivity::class.java)
-            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK)
-            context.startActivity(intent)
-
-            if (context is Activity) {
-                context.finish()
-            }
+            ksuApp.refreshCurrentActivity()
         }
     }
 
