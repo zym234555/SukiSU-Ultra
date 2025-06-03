@@ -3,7 +3,6 @@ package com.sukisu.ultra.ui.viewmodel
 import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Build
-import android.os.SystemClock
 import android.system.Os
 import android.util.Log
 import androidx.compose.runtime.getValue
@@ -27,7 +26,6 @@ import androidx.core.content.edit
 class HomeViewModel : ViewModel() {
     companion object {
         private const val TAG = "HomeViewModel"
-        private const val CACHE_DURATION = 5 * 60 * 1000L
         private const val PREFS_NAME = "home_cache"
         private const val KEY_SYSTEM_STATUS = "system_status"
         private const val KEY_SYSTEM_INFO = "system_info"
@@ -103,15 +101,7 @@ class HomeViewModel : ViewModel() {
 
     fun initializeData() {
         viewModelScope.launch {
-            val currentTime = System.currentTimeMillis()
-            val lastUpdateTime = prefs.getLong(KEY_LAST_UPDATE, 0)
-            val shouldRefresh = currentTime - lastUpdateTime > CACHE_DURATION
-
-            if (!shouldRefresh) {
-                loadCachedData()
-            } else {
-                fetchAndSaveData()
-            }
+            loadCachedData()
         }
     }
 
@@ -147,16 +137,11 @@ class HomeViewModel : ViewModel() {
                     .getBoolean("check_update", true)
 
                 if (checkUpdate) {
-                    val currentTime = System.currentTimeMillis()
-                    val lastUpdateTime = prefs.getLong(KEY_LAST_UPDATE, 0)
-                    val shouldRefresh = currentTime - lastUpdateTime > CACHE_DURATION
-
-                    if (shouldRefresh) {
-                        val start = SystemClock.elapsedRealtime()
-                        val newVersionInfo = checkNewVersion()
-                        latestVersionInfo = newVersionInfo
-                        prefs.edit { putString(KEY_VERSION_INFO, gson.toJson(newVersionInfo)) }
-                        Log.i(TAG, "Update check completed in ${SystemClock.elapsedRealtime() - start}ms")
+                    val newVersionInfo = checkNewVersion()
+                    latestVersionInfo = newVersionInfo
+                    prefs.edit {
+                        putString(KEY_VERSION_INFO, gson.toJson(newVersionInfo))
+                        putLong(KEY_LAST_UPDATE, System.currentTimeMillis())
                     }
                 }
             } catch (e: Exception) {
