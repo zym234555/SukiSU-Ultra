@@ -704,26 +704,24 @@ private fun InfoCard(
             )
 
             if (!isSimpleMode) {
-                if (lkmMode != true) {
-                    // 根据showKpmInfo决定是否显示KPM信息
-                    if (showKpmInfo && Natives.version >= Natives.MINIMAL_SUPPORTED_KPM) {
-                        val displayVersion = if (systemInfo.kpmVersion.isEmpty() || systemInfo.kpmVersion.startsWith("Error")) {
-                            val statusText = if (Natives.isKPMEnabled()) {
-                                stringResource(R.string.kernel_patched)
-                            } else {
-                                stringResource(R.string.kernel_not_enabled)
-                            }
-                            "${stringResource(R.string.not_supported)} ($statusText)"
+                // 根据showKpmInfo决定是否显示KPM信息
+                if (lkmMode != true && !showKpmInfo && Natives.version >= Natives.MINIMAL_SUPPORTED_KPM) {
+                    val displayVersion = if (systemInfo.kpmVersion.isEmpty() || systemInfo.kpmVersion.startsWith("Error")) {
+                        val statusText = if (Natives.isKPMEnabled()) {
+                            stringResource(R.string.kernel_patched)
                         } else {
-                            "${stringResource(R.string.supported)} (${systemInfo.kpmVersion})"
+                            stringResource(R.string.kernel_not_enabled)
                         }
-
-                        InfoCardItem(
-                            stringResource(R.string.home_kpm_version),
-                            displayVersion,
-                            icon = Icons.Default.Archive
-                        )
+                        "${stringResource(R.string.not_supported)} ($statusText)"
+                    } else {
+                        "${stringResource(R.string.supported)} (${systemInfo.kpmVersion})"
                     }
+
+                    InfoCardItem(
+                        stringResource(R.string.home_kpm_version),
+                        displayVersion,
+                        icon = Icons.Default.Archive
+                    )
                 }
             }
 
