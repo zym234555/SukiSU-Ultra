@@ -325,8 +325,8 @@
     <string name="icon_switched">已切换图标</string>
     <string name="root_require_for_install">需要 root 权限</string>
     <!-- KPM display settings -->
-    <string name="show_kpm_info">显示 KPM 功能</string>
-    <string name="show_kpm_info_summary">在主页和底栏显示 KPM 相关功能和信息 (需要重新打开应用)</string>
+    <string name="show_kpm_info">隐藏 KPM 功能</string>
+    <string name="show_kpm_info_summary">在主页和底栏隐藏 KPM 相关功能和信息</string>
     <!-- Webui X settings -->
     <string name="use_webuix">选择使用的 WebUI 引擎</string>
     <string name="engine_auto_select">自动选择</string>

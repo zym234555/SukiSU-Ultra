@@ -86,7 +86,7 @@ class HomeViewModel : ViewModel() {
         private set
     var isHideLinkCard by mutableStateOf(false)
         private set
-    var showKpmInfo by mutableStateOf(true)
+    var showKpmInfo by mutableStateOf(false)
         private set
 
     fun loadUserSettings(context: Context) {
@@ -97,7 +97,7 @@ class HomeViewModel : ViewModel() {
             isHideOtherInfo = prefs.getBoolean("is_hide_other_info", false)
             isHideSusfsStatus = prefs.getBoolean("is_hide_susfs_status", false)
             isHideLinkCard = prefs.getBoolean("is_hide_link_card", false)
-            showKpmInfo = prefs.getBoolean("show_kpm_info", true)
+            showKpmInfo = prefs.getBoolean("show_kpm_info", false)
         }
     }
 

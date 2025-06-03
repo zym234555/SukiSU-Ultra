@@ -27,7 +27,7 @@ object ThemeUtils {
 
         settingsStateFlow.value = MainActivity.SettingsState(
             isHideOtherInfo = prefs.getBoolean("is_hide_other_info", false),
-            showKpmInfo = prefs.getBoolean("show_kpm_info", true)
+            showKpmInfo = prefs.getBoolean("show_kpm_info", false)
         )
 
         if (isFirstRun) {

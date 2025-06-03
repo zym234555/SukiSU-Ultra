@@ -221,7 +221,7 @@ fun MoreSettingsScreen(
 
     // 显示KPM开关状态
     var isShowKpmInfo by remember {
-        mutableStateOf(prefs.getBoolean("show_kpm_info", true))
+        mutableStateOf(prefs.getBoolean("show_kpm_info", false))
     }
 
     // 隐藏SuSFS状态开关状态
@@ -1063,9 +1063,9 @@ fun MoreSettingsScreen(
                 )
 
                 if (Natives.version >= Natives.MINIMAL_SUPPORTED_KPM) {
-                    // 显示KPM开关
+                    // 隐藏KPM开关
                     SwitchSettingItem(
-                        icon = Icons.Filled.Visibility,
+                        icon = Icons.Filled.VisibilityOff,
                         title = stringResource(R.string.show_kpm_info),
                         summary = stringResource(R.string.show_kpm_info_summary),
                         checked = isShowKpmInfo,

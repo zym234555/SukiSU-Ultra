@@ -39,7 +39,7 @@ class MainActivity : ComponentActivity() {
 
     data class SettingsState(
         val isHideOtherInfo: Boolean = false,
-        val showKpmInfo: Boolean = true
+        val showKpmInfo: Boolean = false
     )
 
     private lateinit var themeChangeObserver: ThemeChangeContentObserver
