@@ -289,7 +289,7 @@
     <string name="horizon_getting_original_slot">获取原有槽位</string>
     <string name="horizon_setting_target_slot">设置指定槽位</string>
     <string name="horizon_restoring_original_slot">恢复默认槽位</string>
-    <string name="current_slot">当前槽位：%1$s </string>
+    <string name="current_slot">当前系统默认槽位：%1$s </string>
     <!-- Error Messages -->
     <string name="horizon_copy_failed">复制失败</string>
     <string name="horizon_unknown_error">未知错误</string>
@@ -302,7 +302,6 @@
     <string name="configuration">配置</string>
     <string name="app_settings">应用设置</string>
     <string name="tools">工具</string>
-    <string name="currently_selected">当前</string>
     <!--  String resources used in SuperUser -->
     <string name="clear">清除</string>
     <string name="apps_with_root">Root 权限应用</string>
