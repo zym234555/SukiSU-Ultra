@@ -236,6 +236,16 @@ class HomeViewModel : ViewModel() {
         }
     }
 
+    private fun getDeviceInfo(): String {
+        var manufacturer =
+            Build.MANUFACTURER[0].uppercaseChar().toString() + Build.MANUFACTURER.substring(1)
+        if (Build.BRAND != Build.MANUFACTURER) {
+            manufacturer += " " + Build.BRAND[0].uppercaseChar() + Build.BRAND.substring(1)
+        }
+        manufacturer += " " + Build.MODEL + " "
+        return manufacturer
+    }
+
     @SuppressLint("PrivateApi")
     private fun getDeviceModel(): String {
         return try {
@@ -247,7 +257,7 @@ class HomeViewModel : ViewModel() {
                 "ro.vivo.market.name",            // Vivo
                 "ro.config.marketing_name"        // Huawei
             )
-            var result = Build.DEVICE
+            var result = getDeviceInfo()
             for (key in marketNameKeys) {
                 val marketName = getMethod.invoke(null, key, "") as String
                 if (marketName.isNotEmpty()) {
@@ -258,7 +268,7 @@ class HomeViewModel : ViewModel() {
             result
         } catch (e: Exception) {
             Log.e(TAG, "Error getting device model", e)
-            Build.DEVICE
+            getDeviceInfo()
         }
     }
 
