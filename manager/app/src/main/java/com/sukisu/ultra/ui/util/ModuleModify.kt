@@ -1,17 +1,14 @@
 package com.sukisu.ultra.ui.util
 
-import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.material3.SnackbarDuration
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.SnackbarResult
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.platform.LocalContext
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -25,18 +22,78 @@ import java.util.Date
 import java.util.Locale
 
 object ModuleModify {
-    suspend fun showRestoreConfirmation(context: Context): Boolean {
-        val result = CompletableDeferred<Boolean>()
-        withContext(Dispatchers.Main) {
-            AlertDialog.Builder(context)
-                .setTitle(context.getString(R.string.restore_confirm_title))
-                .setMessage(context.getString(R.string.restore_confirm_message))
-                .setPositiveButton(context.getString(R.string.confirm)) { _, _ -> result.complete(true) }
-                .setNegativeButton(context.getString(R.string.cancel)) { _, _ -> result.complete(false) }
-                .setOnCancelListener { result.complete(false) }
-                .show()
+    @Composable
+    fun RestoreConfirmationDialog(
+        showDialog: Boolean,
+        onConfirm: () -> Unit,
+        onDismiss: () -> Unit
+    ) {
+        val context = LocalContext.current
+
+        if (showDialog) {
+            AlertDialog(
+                onDismissRequest = onDismiss,
+                title = {
+                    Text(
+                        text = context.getString(R.string.restore_confirm_title),
+                        style = MaterialTheme.typography.headlineSmall
+                    )
+                },
+                text = {
+                    Text(
+                        text = context.getString(R.string.restore_confirm_message),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                },
+                confirmButton = {
+                    TextButton(onClick = onConfirm) {
+                        Text(context.getString(R.string.confirm))
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = onDismiss) {
+                        Text(context.getString(R.string.cancel))
+                    }
+                }
+            )
         }
-        return result.await()
+    }
+
+    @Composable
+    fun AllowlistRestoreConfirmationDialog(
+        showDialog: Boolean,
+        onConfirm: () -> Unit,
+        onDismiss: () -> Unit
+    ) {
+        val context = LocalContext.current
+
+        if (showDialog) {
+            AlertDialog(
+                onDismissRequest = onDismiss,
+                title = {
+                    Text(
+                        text = context.getString(R.string.allowlist_restore_confirm_title),
+                        style = MaterialTheme.typography.headlineSmall
+                    )
+                },
+                text = {
+                    Text(
+                        text = context.getString(R.string.allowlist_restore_confirm_message),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                },
+                confirmButton = {
+                    TextButton(onClick = onConfirm) {
+                        Text(context.getString(R.string.confirm))
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = onDismiss) {
+                        Text(context.getString(R.string.cancel))
+                    }
+                }
+            )
+        }
     }
 
     suspend fun backupModules(context: Context, snackBarHost: SnackbarHostState, uri: Uri) {
@@ -82,8 +139,19 @@ object ModuleModify {
         }
     }
 
-    suspend fun restoreModules(context: Context, snackBarHost: SnackbarHostState, uri: Uri) {
-        val userConfirmed = showRestoreConfirmation(context)
+    suspend fun restoreModules(
+        context: Context,
+        snackBarHost: SnackbarHostState,
+        uri: Uri,
+        showConfirmDialog: (Boolean) -> Unit,
+        confirmResult: CompletableDeferred<Boolean>
+    ) {
+        // 显示确认对话框
+        withContext(Dispatchers.Main) {
+            showConfirmDialog(true)
+        }
+
+        val userConfirmed = confirmResult.await()
         if (!userConfirmed) return
 
         withContext(Dispatchers.IO) {
@@ -132,20 +200,6 @@ object ModuleModify {
         }
     }
 
-    suspend fun showAllowlistRestoreConfirmation(context: Context): Boolean {
-        val result = CompletableDeferred<Boolean>()
-        withContext(Dispatchers.Main) {
-            AlertDialog.Builder(context)
-                .setTitle(context.getString(R.string.allowlist_restore_confirm_title))
-                .setMessage(context.getString(R.string.allowlist_restore_confirm_message))
-                .setPositiveButton(context.getString(R.string.confirm)) { _, _ -> result.complete(true) }
-                .setNegativeButton(context.getString(R.string.cancel)) { _, _ -> result.complete(false) }
-                .setOnCancelListener { result.complete(false) }
-                .show()
-        }
-        return result.await()
-    }
-
     suspend fun backupAllowlist(context: Context, snackBarHost: SnackbarHostState, uri: Uri) {
         withContext(Dispatchers.IO) {
             try {
@@ -182,8 +236,19 @@ object ModuleModify {
         }
     }
 
-    suspend fun restoreAllowlist(context: Context, snackBarHost: SnackbarHostState, uri: Uri) {
-        val userConfirmed = showAllowlistRestoreConfirmation(context)
+    suspend fun restoreAllowlist(
+        context: Context,
+        snackBarHost: SnackbarHostState,
+        uri: Uri,
+        showConfirmDialog: (Boolean) -> Unit,
+        confirmResult: CompletableDeferred<Boolean>
+    ) {
+        // 显示确认对话框
+        withContext(Dispatchers.Main) {
+            showConfirmDialog(true)
+        }
+
+        val userConfirmed = confirmResult.await()
         if (!userConfirmed) return
 
         withContext(Dispatchers.IO) {
@@ -246,13 +311,42 @@ object ModuleModify {
         context: Context,
         snackBarHost: SnackbarHostState,
         scope: kotlinx.coroutines.CoroutineScope = rememberCoroutineScope()
-    ) = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        if (result.resultCode == android.app.Activity.RESULT_OK) {
-            result.data?.data?.let { uri ->
-                scope.launch {
-                    restoreModules(context, snackBarHost, uri)
+    ): androidx.activity.result.ActivityResultLauncher<Intent> {
+        var showRestoreDialog by remember { mutableStateOf(false) }
+        var restoreConfirmResult by remember { mutableStateOf<CompletableDeferred<Boolean>?>(null) }
+        var pendingUri by remember { mutableStateOf<Uri?>(null) }
+
+        // 显示恢复确认对话框
+        RestoreConfirmationDialog(
+            showDialog = showRestoreDialog,
+            onConfirm = {
+                showRestoreDialog = false
+                restoreConfirmResult?.complete(true)
+            },
+            onDismiss = {
+                showRestoreDialog = false
+                restoreConfirmResult?.complete(false)
+            }
+        )
+
+        return rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.StartActivityForResult()
+        ) { result ->
+            if (result.resultCode == android.app.Activity.RESULT_OK) {
+                result.data?.data?.let { uri ->
+                    pendingUri = uri
+                    scope.launch {
+                        val confirmResult = CompletableDeferred<Boolean>()
+                        restoreConfirmResult = confirmResult
+
+                        restoreModules(
+                            context = context,
+                            snackBarHost = snackBarHost,
+                            uri = uri,
+                            showConfirmDialog = { show -> showRestoreDialog = show },
+                            confirmResult = confirmResult
+                        )
+                    }
                 }
             }
         }
@@ -280,13 +374,42 @@ object ModuleModify {
         context: Context,
         snackBarHost: SnackbarHostState,
         scope: kotlinx.coroutines.CoroutineScope = rememberCoroutineScope()
-    ) = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        if (result.resultCode == android.app.Activity.RESULT_OK) {
-            result.data?.data?.let { uri ->
-                scope.launch {
-                    restoreAllowlist(context, snackBarHost, uri)
+    ): androidx.activity.result.ActivityResultLauncher<Intent> {
+        var showAllowlistRestoreDialog by remember { mutableStateOf(false) }
+        var allowlistRestoreConfirmResult by remember { mutableStateOf<CompletableDeferred<Boolean>?>(null) }
+        var pendingUri by remember { mutableStateOf<Uri?>(null) }
+
+        // 显示允许列表恢复确认对话框
+        AllowlistRestoreConfirmationDialog(
+            showDialog = showAllowlistRestoreDialog,
+            onConfirm = {
+                showAllowlistRestoreDialog = false
+                allowlistRestoreConfirmResult?.complete(true)
+            },
+            onDismiss = {
+                showAllowlistRestoreDialog = false
+                allowlistRestoreConfirmResult?.complete(false)
+            }
+        )
+
+        return rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.StartActivityForResult()
+        ) { result ->
+            if (result.resultCode == android.app.Activity.RESULT_OK) {
+                result.data?.data?.let { uri ->
+                    pendingUri = uri
+                    scope.launch {
+                        val confirmResult = CompletableDeferred<Boolean>()
+                        allowlistRestoreConfirmResult = confirmResult
+
+                        restoreAllowlist(
+                            context = context,
+                            snackBarHost = snackBarHost,
+                            uri = uri,
+                            showConfirmDialog = { show -> showAllowlistRestoreDialog = show },
+                            confirmResult = confirmResult
+                        )
+                    }
                 }
             }
         }

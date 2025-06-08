@@ -8,12 +8,20 @@ import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.*
 import androidx.compose.material.icons.filled.*
@@ -24,6 +32,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.*
 import androidx.compose.ui.res.stringResource
@@ -66,13 +76,19 @@ import com.sukisu.ultra.ui.viewmodel.ModuleViewModel
 import java.util.concurrent.TimeUnit
 import androidx.core.content.edit
 import com.sukisu.ultra.R
-import com.sukisu.ultra.ui.theme.CardConfig.cardElevation
 import com.sukisu.ultra.ui.webui.WebUIXActivity
 import com.dergoogler.mmrl.platform.Platform
 import androidx.core.net.toUri
 import com.dergoogler.mmrl.platform.model.ModuleConfig
 import com.dergoogler.mmrl.platform.model.ModuleConfig.Companion.asModuleConfig
 import com.sukisu.ultra.ui.theme.getCardElevation
+
+// 菜单项数据类
+data class ModuleBottomSheetMenuItem(
+    val icon: ImageVector,
+    val titleRes: Int,
+    val onClick: () -> Unit
+)
 
 /**
  * @author ShirkNeko
@@ -88,6 +104,12 @@ fun ModuleScreen(navigator: DestinationsNavigator) {
     val scope = rememberCoroutineScope()
     val confirmDialog = rememberConfirmDialog()
     var lastClickTime by remember { mutableStateOf(0L) }
+
+    // BottomSheet状态
+    val bottomSheetState = rememberModalBottomSheetState(
+        skipPartiallyExpanded = true
+    )
+    var showBottomSheet by remember { mutableStateOf(false) }
 
     val selectZipLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
@@ -201,6 +223,34 @@ fun ModuleScreen(navigator: DestinationsNavigator) {
         contract = ActivityResultContracts.StartActivityForResult()
     ) { viewModel.fetchModuleList() }
 
+    // BottomSheet菜单项
+    val bottomSheetMenuItems = remember {
+        listOf(
+            ModuleBottomSheetMenuItem(
+                icon = Icons.Outlined.Save,
+                titleRes = R.string.backup_modules,
+                onClick = {
+                    backupLauncher.launch(ModuleModify.createBackupIntent())
+                    scope.launch {
+                        bottomSheetState.hide()
+                        showBottomSheet = false
+                    }
+                }
+            ),
+            ModuleBottomSheetMenuItem(
+                icon = Icons.Outlined.RestoreFromTrash,
+                titleRes = R.string.restore_modules,
+                onClick = {
+                    restoreLauncher.launch(ModuleModify.createRestoreIntent())
+                    scope.launch {
+                        bottomSheetState.hide()
+                        showBottomSheet = false
+                    }
+                }
+            )
+        )
+    }
+
     Scaffold(
         topBar = {
             SearchAppBar(
@@ -209,87 +259,13 @@ fun ModuleScreen(navigator: DestinationsNavigator) {
                 onSearchTextChange = { viewModel.search = it },
                 onClearClick = { viewModel.search = "" },
                 dropdownContent = {
-                    var showDropdown by remember { mutableStateOf(false) }
-
                     IconButton(
-                        onClick = { showDropdown = true },
+                        onClick = { showBottomSheet = true },
                     ) {
                         Icon(
                             imageVector = Icons.Filled.MoreVert,
                             contentDescription = stringResource(id = R.string.settings),
                         )
-
-                        DropdownMenu(
-                            expanded = showDropdown,
-                            onDismissRequest = { showDropdown = false }
-                        ) {
-                            DropdownMenuItem(
-                                text = { Text(stringResource(R.string.module_sort_action_first)) },
-                                trailingIcon = {
-                                    Checkbox(
-                                        checked = viewModel.sortActionFirst,
-                                        onCheckedChange = null,
-                                    )
-                                },
-                                onClick = {
-                                    viewModel.sortActionFirst = !viewModel.sortActionFirst
-                                    prefs.edit {
-                                        putBoolean(
-                                            "module_sort_action_first",
-                                            viewModel.sortActionFirst
-                                        )
-                                    }
-                                    scope.launch {
-                                        viewModel.fetchModuleList()
-                                    }
-                                }
-                            )
-                            DropdownMenuItem(
-                                text = { Text(stringResource(R.string.module_sort_enabled_first)) },
-                                trailingIcon = {
-                                    Checkbox(
-                                        checked = viewModel.sortEnabledFirst,
-                                        onCheckedChange = null,
-                                    )
-                                },
-                                onClick = {
-                                    viewModel.sortEnabledFirst = !viewModel.sortEnabledFirst
-                                    prefs.edit {
-                                        putBoolean("module_sort_enabled_first", viewModel.sortEnabledFirst)
-                                    }
-                                    scope.launch {
-                                        viewModel.fetchModuleList()
-                                    }
-                                }
-                            )
-                            HorizontalDivider(thickness = Dp.Hairline, modifier = Modifier.padding(vertical = 4.dp))
-                            DropdownMenuItem(
-                                text = { Text(stringResource(R.string.backup_modules)) },
-                                leadingIcon = {
-                                    Icon(
-                                        imageVector = Icons.Outlined.Save,
-                                        contentDescription = stringResource(R.string.backup),
-                                    )
-                                },
-                                onClick = {
-                                    showDropdown = false
-                                    backupLauncher.launch(ModuleModify.createBackupIntent())
-                                }
-                            )
-                            DropdownMenuItem(
-                                text = { Text(stringResource(R.string.restore_modules)) },
-                                leadingIcon = {
-                                    Icon(
-                                        imageVector = Icons.Outlined.RestoreFromTrash,
-                                        contentDescription = stringResource(R.string.restore),
-                                    )
-                                },
-                                onClick = {
-                                    showDropdown = false
-                                    restoreLauncher.launch(ModuleModify.createRestoreIntent())
-                                }
-                            )
-                        }
                     }
                 },
                 scrollBehavior = scrollBehavior,
@@ -425,6 +401,202 @@ fun ModuleScreen(navigator: DestinationsNavigator) {
                 )
             }
         }
+
+        // BottomSheet
+        if (showBottomSheet) {
+            ModalBottomSheet(
+                onDismissRequest = {
+                    showBottomSheet = false
+                },
+                sheetState = bottomSheetState,
+                dragHandle = {
+                    Surface(
+                        modifier = Modifier.padding(vertical = 11.dp),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+                        shape = RoundedCornerShape(16.dp)
+                    ) {
+                        Box(
+                            Modifier.size(
+                                width = 32.dp,
+                                height = 4.dp
+                            )
+                        )
+                    }
+                }
+            ) {
+                ModuleBottomSheetContent(
+                    menuItems = bottomSheetMenuItems,
+                    viewModel = viewModel,
+                    prefs = prefs,
+                    scope = scope,
+                    bottomSheetState = bottomSheetState,
+                    onDismiss = { showBottomSheet = false }
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ModuleBottomSheetContent(
+    menuItems: List<ModuleBottomSheetMenuItem>,
+    viewModel: ModuleViewModel,
+    prefs: android.content.SharedPreferences,
+    scope: kotlinx.coroutines.CoroutineScope,
+    bottomSheetState: SheetState,
+    onDismiss: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 24.dp)
+    ) {
+        // 标题
+        Text(
+            text = stringResource(R.string.menu_options),
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp)
+        )
+
+        // 菜单选项网格
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(4),
+            modifier = Modifier.fillMaxWidth(),
+            contentPadding = PaddingValues(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            items(menuItems) { menuItem ->
+                ModuleBottomSheetMenuItemView(
+                    menuItem = menuItem
+                )
+            }
+        }
+
+        // 排序选项
+        Spacer(modifier = Modifier.height(24.dp))
+        HorizontalDivider(modifier = Modifier.padding(horizontal = 24.dp))
+
+        Text(
+            text = stringResource(R.string.sort_options),
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp)
+        )
+
+        // 排序选项
+        Column(
+            modifier = Modifier.padding(horizontal = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            // 优先显示有操作的模块
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = stringResource(R.string.module_sort_action_first),
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Switch(
+                    checked = viewModel.sortActionFirst,
+                    onCheckedChange = { checked ->
+                        viewModel.sortActionFirst = checked
+                        prefs.edit {
+                            putBoolean("module_sort_action_first", checked)
+                        }
+                        scope.launch {
+                            viewModel.fetchModuleList()
+                            bottomSheetState.hide()
+                            onDismiss()
+                        }
+                    }
+                )
+            }
+
+            // 优先显示已启用的模块
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = stringResource(R.string.module_sort_enabled_first),
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Switch(
+                    checked = viewModel.sortEnabledFirst,
+                    onCheckedChange = { checked ->
+                        viewModel.sortEnabledFirst = checked
+                        prefs.edit {
+                            putBoolean("module_sort_enabled_first", checked)
+                        }
+                        scope.launch {
+                            viewModel.fetchModuleList()
+                            bottomSheetState.hide()
+                            onDismiss()
+                        }
+                    }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ModuleBottomSheetMenuItemView(menuItem: ModuleBottomSheetMenuItem) {
+    // 添加交互状态
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.95f else 1.0f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessHigh
+        ),
+        label = "menuItemScale"
+    )
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .scale(scale)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null
+            ) { menuItem.onClick() }
+            .padding(8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Surface(
+            modifier = Modifier.size(48.dp),
+            shape = CircleShape,
+            color = MaterialTheme.colorScheme.primaryContainer,
+            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+        ) {
+            Box(
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = menuItem.icon,
+                    contentDescription = stringResource(menuItem.titleRes),
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Text(
+            text = stringResource(menuItem.titleRes),
+            style = MaterialTheme.typography.labelSmall,
+            textAlign = TextAlign.Center,
+            maxLines = 2
+        )
     }
 }
 

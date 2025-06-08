@@ -110,6 +110,8 @@ fun FlashScreen(navigator: DestinationsNavigator, flashIt: FlashIt) {
     var tempText: String
     val logContent = rememberSaveable { StringBuilder() }
     var showFloatAction by rememberSaveable { mutableStateOf(false) }
+    // 添加状态跟踪是否已经完成刷写
+    var hasFlashCompleted by rememberSaveable { mutableStateOf(false) }
 
     val snackBarHost = LocalSnackbarHost.current
     val scope = rememberCoroutineScope()
@@ -132,13 +134,19 @@ fun FlashScreen(navigator: DestinationsNavigator, flashIt: FlashIt) {
                 totalModules = flashIt.uris.size,
                 currentModule = 1
             )
+            hasFlashCompleted = false
+        } else if (flashIt !is FlashIt.FlashModules) {
+            hasFlashCompleted = false
         }
     }
 
-    LaunchedEffect(Unit) {
-        if (text.isNotEmpty()) {
+    // 只有在未完成刷写时才执行刷写操作
+    LaunchedEffect(flashIt, hasFlashCompleted) {
+        // 如果已经完成刷写或者已有文本内容，则不再执行
+        if (hasFlashCompleted || text.isNotEmpty()) {
             return@LaunchedEffect
         }
+
         withContext(Dispatchers.IO) {
             setFlashingStatus(FlashingStatus.FLASHING)
 
@@ -157,7 +165,7 @@ fun FlashScreen(navigator: DestinationsNavigator, flashIt: FlashIt) {
                 }
             }
 
-            flashIt(context, flashIt, onFinish = { showReboot, code ->
+            flashIt(flashIt, onFinish = { showReboot, code ->
                 if (code != 0) {
                     text += "$errorCodeString $code.\n$checkLogString\n"
                     setFlashingStatus(FlashingStatus.FAILED)
@@ -175,6 +183,8 @@ fun FlashScreen(navigator: DestinationsNavigator, flashIt: FlashIt) {
                     text += "\n\n\n"
                     showFloatAction = true
                 }
+
+                hasFlashCompleted = true
 
                 if (flashIt is FlashIt.FlashModules && flashIt.currentIndex < flashIt.uris.size - 1) {
                     val nextFlashIt = flashIt.copy(
@@ -222,8 +232,6 @@ fun FlashScreen(navigator: DestinationsNavigator, flashIt: FlashIt) {
             TopBar(
                 currentFlashingStatus.value,
                 currentStatus,
-                navigator = navigator,
-                flashIt = flashIt,
                 onBack = onBack,
                 onSave = {
                     scope.launch {
@@ -434,8 +442,6 @@ fun ModuleInstallProgressBar(
 private fun TopBar(
     status: FlashingStatus,
     moduleStatus: ModuleInstallStatus = ModuleInstallStatus(),
-    navigator: DestinationsNavigator,
-    flashIt: FlashIt,
     onBack: () -> Unit,
     onSave: () -> Unit = {},
     scrollBehavior: TopAppBarScrollBehavior? = null
@@ -531,7 +537,6 @@ sealed class FlashIt : Parcelable {
 }
 
 fun flashIt(
-    context: android.content.Context,
     flashIt: FlashIt,
     onFinish: (Boolean, Int) -> Unit,
     onStdout: (String) -> Unit,
