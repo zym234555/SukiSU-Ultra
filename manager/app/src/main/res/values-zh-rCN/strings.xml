@@ -304,9 +304,6 @@
     <string name="tools">工具</string>
     <!--  String resources used in SuperUser -->
     <string name="clear">清除</string>
-    <string name="apps_with_root">Root 权限应用</string>
-    <string name="apps_with_custom_profile">自定义配置应用</string>
-    <string name="other_apps">默认配置应用</string>
     <string name="no_apps_found">未找到应用</string>
     <string name="selinux_enabled_toast">SELinux 已设置为启用状态</string>
     <string name="selinux_disabled_toast">SELinux 已设置为禁用状态</string>
@@ -353,7 +350,39 @@
     <string name="language_follow_system">跟随系统</string>
     <string name="language_changed">语言已更改，重启应用以应用更改</string>
     <string name="settings_card_dim">卡片暗度调节</string>
-    <!-- Super User Related -->
+    <!-- Flash related -->
+    <string name="error_code">错误代码</string>
+    <string name="check_log">请查看日志</string>
+    <string name="installing_module">正在安装模块 %1$d/%2$d</string>
+    <string name="module_failed_count">%d 个模块安装失败</string>
+    <string name="module_download_error">模块下载失败</string>
+    <string name="kernel_flashing">内核刷写</string>
+    <!-- 分类相关 -->
+    <string name="category_all_apps">全部</string>
+    <string name="category_root_apps">Root</string>
+    <string name="category_custom_apps">自定义</string>
+    <string name="category_default_apps">默认</string>
+    <!-- 排序相关 -->
+    <string name="sort_name_asc">名称升序</string>
+    <string name="sort_name_desc">名称降序</string>
+    <string name="sort_install_time_new">安装时间(新)</string>
+    <string name="sort_install_time_old">安装时间(旧)</string>
+    <string name="sort_size_desc">大小降序</string>
+    <string name="sort_size_asc">大小升序</string>
+    <string name="sort_usage_freq">使用频率</string>
+    <!-- 状态相关 -->
+    <string name="no_apps_in_category">此分类中没有应用</string>
+    <!-- 标签相关 -->
+    <string name="label_root">Root</string>
+    <string name="label_unmount">卸载</string>
+    <string name="label_custom">自定义</string>
+    <!-- FAB菜单相关 -->
+    <string name="deny_authorization">取消授权</string>
+    <string name="grant_authorization">授权</string>
+    <string name="unmount_modules">卸载模块挂载</string>
+    <string name="disable_unmount">禁用卸载模块挂载</string>
+    <string name="expand_menu">展开菜单</string>
+    <string name="collapse_menu">收起菜单</string>
     <string name="scroll_to_top">顶部</string>
     <string name="scroll_to_bottom">底部</string>
     <string name="scroll_to_top_description">滚动到顶部</string>
@@ -363,11 +392,7 @@
     <string name="selected">已选择</string>
     <string name="select">选择</string>
     <string name="profile_umount_modules_disable">禁用自定义卸载模块</string>
-    <!-- Flash related -->
-    <string name="error_code">错误代码</string>
-    <string name="check_log">请查看日志</string>
-    <string name="installing_module">正在安装模块 %1$d/%2$d</string>
-    <string name="module_failed_count">%d 个模块安装失败</string>
-    <string name="module_download_error">模块下载失败</string>
-    <string name="kernel_flashing">内核刷写</string>
+    <!-- BottomSheet相关 -->
+    <string name="menu_options">菜单选项</string>
+    <string name="sort_options">排序方式</string>
 </resources>
