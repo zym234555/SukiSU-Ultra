@@ -395,4 +395,5 @@
     <!-- BottomSheet相关 -->
     <string name="menu_options">菜单选项</string>
     <string name="sort_options">排序方式</string>
+    <string name="app_categories">应用类型选择</string>
 </resources>

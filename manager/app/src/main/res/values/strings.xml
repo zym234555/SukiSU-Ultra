@@ -397,4 +397,5 @@
     <!-- BottomSheet相关 -->
     <string name="menu_options">Menu Options</string>
     <string name="sort_options">Sort by</string>
+    <string name="app_categories">Application Type Selection</string>
 </resources>
