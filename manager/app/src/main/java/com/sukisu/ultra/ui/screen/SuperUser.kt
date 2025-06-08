@@ -54,7 +54,6 @@ import com.sukisu.ultra.ui.component.FabMenuPresets
 import com.sukisu.ultra.ui.util.ModuleModify
 import com.sukisu.ultra.ui.viewmodel.SuperUserViewModel
 import com.dergoogler.mmrl.ui.component.LabelItem
-import com.sukisu.ultra.ui.theme.getCardColors
 import com.sukisu.ultra.ui.theme.getCardElevation
 import kotlin.math.*
 
@@ -312,11 +311,11 @@ fun SuperUserScreen(navigator: DestinationsNavigator) {
                         .nestedScroll(scrollBehavior.nestedScrollConnection),
                     contentPadding = PaddingValues(
                         start = 16.dp,
-                        end = 4.dp,
+                        end = 8.dp,
                         top = 16.dp,
                         bottom = 16.dp
                     ),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     items(filteredAndSortedApps, key = { it.packageName + it.uid }) { app ->
                         AppItem(
@@ -586,10 +585,17 @@ private fun CategoryItem(
     category: AppCategory,
     isSelected: Boolean,
     appCount: Int,
+    onClick: () -> Unit
 ) {
-    // 添加交互状态
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+
     val animatedScale by animateFloatAsState(
-        targetValue = 1.0f,
+        targetValue = when {
+            isPressed -> 0.96f
+            isSelected -> 1.0f
+            else -> 1.0f
+        },
         animationSpec = spring(
             dampingRatio = Spring.DampingRatioMediumBouncy,
             stiffness = Spring.StiffnessHigh
@@ -600,7 +606,11 @@ private fun CategoryItem(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .scale(animatedScale),
+            .scale(animatedScale)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null
+            ) { onClick() },
         colors = CardDefaults.cardColors(
             containerColor = if (isSelected) {
                 MaterialTheme.colorScheme.primary
@@ -694,9 +704,7 @@ private fun AppItem(
         label = "appItemScale"
     )
 
-    Card(
-        colors = getCardColors(MaterialTheme.colorScheme.surfaceContainerHigh),
-        elevation = getCardElevation(),
+    ListItem(
         modifier = Modifier
             .scale(scale)
             .pointerInput(Unit) {
@@ -704,37 +712,16 @@ private fun AppItem(
                     onLongPress = { onLongClick() },
                     onTap = { onClick() }
                 )
-            }
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(app.packageInfo)
-                    .crossfade(true)
-                    .build(),
-                contentDescription = app.label,
-                modifier = Modifier
-                    .padding(end = 16.dp)
-                    .size(48.dp)
-                    .clip(MaterialTheme.shapes.small)
+            },
+        headlineContent = {
+            Text(
+                text = app.label,
+                style = MaterialTheme.typography.titleMedium,
+                maxLines = 1,
             )
-
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(end = 8.dp)
-            ) {
-                Text(
-                    text = app.label,
-                    style = MaterialTheme.typography.titleMedium,
-                    maxLines = 1,
-                )
-
+        },
+        supportingContent = {
+            Column {
                 Text(
                     text = app.packageName,
                     style = MaterialTheme.typography.bodySmall,
@@ -756,8 +743,20 @@ private fun AppItem(
                     }
                 }
             }
-
-            
+        },
+        leadingContent = {
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(app.packageInfo)
+                    .crossfade(true)
+                    .build(),
+                contentDescription = app.label,
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(MaterialTheme.shapes.small)
+            )
+        },
+        trailingContent = {
             if (viewModel.showBatchActions) {
                 val checkboxInteractionSource = remember { MutableInteractionSource() }
                 val isCheckboxPressed by checkboxInteractionSource.collectIsPressedAsState()
@@ -784,8 +783,11 @@ private fun AppItem(
                     )
                 }
             }
-        }
-    }
+        },
+        colors = ListItemDefaults.colors(
+            containerColor = Color.Transparent
+        )
+    )
 }
 
 @Composable
