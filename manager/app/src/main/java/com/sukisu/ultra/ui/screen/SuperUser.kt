@@ -416,12 +416,8 @@ fun SuperUserScreen(navigator: DestinationsNavigator) {
             )
         }
     ) { innerPadding ->
-
-        // 主要内容
         PullToRefreshBox(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding),
+            modifier = Modifier.padding(innerPadding),
             onRefresh = {
                 scope.launch { viewModel.fetchAppList() }
             },
@@ -454,7 +450,7 @@ fun SuperUserScreen(navigator: DestinationsNavigator) {
                         viewModel = viewModel
                     )
                 }
-
+                
                 // 当没有应用显示时显示空状态
                 if (filteredAndSortedApps.isEmpty()) {
                     item {
