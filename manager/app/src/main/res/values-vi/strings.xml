@@ -147,7 +147,7 @@
     <string name="restore_confirm_title">Xác Nhận Khôi Phục Module</string>
     <string name="restore_confirm_message">Hành động này sẽ ghi đè lên tất cả các module hiện có. Tiếp tục?</string>
     <string name="confirm">Xác nhận</string>
-    <string name="cancel">Huỷ bỏ</string>
+    <string name="cancel">Thoát</string>
     <!-- Backup related -->
     <string name="backup_success">Sao lưu thành công (tar.gz)</string>
     <string name="backup_failed">Sao lưu thất bại: %1$s</string>
@@ -304,9 +304,6 @@
     <string name="tools">Công cụ</string>
     <!--  String resources used in SuperUser -->
     <string name="clear">Loại bỏ</string>
-    <string name="apps_with_root">Các ứng dụng đã cấp quyền Root</string>
-    <string name="apps_with_custom_profile">Các ứng dụng có cấu hình tùy chỉnh</string>
-    <string name="other_apps">Các ứng dụng mặc định</string>
     <string name="no_apps_found">Không tìm thấy ứng dụng</string>
     <string name="selinux_enabled_toast">SELinux đã bật</string>
     <string name="selinux_disabled_toast">SELinux đã tắt</string>
@@ -314,8 +311,8 @@
     <string name="advanced_settings">Cài đặt nâng cao</string>
     <string name="appearance_settings">Cài đặt giao diện</string>
     <string name="back">Trở lại</string>
-    <string name="expand">Be in full swing</string>
-    <string name="collapse">put away</string>
+    <string name="expand">Mở rộng</string>
+    <string name="collapse">Thu gọn</string>
     <string name="susfs_enabled">SuSFS đã bật</string>
     <string name="susfs_disabled">SuSFS đã tắt</string>
     <string name="background_set_success">Đã cài đặt hình nền thành công</string>
@@ -353,7 +350,39 @@
     <string name="language_follow_system">Mặc định theo hệ thống</string>
     <string name="language_changed">Ngôn ngữ đã thay đổi, khởi động lại để áp dụng thay đổi</string>
     <string name="settings_card_dim">Độ trong suốt của thẻ</string>
-    <!-- Super User Related -->
+    <!-- Flash related -->
+    <string name="error_code">Code lỗi</string>
+    <string name="check_log">Vui lòng kiểm tra logs</string>
+    <string name="installing_module">Đang cài đặt module %1$d/%2$d</string>
+    <string name="module_failed_count">Cài đặt module %d thất bại</string>
+    <string name="module_download_error">Tải xuống module thất bại</string>
+    <string name="kernel_flashing">Kernel Flashing</string>
+    <!-- 分类相关 -->
+    <string name="category_all_apps">Tất cả</string>
+    <string name="category_root_apps">Root</string>
+    <string name="category_custom_apps">Tuỳ chỉnh</string>
+    <string name="category_default_apps">Mặc định</string>
+    <!-- 排序相关 -->
+    <string name="sort_name_asc">Tên (Tăng dần)</string>
+    <string name="sort_name_desc">Tên (Giảm dần)</string>
+    <string name="sort_install_time_new">Thời gian cài đặt (Mới)</string>
+    <string name="sort_install_time_old">Thời gian cài đặt (Cũ)</string>
+    <string name="sort_size_desc">Kích thước (Giảm dần)</string>
+    <string name="sort_size_asc">Kích thước (Tăng dần)</string>
+    <string name="sort_usage_freq">Tần suất sử dụng</string>
+    <!-- 状态相关 -->
+    <string name="no_apps_in_category">Không có ứng dụng nào trong danh mục này</string>
+    <!-- 标签相关 -->
+    <string name="label_root">Root</string>
+    <string name="label_unmount">Unmount</string>
+    <string name="label_custom">Tuỳ chỉnh</string>
+    <!-- FAB菜单相关 -->
+    <string name="deny_authorization">Huỷ bỏ uỷ quyền</string>
+    <string name="grant_authorization">Uỷ quyền</string>
+    <string name="unmount_modules">Unmount modules</string>
+    <string name="disable_unmount">Vô hiệu hoá unmount modules</string>
+    <string name="expand_menu">Mở rộng Menu</string>
+    <string name="collapse_menu">Thu gọn Menu</string>
     <string name="scroll_to_top">Lên trên</string>
     <string name="scroll_to_bottom">Xuống dưới</string>
     <string name="scroll_to_top_description">Cuộn lên trên</string>
@@ -363,11 +392,8 @@
     <string name="selected">Đã chọn</string>
     <string name="select">Chọn</string>
     <string name="profile_umount_modules_disable">Vô hiệu hóa unmount modules</string>
-    <!-- Flash related -->
-    <string name="error_code">Code lỗi</string>
-    <string name="check_log">Vui lòng kiểm tra logs</string>
-    <string name="installing_module">Đang cài đặt module %1$d/%2$d</string>
-    <string name="module_failed_count">Cài đặt module %d thất bại</string>
-    <string name="module_download_error">Tải xuống module thất bại</string>
-    <string name="kernel_flashing">Kernel Flashing</string>
+    <!-- BottomSheet相关 -->
+    <string name="menu_options">Tuỳ chọn Menu</string>
+    <string name="sort_options">Sắp xếp theo</string>
+    <string name="app_categories">Lựa chọn loại ứng dụng</string>
 </resources>

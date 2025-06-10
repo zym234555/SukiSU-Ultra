@@ -306,9 +306,6 @@
     <string name="tools">Инструменты</string>
     <!--  String resources used in SuperUser -->
     <string name="clear">Удаление</string>
-    <string name="apps_with_root">Приложения с привилегиями root</string>
-    <string name="apps_with_custom_profile">Приложения с настроенными конфигурациями</string>
-    <string name="other_apps">Приложения со значениями по умолчанию</string>
     <string name="no_apps_found">Приложение не найдено</string>
     <string name="selinux_enabled_toast">SELinux включен</string>
     <string name="selinux_disabled_toast">SELinux отключен</string>
@@ -355,16 +352,6 @@
     <string name="language_follow_system">Как в системе</string>
     <string name="language_changed">Язык изменён, перезапуск для применения изменений</string>
     <string name="settings_card_dim">Затемнение карточек</string>
-    <!-- Super User Related -->
-    <string name="scroll_to_top">Лучшие</string>
-    <string name="scroll_to_bottom">Снизу</string>
-    <string name="scroll_to_top_description">Прокрутить к началу</string>
-    <string name="scroll_to_bottom_description">Прокрутить в конец страницы</string>
-    <string name="authorized">авторизован</string>
-    <string name="unauthorized">неавторизован</string>
-    <string name="selected">Выбранные</string>
-    <string name="select">опция</string>
-    <string name="profile_umount_modules_disable">Отключить пользовательский модуль удаления</string>
     <!-- Flash related -->
     <string name="error_code">код ошибки</string>
     <string name="check_log">Пожалуйста, проверьте журнал</string>
@@ -372,4 +359,43 @@
     <string name="module_failed_count">%d не удалось установить новый модуль</string>
     <string name="module_download_error">Ошибка загрузки модуля</string>
     <string name="kernel_flashing">Прошить ядро</string>
+    <!-- 分类相关 -->
+    <string name="category_all_apps">Все</string>
+    <string name="category_root_apps">Рут-доступ</string>
+    <string name="category_custom_apps">Пользовательские</string>
+    <string name="category_default_apps">Стандартные</string>
+    <!-- 排序相关 -->
+    <string name="sort_name_asc">Название (по возрастанию)</string>
+    <string name="sort_name_desc">Название (по убыванию)</string>
+    <string name="sort_install_time_new">Время установки (новые)</string>
+    <string name="sort_install_time_old">Время установки (старые)</string>
+    <string name="sort_size_desc">Размер (по убыванию)</string>
+    <string name="sort_size_asc">Размер (по возрастанию)</string>
+    <string name="sort_usage_freq">Частота использования</string>
+    <!-- 状态相关 -->
+    <string name="no_apps_in_category">В этой категории нет приложений</string>
+    <!-- 标签相关 -->
+    <string name="label_root">Рут-доступ</string>
+    <string name="label_unmount">Размонтированные</string>
+    <string name="label_custom">Пользовательские</string>
+    <!-- FAB菜单相关 -->
+    <string name="deny_authorization">Доступ отклонён</string>
+    <string name="grant_authorization">Доступ выдан</string>
+    <string name="unmount_modules">Размонтирование модулей</string>
+    <string name="disable_unmount">Отключить монтирование модуля</string>
+    <string name="expand_menu">Развернуть</string>
+    <string name="collapse_menu">Свернуть</string>
+    <string name="scroll_to_top">Наверх</string>
+    <string name="scroll_to_bottom">Вниз</string>
+    <string name="scroll_to_top_description">Прокрутить к началу</string>
+    <string name="scroll_to_bottom_description">Прокрутить в конец страницы</string>
+    <string name="authorized">авторизован</string>
+    <string name="unauthorized">неавторизован</string>
+    <string name="selected">Выбранные</string>
+    <string name="select">опция</string>
+    <string name="profile_umount_modules_disable">Отключить пользовательский модуль удаления</string>
+    <!-- BottomSheet相关 -->
+    <string name="menu_options">Настройки списка</string>
+    <string name="sort_options">Сортировка</string>
+    <string name="app_categories">Выбор типа приложения</string>
 </resources>

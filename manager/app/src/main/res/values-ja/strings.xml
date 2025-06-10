@@ -306,9 +306,6 @@
     <string name="tools">ツール</string>
     <!--  String resources used in SuperUser -->
     <string name="clear">削除</string>
-    <string name="apps_with_root">root アプリの権限</string>
-    <string name="apps_with_custom_profile">カスタマイズされたアプリ構成</string>
-    <string name="other_apps">その他のアプリ</string>
     <string name="no_apps_found">アプリがありません</string>
     <string name="selinux_enabled_toast">SELinux 有効</string>
     <string name="selinux_disabled_toast">SELinux 無効</string>
@@ -355,7 +352,39 @@
     <string name="language_follow_system">システムに従う</string>
     <string name="language_changed">言語の変更を適用するために再起動しています</string>
     <string name="settings_card_dim">カードの暗さを調整</string>
-    <!-- Super User Related -->
+    <!-- Flash related -->
+    <string name="error_code">エラーコード</string>
+    <string name="check_log">ログを確認してください</string>
+    <string name="installing_module">モジュール設置中 %1$d/%2$d</string>
+    <string name="module_failed_count">%d モジュールのインストールに失敗しました</string>
+    <string name="module_download_error">モデルのダウンロードに失敗しました</string>
+    <string name="kernel_flashing">カーネルをフラッシュ中</string>
+    <!-- 分类相关 -->
+    <string name="category_all_apps">すべて</string>
+    <string name="category_root_apps">Root</string>
+    <string name="category_custom_apps">カスタム</string>
+    <string name="category_default_apps">デフォルト</string>
+    <!-- 排序相关 -->
+    <string name="sort_name_asc">名前の昇順</string>
+    <string name="sort_name_desc">名前の降順</string>
+    <string name="sort_install_time_new">インストール日時 (新しい)</string>
+    <string name="sort_install_time_old">インストール日時 (古い)</string>
+    <string name="sort_size_desc">サイズの降順</string>
+    <string name="sort_size_asc">サイズの昇順</string>
+    <string name="sort_usage_freq">使用頻度</string>
+    <!-- 状态相关 -->
+    <string name="no_apps_in_category">このカテゴリーにアプリはありません</string>
+    <!-- 标签相关 -->
+    <string name="label_root">Root</string>
+    <string name="label_unmount">アンマウント</string>
+    <string name="label_custom">カスタム</string>
+    <!-- FAB菜单相关 -->
+    <string name="deny_authorization">権限の認証</string>
+    <string name="grant_authorization">認証</string>
+    <string name="unmount_modules">モジュールのマウントを解除</string>
+    <string name="disable_unmount">アンインストールするモジュールのマウントを無効化します</string>
+    <string name="expand_menu">メニューを展開</string>
+    <string name="collapse_menu">メニューを収納</string>
     <string name="scroll_to_top">上詰め</string>
     <string name="scroll_to_bottom">画面下</string>
     <string name="scroll_to_top_description">一番上までスクロール</string>
@@ -365,11 +394,8 @@
     <string name="selected">選択中</string>
     <string name="select">オプション</string>
     <string name="profile_umount_modules_disable">カスタムアンインストールモジュールを無効にする</string>
-    <!-- Flash related -->
-    <string name="error_code">エラーコード</string>
-    <string name="check_log">ログを確認してください</string>
-    <string name="installing_module">モジュール設置中 %1$d/%2$d</string>
-    <string name="module_failed_count">%d モジュールのインストールに失敗しました</string>
-    <string name="module_download_error">モデルのダウンロードに失敗しました</string>
-    <string name="kernel_flashing">カーネルをフラッシュ中</string>
+    <!-- BottomSheet相关 -->
+    <string name="menu_options">メニューのオプション</string>
+    <string name="sort_options">並べ替え</string>
+    <string name="app_categories">アプリタイプを選択</string>
 </resources>

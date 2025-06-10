@@ -306,9 +306,6 @@
     <string name="tools">Outils</string>
     <!--  String resources used in SuperUser -->
     <string name="clear">Suppressions</string>
-    <string name="apps_with_root">Applications avec droits root</string>
-    <string name="apps_with_custom_profile">Applications avec configurations personnalisées</string>
-    <string name="other_apps">Applications avec valeurs par défaut non modifiées</string>
     <string name="no_apps_found">Application introuvable</string>
     <string name="selinux_enabled_toast">SELinux activé</string>
     <string name="selinux_disabled_toast">SELinux désactivé</string>
@@ -355,7 +352,39 @@
     <string name="language_follow_system">Suivre le paramètre système</string>
     <string name="language_changed">Langue modifiée, redémarrage pour appliquer les modifications</string>
     <string name="settings_card_dim">Ajustement de l\'obscurité de la carte</string>
-    <!-- Super User Related -->
+    <!-- Flash related -->
+    <string name="error_code">code d\'erreur</string>
+    <string name="check_log">Veuillez vérifier le journal</string>
+    <string name="installing_module">Module en cours d\'installation %1$d/%2$d</string>
+    <string name="module_failed_count">%d a échoué à installer un nouveau module</string>
+    <string name="module_download_error">Le téléchargement du modèle a échoué</string>
+    <string name="kernel_flashing">Clignotement du noyau</string>
+    <!-- 分类相关 -->
+    <string name="category_all_apps">All</string>
+    <string name="category_root_apps">Root</string>
+    <string name="category_custom_apps">Custom</string>
+    <string name="category_default_apps">Default</string>
+    <!-- 排序相关 -->
+    <string name="sort_name_asc">Ascending order of name</string>
+    <string name="sort_name_desc">Name descending</string>
+    <string name="sort_install_time_new">Installation time (new)</string>
+    <string name="sort_install_time_old">Installation time (old)</string>
+    <string name="sort_size_desc">descending order of size</string>
+    <string name="sort_size_asc">ascending order of size</string>
+    <string name="sort_usage_freq">frequency of use</string>
+    <!-- 状态相关 -->
+    <string name="no_apps_in_category">No application in this category</string>
+    <!-- 标签相关 -->
+    <string name="label_root">Root</string>
+    <string name="label_unmount">Unmount</string>
+    <string name="label_custom">Custom</string>
+    <!-- FAB菜单相关 -->
+    <string name="deny_authorization">Delegation of authority</string>
+    <string name="grant_authorization">Authorizations</string>
+    <string name="unmount_modules">Unmounting Module Mounts</string>
+    <string name="disable_unmount">Disable uninstall module mounting</string>
+    <string name="expand_menu">Expand menu</string>
+    <string name="collapse_menu">Put away the menu</string>
     <string name="scroll_to_top">En haut</string>
     <string name="scroll_to_bottom">En Bas</string>
     <string name="scroll_to_top_description">Aller en haut</string>
@@ -365,11 +394,8 @@
     <string name="selected">Sélectionné</string>
     <string name="select">option</string>
     <string name="profile_umount_modules_disable">Désactiver le module de désinstallation personnalisé</string>
-    <!-- Flash related -->
-    <string name="error_code">code d\'erreur</string>
-    <string name="check_log">Veuillez vérifier le journal</string>
-    <string name="installing_module">Module en cours d\'installation %1$d/%2$d</string>
-    <string name="module_failed_count">%d a échoué à installer un nouveau module</string>
-    <string name="module_download_error">Le téléchargement du modèle a échoué</string>
-    <string name="kernel_flashing">Clignotement du noyau</string>
+    <!-- BottomSheet相关 -->
+    <string name="menu_options">Menu Options</string>
+    <string name="sort_options">Sort by</string>
+    <string name="app_categories">Application Type Selection</string>
 </resources>

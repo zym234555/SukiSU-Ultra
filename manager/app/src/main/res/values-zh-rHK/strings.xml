@@ -306,9 +306,6 @@
     <string name="tools">工具</string>
     <!--  String resources used in SuperUser -->
     <string name="clear">清除</string>
-    <string name="apps_with_root">應用已擁有root權限</string>
-    <string name="apps_with_custom_profile">應用已有特定配置</string>
-    <string name="other_apps">應用未修改</string>
     <string name="no_apps_found">未找到應用</string>
     <string name="selinux_enabled_toast">嚴格模式</string>
     <string name="selinux_disabled_toast">寬容模式</string>
@@ -355,7 +352,39 @@
     <string name="language_follow_system">遵循繫統</string>
     <string name="language_changed">應用的語言改變,正在重啟應用</string>
     <string name="settings_card_dim">卡片明暗度調整</string>
-    <!-- Super User Related -->
+    <!-- Flash related -->
+    <string name="error_code">代碼錯誤</string>
+    <string name="check_log">請檢查日志</string>
+    <string name="installing_module">正在安裝的模塊 %1$d/%2$d</string>
+    <string name="module_failed_count">%d 安裝新模塊失敗</string>
+    <string name="module_download_error">模塊下載失敗</string>
+    <string name="kernel_flashing">內核刷寫中</string>
+    <!-- 分类相关 -->
+    <string name="category_all_apps">All</string>
+    <string name="category_root_apps">Root</string>
+    <string name="category_custom_apps">Custom</string>
+    <string name="category_default_apps">Default</string>
+    <!-- 排序相关 -->
+    <string name="sort_name_asc">Ascending order of name</string>
+    <string name="sort_name_desc">Name descending</string>
+    <string name="sort_install_time_new">Installation time (new)</string>
+    <string name="sort_install_time_old">Installation time (old)</string>
+    <string name="sort_size_desc">descending order of size</string>
+    <string name="sort_size_asc">ascending order of size</string>
+    <string name="sort_usage_freq">frequency of use</string>
+    <!-- 状态相关 -->
+    <string name="no_apps_in_category">No application in this category</string>
+    <!-- 标签相关 -->
+    <string name="label_root">Root</string>
+    <string name="label_unmount">Unmount</string>
+    <string name="label_custom">Custom</string>
+    <!-- FAB菜单相关 -->
+    <string name="deny_authorization">Delegation of authority</string>
+    <string name="grant_authorization">Authorizations</string>
+    <string name="unmount_modules">Unmounting Module Mounts</string>
+    <string name="disable_unmount">Disable uninstall module mounting</string>
+    <string name="expand_menu">Expand menu</string>
+    <string name="collapse_menu">Put away the menu</string>
     <string name="scroll_to_top">頂部</string>
     <string name="scroll_to_bottom">底部</string>
     <string name="scroll_to_top_description">回到置頂</string>
@@ -365,11 +394,8 @@
     <string name="selected">已選擇</string>
     <string name="select">選項</string>
     <string name="profile_umount_modules_disable">禁用自定義卸載模組</string>
-    <!-- Flash related -->
-    <string name="error_code">代碼錯誤</string>
-    <string name="check_log">請檢查日志</string>
-    <string name="installing_module">正在安裝的模塊 %1$d/%2$d</string>
-    <string name="module_failed_count">%d 安裝新模塊失敗</string>
-    <string name="module_download_error">模塊下載失敗</string>
-    <string name="kernel_flashing">內核刷寫中</string>
+    <!-- BottomSheet相关 -->
+    <string name="menu_options">Menu Options</string>
+    <string name="sort_options">Sort by</string>
+    <string name="app_categories">Application Type Selection</string>
 </resources>
