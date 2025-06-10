@@ -141,23 +141,17 @@ void escape_to_root(void)
 {
 	struct cred *cred;
 
-	if (current_euid().val == 0) {
-		pr_warn("Already root, don't escape!\n");
+	cred = prepare_creds();
+	if (!cred) {
+		pr_err("%s: failed to allocate new cred.\n", __func__);
 		return;
 	}
 
-	rcu_read_lock();
-
-	do {
-		cred = (struct cred *)__task_cred((current));
-		if (!cred) {
-			pr_err("%s: cred is NULL! bailing out..\n", __func__);
-			rcu_read_unlock();
-			return;
-		}
-	} while (!get_cred_rcu(cred));
-
-	rcu_read_unlock();
+	if (cred->euid.val == 0) {
+		pr_warn("Already root, don't escape!\n");
+		abort_creds(cred);
+		return;
+	}
 
 	struct root_profile *profile = ksu_get_root_profile(cred->uid.val);
 
@@ -189,7 +183,14 @@ void escape_to_root(void)
 
 	setup_groups(profile, cred);
 
-	put_cred(cred); // - release here - include/linux/cred.h
+	commit_creds(cred);
+
+	// FIXME: Maybe need to remove? The tests were fine.
+	// reference: https://elixir.bootlin.com/linux/v5.4/source/fs/exec.c#L1456
+	if (cred) {
+		pr_info("%s: NULL-ing creds after committing..\n", __func__);
+		cred = NULL;
+	}
 
 	// Refer to kernel/seccomp.c: seccomp_set_mode_strict
 	// When disabling Seccomp, ensure that current->sighand->siglock is held during the operation.
