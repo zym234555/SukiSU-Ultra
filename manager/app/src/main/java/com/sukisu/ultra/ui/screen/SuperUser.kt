@@ -25,7 +25,6 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -57,6 +56,7 @@ import com.sukisu.ultra.ui.viewmodel.SuperUserViewModel
 import com.sukisu.ultra.ui.viewmodel.AppCategory
 import com.sukisu.ultra.ui.viewmodel.SortType
 import com.dergoogler.mmrl.ui.component.LabelItem
+import com.dergoogler.mmrl.ui.component.LabelItemDefaults
 import kotlin.math.*
 import java.io.File
 
@@ -431,9 +431,7 @@ fun SuperUserScreen(navigator: DestinationsNavigator) {
                 state = listState,
                 modifier = Modifier
                     .fillMaxSize()
-                    .nestedScroll(scrollBehavior.nestedScrollConnection),
-                verticalArrangement = Arrangement.spacedBy(6.dp),
-                contentPadding = PaddingValues(vertical = 8.dp)
+                    .nestedScroll(scrollBehavior.nestedScrollConnection)
             ) {
                 items(filteredAndSortedApps, key = { it.packageName + it.uid }) { app ->
                     AppItem(
@@ -790,62 +788,46 @@ private fun AppItem(
     onLongClick: () -> Unit,
     viewModel: SuperUserViewModel
 ) {
-    // 添加交互状态
-    val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
-
-    // 优化的缩放动画
-    val scale by animateFloatAsState(
-        targetValue = if (isPressed) 0.98f else 1.0f,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessHigh
-        ),
-        label = "appItemScale"
-    )
-
     ListItem(
         modifier = Modifier
-            .fillMaxWidth()
-            .scale(scale)
             .pointerInput(Unit) {
                 detectTapGestures(
                     onLongPress = { onLongClick() },
                     onTap = { onClick() }
                 )
-            }
-            .padding(horizontal = 8.dp),
-        headlineContent = {
-            Text(
-                text = app.label,
-                style = MaterialTheme.typography.titleMedium,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-        },
+            },
+        headlineContent = { Text(app.label) },
         supportingContent = {
-            Column(
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                Text(
-                    text = app.packageName,
-                    style = MaterialTheme.typography.bodySmall,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
+            Column {
+                Text(app.packageName)
+                Spacer(modifier = Modifier.height(4.dp))
 
                 FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(4.dp),
-                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     if (app.allowSu) {
-                        LabelItem(text = stringResource(R.string.label_root))
-                    }
-                    if (Natives.uidShouldUmount(app.uid)) {
-                        LabelItem(text = stringResource(R.string.label_unmount))
+                        LabelItem(
+                            text = "ROOT",
+                        )
+                    } else {
+                        if (Natives.uidShouldUmount(app.uid)) {
+                            LabelItem(
+                                text = "UMOUNT",
+                                style = LabelItemDefaults.style.copy(
+                                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                                )
+                            )
+                        }
                     }
                     if (app.hasCustomProfile) {
-                        LabelItem(text = stringResource(R.string.label_custom))
+                        LabelItem(
+                            text = "CUSTOM",
+                            style = LabelItemDefaults.style.copy(
+                                containerColor = MaterialTheme.colorScheme.onTertiary,
+                                contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                            )
+                        )
                     }
                 }
             }
@@ -858,8 +840,9 @@ private fun AppItem(
                     .build(),
                 contentDescription = app.label,
                 modifier = Modifier
-                    .size(48.dp)
-                    .clip(MaterialTheme.shapes.small)
+                    .padding(4.dp)
+                    .width(48.dp)
+                    .height(48.dp)
             )
         },
         trailingContent = {
@@ -889,10 +872,7 @@ private fun AppItem(
                     )
                 }
             }
-        },
-        colors = ListItemDefaults.colors(
-            containerColor = Color.Transparent
-        )
+        }
     )
 }
 
@@ -900,16 +880,15 @@ private fun AppItem(
 fun LabelText(label: String) {
     Box(
         modifier = Modifier
-            .padding(top = 2.dp, end = 2.dp)
+            .padding(top = 4.dp, end = 4.dp)
             .background(
                 Color.Black,
                 shape = RoundedCornerShape(4.dp)
             )
-            .clip(RoundedCornerShape(4.dp))
     ) {
         Text(
             text = label,
-            modifier = Modifier.padding(vertical = 2.dp, horizontal = 6.dp),
+            modifier = Modifier.padding(vertical = 2.dp, horizontal = 5.dp),
             style = TextStyle(
                 fontSize = 8.sp,
                 color = Color.White,
