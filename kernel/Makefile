@@ -119,7 +119,7 @@ ccflags-y += -DKSU_KERNEL_WRITE
 endif
 
 ifeq ($(shell grep -q "int\s\+path_umount" $(srctree)/fs/namespace.c; echo $$?),0)
-ccflags-y += -DKSU_HAS_PATH_UMOUNTAdd commentMore actions
+ccflags-y += -DKSU_HAS_PATH_UMOUNT
 endif
 
 # 检查三星 UH 驱动程序
