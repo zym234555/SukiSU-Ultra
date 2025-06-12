@@ -15,9 +15,6 @@ kernelsu-objs += selinux/rules.o
 ccflags-y += -I$(srctree)/security/selinux -I$(srctree)/security/selinux/include
 ccflags-y += -I$(objtree)/security/selinux -include $(srctree)/include/uapi/asm-generic/errno.h
 
-ccflags-y += -Wno-implicit-function-declaration -Wno-strict-prototypes -Wno-int-conversion
-ccflags-y += -Wno-declaration-after-statement -Wno-unused-function
-
 obj-$(CONFIG_KSU) += kernelsu.o
 
 obj-$(CONFIG_KPM) += kpm/
@@ -34,24 +31,6 @@ else # If there is no .git file, the default version will be passed.
 $(warning "KSU_GIT_VERSION not defined! It is better to make SukiSU a git submodule!")
 ccflags-y += -DKSU_VERSION=12800
 endif
-
-ifndef KSU_EXPECTED_SIZE
-KSU_EXPECTED_SIZE := 0x35c
-endif
-
-ifndef KSU_EXPECTED_HASH
-KSU_EXPECTED_HASH := 947ae944f3de4ed4c21a7e4f7953ecf351bfa2b36239da37a34111ad29993eef
-endif
-
-ifdef KSU_MANAGER_PACKAGE
-ccflags-y += -DKSU_MANAGER_PACKAGE=\"$(KSU_MANAGER_PACKAGE)\"
-$(info -- SukiSU Manager package name: $(KSU_MANAGER_PACKAGE))
-endif
-
-$(info -- SukiSU Manager signature size: $(KSU_EXPECTED_SIZE))
-$(info -- SukiSU Manager signature hash: $(KSU_EXPECTED_HASH))
-$(info -- Supported Unofficial Manager: 5ec1cff (GKI) rsuntk (Non-GKI) ShirkNeko udochina (GKI and non-GKI and KPM))
-
 ifeq ($(strip $(CONFIG_KSU_MANUAL_HOOK)),y)
 $(info -- SukiSU: Manual hooking enabled!)
 else
@@ -105,27 +84,56 @@ ccflags-y += -DKSU_COMPAT_HAS_NONCONST_CRED
 endif
 endif
 
-# 处理可选的backport
+# Handle optional backports
 ifeq ($(shell grep -q "strncpy_from_user_nofault" $(srctree)/include/linux/uaccess.h; echo $$?),0)
-ccflags-y += -DKSU_STRNCPY_FROM_USER_NOFAULT
+ccflags-y += -DKSU_OPTIONAL_STRNCPY
 endif
-
 ifeq ($(shell grep -q "ssize_t kernel_read" $(srctree)/fs/read_write.c; echo $$?),0)
-ccflags-y += -DKSU_KERNEL_READ
+ccflags-y += -DKSU_OPTIONAL_KERNEL_READ
 endif
-
 ifeq ($(shell grep "ssize_t kernel_write" $(srctree)/fs/read_write.c | grep -q "const void" ; echo $$?),0)
-ccflags-y += -DKSU_KERNEL_WRITE
+ccflags-y += -DKSU_OPTIONAL_KERNEL_WRITE
 endif
-
 ifeq ($(shell grep -q "int\s\+path_umount" $(srctree)/fs/namespace.c; echo $$?),0)
 ccflags-y += -DKSU_HAS_PATH_UMOUNT
+ifneq ($(shell grep -Eq "^int path_umount" $(srctree)/fs/internal.h; echo $$?),0)
+$(shell sed -i '/^extern void __init mnt_init/a int path_umount(struct path *path, int flags);' $(srctree)/fs/internal.h;)
+$(info -- KernelSU: SusFS: Adding 'int path_umount(struct path *path, int flags);' to $(srctree)/fs/internal.h)
+endif
 endif
 
-# 检查三星 UH 驱动程序
+# Checks Samsung UH drivers
 ifeq ($(shell grep -q "CONFIG_KDP_CRED" $(srctree)/kernel/cred.c; echo $$?),0)
 ccflags-y += -DSAMSUNG_UH_DRIVER_EXIST
 endif
+
+# Samsung SELinux Porting
+ifeq ($(shell grep -q "SEC_SELINUX_PORTING_COMMON" $(srctree)/security/selinux/avc.c; echo $$?),0)
+ccflags-y += -DSAMSUNG_SELINUX_PORTING
+endif
+
+ifndef KSU_EXPECTED_SIZE
+KSU_EXPECTED_SIZE := 0x35c
+endif
+
+ifndef KSU_EXPECTED_HASH
+KSU_EXPECTED_HASH := 947ae944f3de4ed4c21a7e4f7953ecf351bfa2b36239da37a34111ad29993eef
+endif
+
+ifdef KSU_MANAGER_PACKAGE
+ccflags-y += -DKSU_MANAGER_PACKAGE=\"$(KSU_MANAGER_PACKAGE)\"
+$(info -- SukiSU Manager package name: $(KSU_MANAGER_PACKAGE))
+endif
+
+$(info -- SukiSU Manager signature size: $(KSU_EXPECTED_SIZE))
+$(info -- SukiSU Manager signature hash: $(KSU_EXPECTED_HASH))
+$(info -- Supported Unofficial Manager: 5ec1cff (GKI) rsuntk (Non-GKI) ShirkNeko udochina (GKI and non-GKI and KPM))
+
+ccflags-y += -DEXPECTED_SIZE=$(KSU_EXPECTED_SIZE)
+ccflags-y += -DEXPECTED_HASH=\"$(KSU_EXPECTED_HASH)\"
+
+ccflags-y += -Wno-implicit-function-declaration -Wno-strict-prototypes -Wno-int-conversion -Wno-gcc-compat
+ccflags-y += -Wno-declaration-after-statement -Wno-unused-function
 
 ## For susfs stuff ##
 ifeq ($(shell test -e $(srctree)/fs/susfs.c; echo $$?),0)
