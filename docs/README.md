@@ -28,10 +28,10 @@ curl -LSs "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/main/kern
 
 ## 如何集成 susfs
 
-1. 直接使用 susfs-stable 或者 susfs-dev 分支，不需要再集成 susfs (支持非 GKI 设备构建)
+1. 直接使用 susfs-main 或者其他susfs-* 分支，不需要再集成 susfs (支持非 GKI 设备构建)
 
 ```
-curl -LSs "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/main/kernel/setup.sh" | bash -s susfs-dev
+curl -LSs "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/main/kernel/setup.sh" | bash -s susfs-main
 ```
 
 ## 钩子方法

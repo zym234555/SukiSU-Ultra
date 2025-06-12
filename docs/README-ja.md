@@ -25,9 +25,10 @@ curl -LSs "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/main/kern
 
 ## 統合された susfs の使い方
 
-1. パッチを当てずに susfs-dev ブランチを直接使用してください (非GKIデバイスビルドをサポート)
+1. susfs-mainまたは他のsusfs-*ブランチを直接使用し、susfsを再度統合する必要はありません
+
 ```
-curl -LSs "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/main/kernel/setup.sh" | bash -s susfs-dev
+curl -LSs "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/main/kernel/setup.sh" | bash -s susfs-main
 ```
 
 ## KPM に対応

@@ -24,10 +24,10 @@ curl -LSs "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/main/kern
 
 ## How to use integrated susfs
 
-1. Use the susfs-dev branch directly without any patching (Support for non-GKI device builds)
+1. Use susfs-main or other susfs-* branches directly, no need to integrate susfs again (supports non-GKI device builds)
 
 ```
-curl -LSs "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/main/kernel/setup.sh" | bash -s susfs-dev
+curl -LSs "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/main/kernel/setup.sh" | bash -s susfs-main
 ```
 
 ## KPM Support

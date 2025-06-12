@@ -28,10 +28,10 @@ curl -LSs "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/main/kern
 
 ## susfs Nasıl Entegre Edilir
 
-1. Doğrudan susfs-stable veya susfs-dev dalını kullanın, susfs entegrasyonuna gerek yok
+1. Doğrudan susfs-main veya susfs-* dalını kullanın, susfs entegrasyonuna gerek yok
 
 ```
-curl -LSs "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/main/kernel/setup.sh" | bash -s susfs-dev
+curl -LSs "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/main/kernel/setup.sh" | bash -s susfs-main
 ```
 
 ## Kanca Yöntemleri
