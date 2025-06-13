@@ -731,7 +731,13 @@ private fun InfoCard(
                         val isSUS_SU = systemInfo.suSFSFeatures == "CONFIG_KSU_SUSFS_SUS_SU"
                         val infoText = buildString {
                             append(systemInfo.suSFSVersion)
-                            append(if (isSUS_SU) " (${systemInfo.suSFSVariant})" else " (${stringResource(R.string.manual_hook)})")
+                            append(if (isSUS_SU && !Natives.getHookType()) " (${systemInfo.suSFSVariant})" else {
+                                if (Natives.getHookType()) {
+                                    " (${stringResource(R.string.manual_hook)})"
+                                } else {
+                                    "Unknown"
+                                }
+                            })
                             if (isSUS_SU) {
                                 if (systemInfo.susSUMode.isNotEmpty()) {
                                     append(" ${stringResource(R.string.sus_su_mode)} ${systemInfo.susSUMode}")

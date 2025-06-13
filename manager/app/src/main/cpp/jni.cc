@@ -311,3 +311,8 @@ extern "C" JNIEXPORT jboolean JNICALL
 Java_com_sukisu_ultra_Natives_isKPMEnabled(JNIEnv *env, jobject) {
     return is_KPM_enable();
 }
+
+extern "C" JNIEXPORT jboolean JNICALL
+Java_com_sukisu_ultra_Natives_getHookType(JNIEnv *env, jobject) {
+    return get_hook_type();
+}

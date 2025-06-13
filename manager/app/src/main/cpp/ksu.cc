@@ -30,6 +30,7 @@
 #define CMD_IS_SU_ENABLED 14
 #define CMD_ENABLE_SU 15
 #define CMD_ENABLE_KPM 100
+#define CMD_HOOK_TYPE 101
 
 static bool ksuctl(int cmd, void* arg1, void* arg2) {
     int32_t result = 0;
@@ -102,4 +103,9 @@ bool is_su_enabled() {
 bool is_KPM_enable() {
     bool enabled = false;
     return ksuctl(CMD_ENABLE_KPM, &enabled, nullptr), enabled;
+}
+
+bool get_hook_type() {
+    bool enabled = false;
+    return ksuctl(CMD_HOOK_TYPE, &enabled, nullptr), enabled;
 }
