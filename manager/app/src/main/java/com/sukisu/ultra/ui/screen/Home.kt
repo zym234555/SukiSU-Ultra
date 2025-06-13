@@ -725,34 +725,41 @@ private fun InfoCard(
                 }
             }
 
-            if ((!isSimpleMode) && (!isHideSusfsStatus)) {
-                if (systemInfo.suSFSStatus == "Supported") {
-                    if (systemInfo.suSFSVersion.isNotEmpty()) {
-                        val isSUS_SU = systemInfo.suSFSFeatures == "CONFIG_KSU_SUSFS_SUS_SU"
-                        val infoText = buildString {
-                            append(systemInfo.suSFSVersion)
-                            append(if (isSUS_SU && !Natives.getHookType()) " (${systemInfo.suSFSVariant})" else {
-                                if (Natives.getHookType()) {
-                                    " (${stringResource(R.string.manual_hook)})"
-                                } else {
-                                    "Unknown"
-                                }
-                            })
-                            if (isSUS_SU) {
-                                if (systemInfo.susSUMode.isNotEmpty()) {
-                                    append(" ${stringResource(R.string.sus_su_mode)} ${systemInfo.susSUMode}")
-                                }
-                            }
-                        }
+            if (!isSimpleMode && !isHideSusfsStatus &&
+                systemInfo.suSFSStatus == "Supported" &&
+                systemInfo.suSFSVersion.isNotEmpty()) {
 
-                        InfoCardItem(
-                            stringResource(R.string.home_susfs_version),
-                            infoText,
-                            icon = Icons.Default.Storage
-                        )
-                    }
-                }
+                val infoText = SuSFSInfoText(systemInfo)
+
+                InfoCardItem(
+                    stringResource(R.string.home_susfs_version),
+                    infoText,
+                    icon = Icons.Default.Storage
+                )
             }
+        }
+    }
+}
+
+@Composable
+private fun SuSFSInfoText(systemInfo: HomeViewModel.SystemInfo): String = buildString {
+    append(systemInfo.suSFSVersion)
+
+    val isSUS_SU = systemInfo.suSFSFeatures == "CONFIG_KSU_SUSFS_SUS_SU"
+    val isKprobesHook = Natives.getHookType() == "Kprobes"
+
+    when {
+        isSUS_SU && isKprobesHook -> {
+            append(" (${systemInfo.suSFSVariant})")
+            if (systemInfo.susSUMode.isNotEmpty()) {
+                append(" ${stringResource(R.string.sus_su_mode)} ${systemInfo.susSUMode}")
+            }
+        }
+        Natives.getHookType() == "Manual" -> {
+            append(" (${stringResource(R.string.manual_hook)})")
+        }
+        else -> {
+            append(" (${Natives.getHookType()})")
         }
     }
 }

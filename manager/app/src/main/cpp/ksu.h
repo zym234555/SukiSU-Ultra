@@ -85,6 +85,6 @@ bool is_su_enabled();
 
 bool is_KPM_enable();
 
-bool get_hook_type();
+const char* get_hook_type();
 
 #endif //KERNELSU_KSU_H

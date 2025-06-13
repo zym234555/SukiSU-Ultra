@@ -312,7 +312,8 @@ Java_com_sukisu_ultra_Natives_isKPMEnabled(JNIEnv *env, jobject) {
     return is_KPM_enable();
 }
 
-extern "C" JNIEXPORT jboolean JNICALL
+extern "C" JNIEXPORT jstring JNICALL
 Java_com_sukisu_ultra_Natives_getHookType(JNIEnv *env, jobject) {
-    return get_hook_type();
+    const char* hook_type = get_hook_type();
+    return env->NewStringUTF(hook_type);
 }

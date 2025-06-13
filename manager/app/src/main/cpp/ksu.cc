@@ -105,7 +105,13 @@ bool is_KPM_enable() {
     return ksuctl(CMD_ENABLE_KPM, &enabled, nullptr), enabled;
 }
 
-bool get_hook_type() {
-    bool enabled = false;
-    return ksuctl(CMD_HOOK_TYPE, &enabled, nullptr), enabled;
+const char* get_hook_type() {
+    static char hook_type[16] = {0};
+    if (hook_type[0] == '\0') {
+        if (ksuctl(CMD_HOOK_TYPE, hook_type, nullptr)) {
+            return hook_type;
+        }
+        strcpy(hook_type, "Unknown");
+    }
+    return hook_type;
 }

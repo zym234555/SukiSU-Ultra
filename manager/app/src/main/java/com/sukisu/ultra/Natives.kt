@@ -69,7 +69,7 @@ object Natives {
     external fun isSuEnabled(): Boolean
     external fun setSuEnabled(enabled: Boolean): Boolean
     external fun isKPMEnabled(): Boolean
-    external fun getHookType(): Boolean
+    external fun getHookType(): String
 
     private const val NON_ROOT_DEFAULT_PROFILE_KEY = "$"
     private const val NOBODY_UID = 9999
