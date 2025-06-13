@@ -529,6 +529,29 @@ int ksu_handle_prctl(int option, unsigned long arg2, unsigned long arg3,
     	return 0;
 	}
 
+	if (arg2 == CMD_HOOK_TYPE) {
+		const char *hook_type;
+		
+#ifdef CONFIG_KSU_MANUAL_HOOK
+		hook_type = "Manual";
+#elif defined(CONFIG_KSU_KPROBES_HOOK)
+		hook_type = "Kprobes";
+#else
+		hook_type = "Unknown";
+#endif
+		
+		size_t len = strlen(hook_type) + 1;
+		if (copy_to_user((void __user *)arg3, hook_type, len)) {
+			pr_err("hook_type: copy_to_user failed\n");
+			return 0;
+		}
+		
+		if (copy_to_user(result, &reply_ok, sizeof(reply_ok))) {
+			pr_err("hook_type: prctl reply error\n");
+		}
+		return 0;
+	}
+
 #ifdef CONFIG_KSU_SUSFS
 	if (current_uid_val == 0) {
 #ifdef CONFIG_KSU_SUSFS_SUS_PATH
