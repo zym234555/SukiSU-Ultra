@@ -63,6 +63,7 @@ import com.sukisu.ultra.Natives
 import com.sukisu.ultra.R
 import com.sukisu.ultra.ui.component.ImageEditorDialog
 import com.sukisu.ultra.ui.component.KsuIsValid
+import com.sukisu.ultra.ui.component.SuSFSConfigDialog
 import com.sukisu.ultra.ui.theme.CardConfig.cardElevation
 import com.sukisu.ultra.ui.theme.*
 import com.sukisu.ultra.ui.util.*
@@ -145,6 +146,7 @@ fun MoreSettingsScreen(
     var showThemeColorDialog by remember { mutableStateOf(false) }
     var showDpiConfirmDialog by remember { mutableStateOf(false) }
     var showImageEditor by remember { mutableStateOf(false) }
+    var showSuSFSConfigDialog by remember { mutableStateOf(false) }
 
     // 主题模式选项
     val themeOptions = listOf(
@@ -472,6 +474,13 @@ fun MoreSettingsScreen(
                     Toast.LENGTH_SHORT
                 ).show()
             }
+        )
+    }
+
+    // SuSFS配置对话框
+    if (showSuSFSConfigDialog) {
+        SuSFSConfigDialog(
+            onDismiss = { showSuSFSConfigDialog = false }
         )
     }
 
@@ -1120,7 +1129,20 @@ fun MoreSettingsScreen(
                     )
                 }
 
-                // SuSFS 配置（仅在支持时显示）
+                // SuSFS 配置（仅在支持时显示存）
+                if (getSuSFS() == "Supported" && SuSFSManager.isBinaryAvailable(context)) {
+                    SettingItem(
+                        icon = Icons.Default.Settings,
+                        title = stringResource(R.string.susfs_config_setting_title),
+                        subtitle = stringResource(
+                            R.string.susfs_config_setting_summary,
+                            SuSFSManager.getUnameValue(context)
+                        ),
+                        onClick = { showSuSFSConfigDialog = true }
+                    )
+                }
+
+                // SuSFS 开关（仅在支持时显示）
                 val suSFS = getSuSFS()
                 val isSUS_SU = getSuSFSFeatures()
                 if (suSFS == "Supported" && isSUS_SU == "CONFIG_KSU_SUSFS_SUS_SU") {

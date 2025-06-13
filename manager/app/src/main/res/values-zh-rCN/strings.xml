@@ -396,4 +396,35 @@
     <string name="menu_options">菜单选项</string>
     <string name="sort_options">排序方式</string>
     <string name="app_categories">应用类型选择</string>
+    <!-- SuSFS Configuration -->
+    <string name="susfs_config_title">SuSFS 配置</string>
+    <string name="susfs_config_description">配置说明</string>
+    <string name="susfs_config_description_text">此功能允许您自定义 SuSFS 的 uname 值。输入您想要设置的值，点击应用即可生效</string>
+    <string name="susfs_uname_label">Uname 值</string>
+    <string name="susfs_uname_placeholder">请输入自定义 uname 值</string>
+    <string name="susfs_current_value">当前值: %s</string>
+    <string name="susfs_reset_to_default">重置为默认值</string>
+    <string name="susfs_apply">应用</string>
+    <!-- SuSFS Reset Confirmation -->
+    <string name="susfs_reset_confirm_title">确认重置</string>
+    <string name="susfs_reset_confirm_message">确定要将 SuSFS uname 重置为默认值吗？此操作不可撤销。</string>
+    <string name="susfs_reset_confirm">确认重置</string>
+    <!-- SuSFS Toast Messages -->
+    <string name="susfs_binary_not_found">无法找到 ksu_susfs 文件</string>
+    <string name="susfs_command_failed">SuSFS 命令执行失败</string>
+    <string name="susfs_command_error">执行 SuSFS 命令时出错: %s</string>
+    <string name="susfs_uname_set_success">SuSFS uname 设置成功: %s</string>
+    <!-- SuSFS Settings Item -->
+    <string name="susfs_config_setting_title">SuSFS 配置</string>
+    <string name="susfs_config_setting_summary">配置 SuSFS 的 uname 值 (当前: %s)</string>
+    <!-- 开机自启动相关 -->
+    <string name="susfs_autostart_title">开机自启动</string>
+    <string name="susfs_autostart_description">系统启动时自动应用 uname 配置</string>
+    <string name="susfs_autostart_enabled">开机自启动已启用</string>
+    <string name="susfs_autostart_disabled">开机自启动已禁用</string>
+    <string name="susfs_autostart_enable_failed">启用开机自启动失败</string>
+    <string name="susfs_autostart_disable_failed">禁用开机自启动失败</string>
+    <string name="susfs_autostart_error">开机自启动配置错误: %s</string>
+    <string name="susfs_no_config_to_autostart">没有可用的配置进行开机自启动</string>
+    <string name="susfs_autostart_tis">需要输入非默认值才能启用开机自启动</string>
 </resources>
