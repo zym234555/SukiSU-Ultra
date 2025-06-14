@@ -503,10 +503,4 @@
     <string name="magic_mount_feature_label">Magic Mount Support</string>
     <string name="overlayfs_auto_kstat_feature_label">OverlayFS Auto Kernel Stat Support</string>
     <string name="sus_kstat_feature_label">SUS Kstat Support</string>
-    <!-- Content Descriptions for Accessibility -->
-    <string name="susfs_add_button_description">Add new item</string>
-    <string name="susfs_run_button_description">Run umount operations</string>
-    <string name="susfs_delete_button_description">Delete item</string>
-    <string name="susfs_reset_section_description">Reset this section</string>
-    <string name="susfs_refresh_button_description">Refresh feature status</string>
 </resources>
