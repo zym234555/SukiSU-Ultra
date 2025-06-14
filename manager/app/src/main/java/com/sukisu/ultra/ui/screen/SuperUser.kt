@@ -26,6 +26,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -450,8 +451,8 @@ fun SuperUserScreen(navigator: DestinationsNavigator) {
                         viewModel = viewModel
                     )
                 }
-                
-                // 当没有应用显示时显示空状态
+
+                // 当没有应用显示时显示加载动画或空状态
                 if (filteredAndSortedApps.isEmpty()) {
                     item {
                         Box(
@@ -460,26 +461,14 @@ fun SuperUserScreen(navigator: DestinationsNavigator) {
                                 .height(400.dp),
                             contentAlignment = Alignment.Center
                         ) {
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.Center
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Filled.Archive,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
-                                    modifier = Modifier
-                                        .size(96.dp)
-                                        .padding(bottom = 16.dp)
+                            // 根据加载状态显示不同内容
+                            if (viewModel.isRefreshing || viewModel.appList.isEmpty()) {
+                                LoadingAnimation(
+                                    isLoading = true
                                 )
-                                Text(
-                                    text = if (selectedCategory == AppCategory.ALL) {
-                                        stringResource(R.string.no_apps_found)
-                                    } else {
-                                        stringResource(R.string.no_apps_in_category)
-                                    },
-                                    textAlign = TextAlign.Center,
-                                    style = MaterialTheme.typography.bodyLarge,
+                            } else {
+                                EmptyState(
+                                    selectedCategory = selectedCategory
                                 )
                             }
                         }
@@ -711,9 +700,9 @@ private fun CategoryChip(
                 text = "$appCount apps",
                 style = MaterialTheme.typography.labelSmall,
                 color = if (isSelected) {
-                    MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
+                    MaterialTheme.colorScheme.onPrimaryContainer
                 } else {
-                    MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
+                    MaterialTheme.colorScheme.onSurfaceVariant
                 }
             )
         }
@@ -889,6 +878,105 @@ fun LabelText(label: String) {
                 fontSize = 8.sp,
                 color = Color.White,
             )
+        )
+    }
+}
+
+/**
+ * 加载动画组件
+ */
+@Composable
+private fun LoadingAnimation(
+    modifier: Modifier = Modifier,
+    isLoading: Boolean = true
+) {
+    val infiniteTransition = rememberInfiniteTransition(label = "loading")
+
+    // 旋转动画
+    val rotation by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 360f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1000, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "rotation"
+    )
+
+    // 透明度动画
+    val alpha by infiniteTransition.animateFloat(
+        initialValue = 0.3f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(600, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "alpha"
+    )
+
+    AnimatedVisibility(
+        visible = isLoading,
+        enter = fadeIn() + scaleIn(),
+        exit = fadeOut() + scaleOut(),
+        modifier = modifier
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            // 主加载图标
+            Icon(
+                imageVector = Icons.Filled.Refresh,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary.copy(alpha = alpha),
+                modifier = Modifier
+                    .size(64.dp)
+                    .rotate(rotation)
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // 进度指示器
+            LinearProgressIndicator(
+                modifier = Modifier
+                    .width(200.dp)
+                    .height(4.dp),
+                color = MaterialTheme.colorScheme.primary.copy(alpha = alpha),
+                trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+            )
+        }
+    }
+}
+
+/**
+ * 空状态组件
+ */
+@Composable
+private fun EmptyState(
+    selectedCategory: AppCategory,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+        modifier = modifier
+    ) {
+        Icon(
+            imageVector = Icons.Filled.Archive,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
+            modifier = Modifier
+                .size(96.dp)
+                .padding(bottom = 16.dp)
+        )
+        Text(
+            text = if (selectedCategory == AppCategory.ALL) {
+                stringResource(R.string.no_apps_found)
+            } else {
+                stringResource(R.string.no_apps_in_category)
+            },
+            textAlign = TextAlign.Center,
+            style = MaterialTheme.typography.bodyLarge,
         )
     }
 }
