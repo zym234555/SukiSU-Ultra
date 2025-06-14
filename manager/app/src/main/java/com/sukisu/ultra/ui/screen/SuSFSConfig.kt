@@ -23,16 +23,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AutoMode
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.RestoreFromTrash
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Storage
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -43,7 +38,6 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -82,6 +76,11 @@ import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import com.sukisu.ultra.R
 import com.sukisu.ultra.ui.theme.CardConfig
 import com.sukisu.ultra.ui.util.SuSFSManager
+import com.sukisu.ultra.ui.screen.extensions.EmptyStateCard
+import com.sukisu.ultra.ui.screen.extensions.FeatureStatusCard
+import com.sukisu.ultra.ui.screen.extensions.SusPathsContent
+import com.sukisu.ultra.ui.screen.extensions.SusMountsContent
+import com.sukisu.ultra.ui.screen.extensions.TryUmountContent
 import kotlinx.coroutines.launch
 
 /**
@@ -151,12 +150,10 @@ fun SuSFSConfigScreen(
 
     val allTabs = SuSFSTab.getAllTabs()
 
-    // 实时判断是否可以启用开机自启动
+    // 实时判断是否可以启用开机自启动 - 修改逻辑
     val canEnableAutoStart by remember {
         derivedStateOf {
-            (unameValue.trim().isNotBlank() && unameValue.trim() != "default") ||
-                    (buildTimeValue.trim().isNotBlank() && buildTimeValue.trim() != "default") ||
-                    susPaths.isNotEmpty() || susMounts.isNotEmpty() || tryUmounts.isNotEmpty()
+            SuSFSManager.hasConfigurationForAutoStart(context)
         }
     }
 
@@ -190,7 +187,7 @@ fun SuSFSConfigScreen(
         }
     }
 
-    // 当输入值变化时，自动调整开机自启动状态
+    // 当配置变化时，自动调整开机自启动状态
     LaunchedEffect(canEnableAutoStart) {
         if (!canEnableAutoStart && autoStartEnabled) {
             autoStartEnabled = false
@@ -742,7 +739,7 @@ fun SuSFSConfigScreen(
                                 )
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text(
-                                    stringResource(R.string.susfs_reset, stringResource(selectedTab.displayNameRes)),
+                                    stringResource(R.string.susfs_reset_to_default),
                                     fontWeight = FontWeight.Medium
                                 )
                             }
@@ -765,7 +762,7 @@ fun SuSFSConfigScreen(
                                 )
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text(
-                                    stringResource(R.string.susfs_reset, stringResource(selectedTab.displayNameRes)),
+                                    stringResource(R.string.susfs_reset_paths_title),
                                     fontWeight = FontWeight.Medium
                                 )
                             }
@@ -788,7 +785,7 @@ fun SuSFSConfigScreen(
                                 )
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text(
-                                    stringResource(R.string.susfs_reset, stringResource(selectedTab.displayNameRes)),
+                                    stringResource(R.string.susfs_reset_mounts_title),
                                     fontWeight = FontWeight.Medium
                                 )
                             }
@@ -811,7 +808,7 @@ fun SuSFSConfigScreen(
                                 )
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text(
-                                    stringResource(R.string.susfs_reset, stringResource(selectedTab.displayNameRes)),
+                                    stringResource(R.string.susfs_reset_umounts_title),
                                     fontWeight = FontWeight.Medium
                                 )
                             }
@@ -843,7 +840,7 @@ fun SuSFSConfigScreen(
                                 )
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text(
-                                    stringResource(R.string.susfs_reset, stringResource(selectedTab.displayNameRes)),
+                                    stringResource(R.string.susfs_path_settings),
                                     fontWeight = FontWeight.Medium
                                 )
                             }
@@ -1014,7 +1011,8 @@ fun SuSFSConfigScreen(
                     }
                     SuSFSTab.ENABLED_FEATURES -> {
                         EnabledFeaturesContent(
-                            enabledFeatures = enabledFeatures
+                            enabledFeatures = enabledFeatures,
+                            onRefresh = { loadEnabledFeatures() }
                         )
                     }
                 }
@@ -1183,215 +1181,6 @@ private fun BasicSettingsContent(
 }
 
 /**
- * SUS路径内容组件
- */
-@Composable
-private fun SusPathsContent(
-    susPaths: Set<String>,
-    isLoading: Boolean,
-    onAddPath: () -> Unit,
-    onRemovePath: (String) -> Unit
-) {
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        UnifiedButtonRow(
-            primaryButton = {
-                FloatingActionButton(
-                    onClick = onAddPath,
-                    modifier = Modifier.size(48.dp),
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = null,
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-            },
-            secondaryButtons = {
-                Text(
-                    text = stringResource(R.string.susfs_sus_paths_management),
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-        )
-
-        if (susPaths.isEmpty()) {
-            EmptyStateCard(
-                message = stringResource(R.string.susfs_no_paths_configured)
-            )
-        } else {
-            LazyColumn(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-                items(susPaths.toList()) { path ->
-                    PathItemCard(
-                        path = path,
-                        icon = Icons.Default.Folder,
-                        onDelete = { onRemovePath(path) },
-                        isLoading = isLoading
-                    )
-                }
-            }
-        }
-    }
-}
-
-/**
- * SUS挂载内容组件
- */
-@Composable
-private fun SusMountsContent(
-    susMounts: Set<String>,
-    isLoading: Boolean,
-    onAddMount: () -> Unit,
-    onRemoveMount: (String) -> Unit
-) {
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        UnifiedButtonRow(
-            primaryButton = {
-                FloatingActionButton(
-                    onClick = onAddMount,
-                    modifier = Modifier.size(48.dp),
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = null,
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-            },
-            secondaryButtons = {
-                Text(
-                    text = stringResource(R.string.susfs_sus_mounts_management),
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-        )
-
-        if (susMounts.isEmpty()) {
-            EmptyStateCard(
-                message = stringResource(R.string.susfs_no_mounts_configured)
-            )
-        } else {
-            LazyColumn(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-                items(susMounts.toList()) { mount ->
-                    PathItemCard(
-                        path = mount,
-                        icon = Icons.Default.Storage,
-                        onDelete = { onRemoveMount(mount) },
-                        isLoading = isLoading
-                    )
-                }
-            }
-        }
-    }
-}
-
-/**
- * 尝试卸载内容组件
- */
-@Composable
-private fun TryUmountContent(
-    tryUmounts: Set<String>,
-    isLoading: Boolean,
-    onAddUmount: () -> Unit,
-    onRunUmount: () -> Unit,
-    onRemoveUmount: (String) -> Unit
-) {
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        UnifiedButtonRow(
-            primaryButton = {
-                FloatingActionButton(
-                    onClick = onAddUmount,
-                    modifier = Modifier.size(48.dp),
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = null,
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-            },
-            secondaryButtons = {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = stringResource(R.string.susfs_try_umount_management),
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
-                    )
-                    if (tryUmounts.isNotEmpty()) {
-                        FloatingActionButton(
-                            onClick = onRunUmount,
-                            modifier = Modifier.size(40.dp),
-                            containerColor = MaterialTheme.colorScheme.secondary,
-                            contentColor = MaterialTheme.colorScheme.onSecondary
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.PlayArrow,
-                                contentDescription = null,
-                                modifier = Modifier.size(18.dp)
-                            )
-                        }
-                    }
-                }
-            }
-        )
-
-        if (tryUmounts.isEmpty()) {
-            EmptyStateCard(
-                message = stringResource(R.string.susfs_no_umounts_configured)
-            )
-        } else {
-            LazyColumn(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-                items(tryUmounts.toList()) { umountEntry ->
-                    val parts = umountEntry.split("|")
-                    val path = if (parts.isNotEmpty()) parts[0] else umountEntry
-                    val mode = if (parts.size > 1) parts[1] else "0"
-                    val modeText = if (mode == "0")
-                        stringResource(R.string.susfs_umount_mode_normal_short)
-                    else
-                        stringResource(R.string.susfs_umount_mode_detach_short)
-
-                    PathItemCard(
-                        path = path,
-                        icon = Icons.Default.Storage,
-                        additionalInfo = stringResource(R.string.susfs_umount_mode_display, modeText, mode),
-                        onDelete = { onRemoveUmount(umountEntry) },
-                        isLoading = isLoading
-                    )
-                }
-            }
-        }
-    }
-}
-
-/**
  * 路径设置内容组件
  */
 @SuppressLint("SdCardPath")
@@ -1490,7 +1279,8 @@ private fun PathSettingsContent(
  */
 @Composable
 private fun EnabledFeaturesContent(
-    enabledFeatures: List<SuSFSManager.EnabledFeature>
+    enabledFeatures: List<SuSFSManager.EnabledFeature>,
+    onRefresh: () -> Unit
 ) {
     Column(
         modifier = Modifier.fillMaxSize(),
@@ -1543,181 +1333,11 @@ private fun EnabledFeaturesContent(
                 verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 items(enabledFeatures) { feature ->
-                    FeatureStatusCard(feature = feature)
-                }
-            }
-        }
-    }
-}
-
-/**
- * 统一的按钮布局组件
- */
-@Composable
-private fun UnifiedButtonRow(
-    primaryButton: @Composable () -> Unit,
-    secondaryButtons: @Composable () -> Unit = {},
-    @SuppressLint("ModifierParameter") modifier: Modifier = Modifier
-) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(vertical = 6.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            secondaryButtons()
-        }
-        primaryButton()
-    }
-}
-
-/**
- * 空状态显示组件
- */
-@Composable
-private fun EmptyStateCard(
-    message: String,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f)
-        ),
-        shape = RoundedCornerShape(12.dp)
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(24.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = message,
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center
-            )
-        }
-    }
-}
-
-/**
- * 路径项目卡片组件
- */
-@Composable
-private fun PathItemCard(
-    path: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    onDelete: () -> Unit,
-    isLoading: Boolean = false,
-    additionalInfo: String? = null
-) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 1.dp),
-        shape = RoundedCornerShape(8.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.weight(1f)
-            ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(18.dp)
-                )
-                Spacer(modifier = Modifier.width(12.dp))
-                Column {
-                    Text(
-                        text = path,
-                        style = MaterialTheme.typography.bodyLarge,
-                        fontWeight = FontWeight.Medium
+                    FeatureStatusCard(
+                        feature = feature,
+                        onRefresh = onRefresh
                     )
-                    if (additionalInfo != null) {
-                        Text(
-                            text = additionalInfo,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
                 }
-            }
-            IconButton(
-                onClick = onDelete,
-                enabled = !isLoading,
-                modifier = Modifier.size(32.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Delete,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.size(16.dp)
-                )
-            }
-        }
-    }
-}
-
-/**
- * 启用功能状态卡片组件
- */
-@Composable
-private fun FeatureStatusCard(
-    feature: SuSFSManager.EnabledFeature,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(vertical = 1.dp),
-        shape = RoundedCornerShape(8.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = feature.name,
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.Medium,
-                modifier = Modifier.weight(1f)
-            )
-            Surface(
-                shape = RoundedCornerShape(6.dp),
-                color = when {
-                    feature.isEnabled -> MaterialTheme.colorScheme.primary
-                    else -> Color.Gray
-                }
-            ) {
-                Text(
-                    text = feature.statusText,
-                    style = MaterialTheme.typography.labelLarge,
-                    color = when {
-                        feature.isEnabled -> MaterialTheme.colorScheme.onPrimary
-                        else -> Color.White
-                    },
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
-                )
             }
         }
     }
