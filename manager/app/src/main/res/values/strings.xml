@@ -401,10 +401,13 @@
     <!-- SuSFS Configuration -->
     <string name="susfs_config_title">SuSFS Configuration</string>
     <string name="susfs_config_description">Configuration Description</string>
-    <string name="susfs_config_description_text">This feature allows you to customize the SuSFS uname value. Enter the value you want to set and click Apply to take effect.</string>
+    <string name="susfs_config_description_text">This feature allows you to customize the SuSFS uname value and build time spoofing. Enter the values you want to set and click Apply to take effect.</string>
     <string name="susfs_uname_label">Uname Value</string>
     <string name="susfs_uname_placeholder">Please enter custom uname value</string>
+    <string name="susfs_build_time_label">Build Time Spoofing</string>
+    <string name="susfs_build_time_placeholder">Please enter build time spoofing value</string>
     <string name="susfs_current_value">Current value: %s</string>
+    <string name="susfs_current_build_time">Current build time: %s</string>
     <string name="susfs_reset_to_default">Reset to Default</string>
     <string name="susfs_apply">Apply</string>
     <string name="susfs_done">Done</string>
@@ -415,10 +418,10 @@
     <string name="susfs_binary_not_found">Cannot find ksu_susfs file</string>
     <string name="susfs_command_failed">SuSFS command execution failed</string>
     <string name="susfs_command_error">Error executing SuSFS command: %s</string>
-    <string name="susfs_uname_set_success">SuSFS uname set successfully: %s</string>
+    <string name="susfs_uname_set_success">SuSFS uname and build time set successfully: %s, %s</string>
     <!-- SuSFS Settings Item -->
     <string name="susfs_config_setting_title">SuSFS Configuration</string>
-    <string name="susfs_config_setting_summary">Configure SuSFS uname value (Current: %s)</string>
+    <string name="susfs_config_setting_summary">Configure SuSFS uname value and build time spoofing (Current: %s)</string>
     <!-- 开机自启动相关 -->
     <string name="susfs_autostart_title">Auto Start</string>
     <string name="susfs_autostart_description">Automatically apply uname configuration at system startup</string>

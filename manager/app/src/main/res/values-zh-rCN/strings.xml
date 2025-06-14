@@ -399,10 +399,13 @@
     <!-- SuSFS Configuration -->
     <string name="susfs_config_title">SuSFS 配置</string>
     <string name="susfs_config_description">配置说明</string>
-    <string name="susfs_config_description_text">此功能允许您自定义 SuSFS 的 uname 值。输入您想要设置的值，点击应用即可生效</string>
+    <string name="susfs_config_description_text">此功能允许您自定义 SuSFS 的 uname 值和构建时间伪装。输入您想要设置的值，点击应用即可生效</string>
     <string name="susfs_uname_label">Uname 值</string>
     <string name="susfs_uname_placeholder">请输入自定义 uname 值</string>
+    <string name="susfs_build_time_label">构建时间伪装</string>
+    <string name="susfs_build_time_placeholder">请输入构建时间伪装值</string>
     <string name="susfs_current_value">当前值: %s</string>
+    <string name="susfs_current_build_time">当前构建时间: %s</string>
     <string name="susfs_reset_to_default">重置为默认值</string>
     <string name="susfs_apply">应用</string>
     <string name="susfs_done">完成</string>
@@ -413,14 +416,14 @@
     <string name="susfs_binary_not_found">无法找到 ksu_susfs 文件</string>
     <string name="susfs_command_failed">SuSFS 命令执行失败</string>
     <string name="susfs_command_error">执行 SuSFS 命令时出错: %s</string>
-    <string name="susfs_uname_set_success">SuSFS uname 设置成功: %s</string>
+    <string name="susfs_uname_set_success">SuSFS uname 和构建时间设置成功: %s, %s</string>
     <!-- SuSFS Settings Item -->
     <string name="susfs_config_setting_title">SuSFS 配置</string>
-    <string name="susfs_config_setting_summary">配置 SuSFS 的 uname 值 (当前: %s)</string>
+    <string name="susfs_config_setting_summary">配置 SuSFS 的 uname 值和构建时间伪装 (当前: %s)</string>
     <!-- 开机自启动相关 -->
     <string name="susfs_autostart_title">开机自启动</string>
     <string name="susfs_autostart_description">系统启动时自动应用 uname 配置</string>
-    <string name="susfs_autostart_requirement">需要配置uname或添加路径后才能启用</string>
+    <string name="susfs_autostart_requirement">需要配置 uname 或添加路径后才能启用</string>
     <string name="susfs_autostart_enabled">开机自启动已启用</string>
     <string name="susfs_autostart_disabled">开机自启动已禁用</string>
     <string name="susfs_autostart_enable_failed">启用开机自启动失败</string>
@@ -448,11 +451,11 @@
     <string name="susfs_path_label">路径</string>
     <string name="susfs_mount_path_label">挂载路径</string>
     <string name="susfs_path_placeholder">例如: /system/addon.d</string>
-    <string name="susfs_sus_paths_management">SUS路径管理</string>
-    <string name="susfs_sus_mounts_management">SUS挂载管理</string>
+    <string name="susfs_sus_paths_management">SUS 路径管理</string>
+    <string name="susfs_sus_mounts_management">SUS 挂载管理</string>
     <string name="susfs_try_umount_management">尝试卸载管理</string>
-    <string name="susfs_no_paths_configured">暂无SUS路径配置</string>
-    <string name="susfs_no_mounts_configured">暂无SUS挂载配置</string>
+    <string name="susfs_no_paths_configured">暂无 SUS 路径配置</string>
+    <string name="susfs_no_mounts_configured">暂无 SUS 挂载配置</string>
     <string name="susfs_no_umounts_configured">暂无尝试卸载配置</string>
     <!-- SuSFS Umount Mode -->
     <string name="susfs_umount_mode_label">卸载模式</string>
@@ -465,21 +468,21 @@
     <string name="susfs_run_umount_confirm_title">确认运行尝试卸载</string>
     <string name="susfs_run_umount_confirm_message">这将立即执行所有已配置的尝试卸载操作，确定要继续吗？</string>
     <!-- SuSFS Reset Categories -->
-    <string name="susfs_reset_paths_title">重置SUS路径</string>
-    <string name="susfs_reset_paths_message">这将清除所有SUS路径配置，确定要继续吗？</string>
-    <string name="susfs_reset_mounts_title">重置SUS挂载</string>
-    <string name="susfs_reset_mounts_message">这将清除所有SUS挂载配置，确定要继续吗？</string>
+    <string name="susfs_reset_paths_title">重置 SUS 路径</string>
+    <string name="susfs_reset_paths_message">这将清除所有 SUS 路径配置，确定要继续吗？</string>
+    <string name="susfs_reset_mounts_title">重置 SUS 挂载</string>
+    <string name="susfs_reset_mounts_message">这将清除所有 SUS 挂载配置，确定要继续吗？</string>
     <string name="susfs_reset_umounts_title">重置尝试卸载</string>
     <string name="susfs_reset_umounts_message">这将清除所有尝试卸载配置，确定要继续吗？</string>
     <!-- SuSFS Path Settings -->
     <string name="susfs_path_settings">路径设置</string>
-    <string name="susfs_android_data_path_label">Android Data路径</string>
-    <string name="susfs_sdcard_path_label">SD卡路径</string>
-    <string name="susfs_set_android_data_path">设置Android Data路径</string>
-    <string name="susfs_set_sdcard_path">设置SD卡路径</string>
+    <string name="susfs_android_data_path_label">Android Data 路径</string>
+    <string name="susfs_sdcard_path_label">SD 卡路径</string>
+    <string name="susfs_set_android_data_path">设置 Android Data 路径</string>
+    <string name="susfs_set_sdcard_path">设置 SD 卡路径</string>
     <!-- SuSFS Enabled Features -->
     <string name="susfs_enabled_features_title">启用功能状态</string>
-    <string name="susfs_enabled_features_description">显示当前SuSFS启用的功能状态</string>
+    <string name="susfs_enabled_features_description">显示当前 SuSFS 启用的功能状态</string>
     <string name="susfs_no_features_found">未找到功能状态信息</string>
     <string name="susfs_feature_enabled">已启用</string>
     <string name="susfs_feature_disabled">已禁用</string>

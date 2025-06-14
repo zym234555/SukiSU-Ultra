@@ -19,18 +19,40 @@ import java.io.File
 object SuSFSManager {
     private const val PREFS_NAME = "susfs_config"
     private const val KEY_UNAME_VALUE = "uname_value"
+    private const val KEY_BUILD_TIME_VALUE = "build_time_value"
     private const val KEY_IS_ENABLED = "is_enabled"
     private const val KEY_AUTO_START_ENABLED = "auto_start_enabled"
     private const val KEY_LAST_APPLIED_VALUE = "last_applied_value"
+    private const val KEY_LAST_APPLIED_BUILD_TIME = "last_applied_build_time"
     private const val KEY_SUS_PATHS = "sus_paths"
     private const val KEY_SUS_MOUNTS = "sus_mounts"
     private const val KEY_TRY_UMOUNTS = "try_umounts"
     private const val KEY_ANDROID_DATA_PATH = "android_data_path"
     private const val KEY_SDCARD_PATH = "sdcard_path"
-    private const val SUSFS_BINARY_NAME = "ksu_susfs"
+    private const val SUSFS_BINARY_BASE_NAME = "ksu_susfs"
     private const val DEFAULT_UNAME = "default"
+    private const val DEFAULT_BUILD_TIME = "default"
     private const val STARTUP_SCRIPT_PATH = "/data/adb/service.d/susfs_startup.sh"
-    private const val SUSFS_TARGET_PATH = "/data/adb/ksu/bin/$SUSFS_BINARY_NAME"
+
+    private fun getSuSFS(): String {
+        return try {
+            getSuSFSVersion()
+        } catch (_: Exception) {
+            "1.5.8"
+        }
+    }
+
+    private fun getSuSFSBinaryName(): String {
+        val variant = getSuSFS().removePrefix("v")
+        return "${SUSFS_BINARY_BASE_NAME}_${variant}"
+    }
+
+    /**
+     * 获取SuSFS二进制文件的完整路径
+     */
+    private fun getSuSFSTargetPath(): String {
+        return "/data/adb/ksu/bin/${getSuSFSBinaryName()}"
+    }
 
     /**
      * 启用功能状态数据类
@@ -91,6 +113,23 @@ object SuSFSManager {
     }
 
     /**
+     * 保存构建时间值
+     */
+    fun saveBuildTimeValue(context: Context, value: String) {
+        getPrefs(context).edit().apply {
+            putString(KEY_BUILD_TIME_VALUE, value)
+            apply()
+        }
+    }
+
+    /**
+     * 获取保存的构建时间值
+     */
+    fun getBuildTimeValue(context: Context): String {
+        return getPrefs(context).getString(KEY_BUILD_TIME_VALUE, DEFAULT_BUILD_TIME) ?: DEFAULT_BUILD_TIME
+    }
+
+    /**
      * 保存最后应用的值
      */
     private fun saveLastAppliedValue(context: Context, value: String) {
@@ -105,6 +144,23 @@ object SuSFSManager {
      */
     fun getLastAppliedValue(context: Context): String {
         return getPrefs(context).getString(KEY_LAST_APPLIED_VALUE, DEFAULT_UNAME) ?: DEFAULT_UNAME
+    }
+
+    /**
+     * 保存最后应用的构建时间值
+     */
+    private fun saveLastAppliedBuildTime(context: Context, value: String) {
+        getPrefs(context).edit().apply {
+            putString(KEY_LAST_APPLIED_BUILD_TIME, value)
+            apply()
+        }
+    }
+
+    /**
+     * 获取最后应用的构建时间值
+     */
+    fun getLastAppliedBuildTime(context: Context): String {
+        return getPrefs(context).getString(KEY_LAST_APPLIED_BUILD_TIME, DEFAULT_BUILD_TIME) ?: DEFAULT_BUILD_TIME
     }
 
     /**
@@ -226,8 +282,10 @@ object SuSFSManager {
      */
     private suspend fun copyBinaryFromAssets(context: Context): String? = withContext(Dispatchers.IO) {
         try {
-            val inputStream = context.assets.open(SUSFS_BINARY_NAME)
-            val tempFile = File(context.cacheDir, SUSFS_BINARY_NAME)
+            val binaryName = getSuSFSBinaryName()
+            val targetPath = getSuSFSTargetPath()
+            val inputStream = context.assets.open(binaryName)
+            val tempFile = File(context.cacheDir, binaryName)
 
             FileOutputStream(tempFile).use { outputStream ->
                 inputStream.copyTo(outputStream)
@@ -236,8 +294,8 @@ object SuSFSManager {
             // 创建目标目录并复制文件到/data/adb/ksu/bin/
             val shell = getRootShell()
             val commands = arrayOf(
-                "cp '${tempFile.absolutePath}' '$SUSFS_TARGET_PATH'",
-                "chmod 755 '$SUSFS_TARGET_PATH'",
+                "cp '${tempFile.absolutePath}' '$targetPath'",
+                "chmod 755 '$targetPath'",
             )
 
             var success = true
@@ -253,9 +311,9 @@ object SuSFSManager {
             tempFile.delete()
 
             if (success) {
-                val verifyResult = shell.newJob().add("test -f '$SUSFS_TARGET_PATH'").exec()
+                val verifyResult = shell.newJob().add("test -f '$targetPath'").exec()
                 if (verifyResult.isSuccess) {
-                    SUSFS_TARGET_PATH
+                    targetPath
                 } else {
                     null
                 }
@@ -275,11 +333,13 @@ object SuSFSManager {
     private suspend fun createStartupScript(context: Context): Boolean = withContext(Dispatchers.IO) {
         try {
             val unameValue = getUnameValue(context)
+            val buildTimeValue = getBuildTimeValue(context)
             val susPaths = getSusPaths(context)
             val susMounts = getSusMounts(context)
             val tryUmounts = getTryUmounts(context)
             val androidDataPath = getAndroidDataPath(context)
             val sdcardPath = getSdcardPath(context)
+            val targetPath = getSuSFSTargetPath()
 
             val scriptContent = buildString {
                 appendLine("#!/system/bin/sh")
@@ -290,7 +350,7 @@ object SuSFSManager {
                 appendLine("sleep 60")
                 appendLine()
                 appendLine("# 检查二进制文件是否存在")
-                appendLine("if [ -f \"$SUSFS_TARGET_PATH\" ]; then")
+                appendLine("if [ -f \"$targetPath\" ]; then")
                 appendLine("    # 创建日志目录")
                 appendLine("    mkdir -p /data/adb/ksu/log")
                 appendLine()
@@ -298,28 +358,28 @@ object SuSFSManager {
                 // 设置Android Data路径
                 if (androidDataPath != "/sdcard/Android/data") {
                     appendLine("    # 设置Android Data路径")
-                    appendLine("    $SUSFS_TARGET_PATH set_android_data_root_path '$androidDataPath'")
+                    appendLine("    $targetPath set_android_data_root_path '$androidDataPath'")
                     appendLine("    echo \"\\$(date): Android Data路径设置为: $androidDataPath\" >> /data/adb/ksu/log/susfs_startup.log")
                 }
 
                 // 设置SD卡路径
                 if (sdcardPath != "/sdcard") {
                     appendLine("    # 设置SD卡路径")
-                    appendLine("    $SUSFS_TARGET_PATH set_sdcard_root_path '$sdcardPath'")
+                    appendLine("    $targetPath set_sdcard_root_path '$sdcardPath'")
                     appendLine("    echo \"\\$(date): SD卡路径设置为: $sdcardPath\" >> /data/adb/ksu/log/susfs_startup.log")
                 }
 
                 // 添加SUS路径
                 susPaths.forEach { path ->
                     appendLine("    # 添加SUS路径: $path")
-                    appendLine("    $SUSFS_TARGET_PATH add_sus_path '$path'")
+                    appendLine("    $targetPath add_sus_path '$path'")
                     appendLine("    echo \"\\$(date): 添加SUS路径: $path\" >> /data/adb/ksu/log/susfs_startup.log")
                 }
 
                 // 添加SUS挂载
                 susMounts.forEach { mount ->
                     appendLine("    # 添加SUS挂载: $mount")
-                    appendLine("    $SUSFS_TARGET_PATH add_sus_mount '$mount'")
+                    appendLine("    $targetPath add_sus_mount '$mount'")
                     appendLine("    echo \"\\$(date): 添加SUS挂载: $mount\" >> /data/adb/ksu/log/susfs_startup.log")
                 }
 
@@ -330,20 +390,20 @@ object SuSFSManager {
                         val path = parts[0]
                         val mode = parts[1]
                         appendLine("    # 添加尝试卸载: $path (模式: $mode)")
-                        appendLine("    $SUSFS_TARGET_PATH add_try_umount '$path' $mode")
+                        appendLine("    $targetPath add_try_umount '$path' $mode")
                         appendLine("    echo \"\\$(date): 添加尝试卸载: $path (模式: $mode)\" >> /data/adb/ksu/log/susfs_startup.log")
                     }
                 }
 
-                // 设置uname
-                if (unameValue != DEFAULT_UNAME) {
-                    appendLine("    # 设置uname")
-                    appendLine("    $SUSFS_TARGET_PATH set_uname '$unameValue' '$DEFAULT_UNAME'")
-                    appendLine("    echo \"\\$(date): 设置uname为: $unameValue\" >> /data/adb/ksu/log/susfs_startup.log")
+                // 设置uname和构建时间
+                if (unameValue != DEFAULT_UNAME || buildTimeValue != DEFAULT_BUILD_TIME) {
+                    appendLine("    # 设置uname和构建时间")
+                    appendLine("    $targetPath set_uname '$unameValue' '$buildTimeValue'")
+                    appendLine("    echo \"\\$(date): 设置uname为: $unameValue, 构建时间为: $buildTimeValue\" >> /data/adb/ksu/log/susfs_startup.log")
                 }
 
                 appendLine("else")
-                appendLine("    echo \"\\$(date): SuSFS二进制文件未找到: $SUSFS_TARGET_PATH\" >> /data/adb/ksu/log/susfs_startup.log")
+                appendLine("    echo \"\\$(date): SuSFS二进制文件未找到: $targetPath\" >> /data/adb/ksu/log/susfs_startup.log")
                 appendLine("fi")
             }
 
@@ -460,13 +520,14 @@ object SuSFSManager {
         try {
             // 每次都重新执行命令获取最新状态
             val shell = getRootShell()
+            val targetPath = getSuSFSTargetPath()
 
             // 首先检查二进制文件是否存在于目标位置
-            val checkResult = shell.newJob().add("test -f '$SUSFS_TARGET_PATH'").exec()
+            val checkResult = shell.newJob().add("test -f '$targetPath'").exec()
 
             val binaryPath = if (checkResult.isSuccess) {
                 // 如果目标位置存在，直接使用
-                SUSFS_TARGET_PATH
+                targetPath
             } else {
                 // 如果不存在，尝试从assets复制
                 copyBinaryFromAssets(context)
@@ -685,9 +746,9 @@ object SuSFSManager {
     }
 
     /**
-     * 执行SuSFS命令设置uname
+     * 执行SuSFS命令设置uname和构建时间
      */
-    suspend fun setUname(context: Context, unameValue: String): Boolean = withContext(Dispatchers.IO) {
+    suspend fun setUname(context: Context, unameValue: String, buildTimeValue: String): Boolean = withContext(Dispatchers.IO) {
         try {
             // 首先复制二进制文件到/data/adb/ksu/bin/
             val binaryPath = copyBinaryFromAssets(context)
@@ -703,7 +764,7 @@ object SuSFSManager {
             }
 
             // 构建命令
-            val command = "$binaryPath set_uname '$unameValue' '$DEFAULT_UNAME'"
+            val command = "$binaryPath set_uname '$unameValue' '$buildTimeValue'"
 
             // 执行命令
             val result = getRootShell().newJob().add(command).exec()
@@ -711,7 +772,9 @@ object SuSFSManager {
             if (result.isSuccess) {
                 // 保存配置
                 saveUnameValue(context, unameValue)
+                saveBuildTimeValue(context, buildTimeValue)
                 saveLastAppliedValue(context, unameValue)
+                saveLastAppliedBuildTime(context, buildTimeValue)
                 setEnabled(context, true)
 
                 // 如果开启了开机自启动，更新启动脚本
@@ -722,7 +785,7 @@ object SuSFSManager {
                 withContext(Dispatchers.Main) {
                     Toast.makeText(
                         context,
-                        context.getString(R.string.susfs_uname_set_success, unameValue),
+                        context.getString(R.string.susfs_uname_set_success, unameValue, buildTimeValue),
                         Toast.LENGTH_SHORT
                     ).show()
                 }
@@ -759,8 +822,10 @@ object SuSFSManager {
             if (enabled) {
                 // 启用开机自启动
                 val lastValue = getLastAppliedValue(context)
-                if (lastValue == DEFAULT_UNAME && getSusPaths(context).isEmpty() &&
-                    getSusMounts(context).isEmpty() && getTryUmounts(context).isEmpty()) {
+                val lastBuildTime = getLastAppliedBuildTime(context)
+                if (lastValue == DEFAULT_UNAME && lastBuildTime == DEFAULT_BUILD_TIME &&
+                    getSusPaths(context).isEmpty() && getSusMounts(context).isEmpty() &&
+                    getTryUmounts(context).isEmpty()) {
                     withContext(Dispatchers.Main) {
                         Toast.makeText(
                             context,
@@ -773,7 +838,8 @@ object SuSFSManager {
 
                 // 确保二进制文件存在于目标位置
                 val shell = getRootShell()
-                val checkResult = shell.newJob().add("test -f '$SUSFS_TARGET_PATH'").exec()
+                val targetPath = getSuSFSTargetPath()
+                val checkResult = shell.newJob().add("test -f '$targetPath'").exec()
 
                 if (!checkResult.isSuccess) {
                     // 如果不存在，尝试复制
@@ -850,10 +916,11 @@ object SuSFSManager {
      * 重置为默认值
      */
     suspend fun resetToDefault(context: Context): Boolean {
-        val success = setUname(context, DEFAULT_UNAME)
+        val success = setUname(context, DEFAULT_UNAME, DEFAULT_BUILD_TIME)
         if (success) {
             // 重置时清除最后应用的值
             saveLastAppliedValue(context, DEFAULT_UNAME)
+            saveLastAppliedBuildTime(context, DEFAULT_BUILD_TIME)
             // 如果开启了开机自启动，需要禁用它
             if (isAutoStartEnabled(context)) {
                 configureAutoStart(context, false)
@@ -867,7 +934,8 @@ object SuSFSManager {
      */
     fun isBinaryAvailable(context: Context): Boolean {
         return try {
-            context.assets.open(SUSFS_BINARY_NAME).use { true }
+            val binaryName = getSuSFSBinaryName()
+            context.assets.open(binaryName).use { true }
         } catch (_: IOException) {
             false
         }

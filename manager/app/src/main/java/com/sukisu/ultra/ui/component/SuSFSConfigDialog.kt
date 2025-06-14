@@ -84,10 +84,12 @@ fun SuSFSConfigDialog(
 
     var selectedTabIndex by remember { mutableIntStateOf(0) }
     var unameValue by remember { mutableStateOf("") }
+    var buildTimeValue by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(false) }
     var showConfirmReset by remember { mutableStateOf(false) }
     var autoStartEnabled by remember { mutableStateOf(false) }
     var lastAppliedValue by remember { mutableStateOf("") }
+    var lastAppliedBuildTime by remember { mutableStateOf("") }
 
     // 路径管理相关状态
     var susPaths by remember { mutableStateOf(emptySet<String>()) }
@@ -128,7 +130,8 @@ fun SuSFSConfigDialog(
     // 实时判断是否可以启用开机自启动
     val canEnableAutoStart by remember {
         derivedStateOf {
-            unameValue.trim().isNotBlank() && unameValue.trim() != "default" ||
+            (unameValue.trim().isNotBlank() && unameValue.trim() != "default") ||
+                    (buildTimeValue.trim().isNotBlank() && buildTimeValue.trim() != "default") ||
                     susPaths.isNotEmpty() || susMounts.isNotEmpty() || tryUmounts.isNotEmpty()
         }
     }
@@ -145,8 +148,10 @@ fun SuSFSConfigDialog(
     // 加载当前配置
     LaunchedEffect(Unit) {
         unameValue = SuSFSManager.getUnameValue(context)
+        buildTimeValue = SuSFSManager.getBuildTimeValue(context)
         autoStartEnabled = SuSFSManager.isAutoStartEnabled(context)
         lastAppliedValue = SuSFSManager.getLastAppliedValue(context)
+        lastAppliedBuildTime = SuSFSManager.getLastAppliedBuildTime(context)
         susPaths = SuSFSManager.getSusPaths(context)
         susMounts = SuSFSManager.getSusMounts(context)
         tryUmounts = SuSFSManager.getTryUmounts(context)
@@ -585,7 +590,9 @@ fun SuSFSConfigDialog(
                             isLoading = true
                             if (SuSFSManager.resetToDefault(context)) {
                                 unameValue = "default"
+                                buildTimeValue = "default"
                                 lastAppliedValue = "default"
+                                lastAppliedBuildTime = "default"
                                 autoStartEnabled = false
                             }
                             isLoading = false
@@ -615,6 +622,7 @@ fun SuSFSConfigDialog(
         onDismissRequest = onDismiss,
         title = {
             Row(
+                modifier = Modifier.fillMaxWidth(0.8f),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
@@ -635,7 +643,7 @@ fun SuSFSConfigDialog(
             Column(
                 modifier = Modifier.fillMaxWidth()
             ) {
-                // 优化后的标签页 - 使用ScrollableTabRow
+                // 优化后的标签页
                 ScrollableTabRow(
                     selectedTabIndex = selectedTabIndex,
                     edgePadding = 16.dp,
@@ -667,7 +675,7 @@ fun SuSFSConfigDialog(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(380.dp)
+                        .height(460.dp)
                 ) {
                     when (selectedTabIndex) {
                         0 -> {
@@ -705,7 +713,7 @@ fun SuSFSConfigDialog(
                                     }
                                 }
 
-                                // 输入框
+                                // Uname输入框
                                 OutlinedTextField(
                                     value = unameValue,
                                     onValueChange = { unameValue = it },
@@ -717,12 +725,33 @@ fun SuSFSConfigDialog(
                                     shape = RoundedCornerShape(8.dp)
                                 )
 
-                                // 当前值显示
-                                Text(
-                                    text = stringResource(R.string.susfs_current_value, SuSFSManager.getUnameValue(context)),
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                // 构建时间伪装输入框
+                                OutlinedTextField(
+                                    value = buildTimeValue,
+                                    onValueChange = { buildTimeValue = it },
+                                    label = { Text(stringResource(R.string.susfs_build_time_label)) },
+                                    placeholder = { Text(stringResource(R.string.susfs_build_time_placeholder)) },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    enabled = !isLoading,
+                                    singleLine = true,
+                                    shape = RoundedCornerShape(8.dp)
                                 )
+
+                                // 当前值显示
+                                Column(
+                                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    Text(
+                                        text = stringResource(R.string.susfs_current_value, SuSFSManager.getUnameValue(context)),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                    Text(
+                                        text = stringResource(R.string.susfs_current_build_time, SuSFSManager.getBuildTimeValue(context)),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
 
                                 // 开机自启动开关
                                 Card(
@@ -1248,19 +1277,22 @@ fun SuSFSConfigDialog(
                 if (selectedTabIndex == 0) {
                     Button(
                         onClick = {
-                            if (unameValue.isNotBlank()) {
+                            if (unameValue.isNotBlank() || buildTimeValue.isNotBlank()) {
                                 coroutineScope.launch {
                                     isLoading = true
-                                    val success = SuSFSManager.setUname(context, unameValue.trim())
+                                    val finalUnameValue = unameValue.trim().ifBlank { "default" }
+                                    val finalBuildTimeValue = buildTimeValue.trim().ifBlank { "default" }
+                                    val success = SuSFSManager.setUname(context, finalUnameValue, finalBuildTimeValue)
                                     if (success) {
-                                        lastAppliedValue = unameValue.trim()
+                                        lastAppliedValue = finalUnameValue
+                                        lastAppliedBuildTime = finalBuildTimeValue
                                         onDismiss()
                                     }
                                     isLoading = false
                                 }
                             }
                         },
-                        enabled = !isLoading && unameValue.isNotBlank(),
+                        enabled = !isLoading && (unameValue.isNotBlank() || buildTimeValue.isNotBlank()),
                         shape = RoundedCornerShape(8.dp)
                     ) {
                         Text(stringResource(R.string.susfs_apply))
