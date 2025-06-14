@@ -45,6 +45,7 @@ import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.ScrollableTabRow
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
@@ -60,6 +61,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -1515,18 +1517,20 @@ private fun FeatureStatusCard(
                     modifier = Modifier.weight(1f)
                 )
             }
-            Text(
-                text = if (feature.isEnabled)
-                    stringResource(R.string.susfs_feature_enabled)
-                else
-                    stringResource(R.string.susfs_feature_disabled),
-                style = MaterialTheme.typography.bodySmall,
-                color = if (feature.isEnabled)
-                    MaterialTheme.colorScheme.primary
-                else
-                    MaterialTheme.colorScheme.error,
-                fontWeight = FontWeight.Medium
-            )
+            Surface(
+                shape = RoundedCornerShape(4.dp),
+                color = when {
+                    feature.isEnabled -> MaterialTheme.colorScheme.primary
+                    else -> Color.Gray
+                },
+                modifier = Modifier
+            ) {
+                Text(
+                    text = feature.statusText,
+                    style = MaterialTheme.typography.labelMedium,
+                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                )
+            }
         }
     }
 }

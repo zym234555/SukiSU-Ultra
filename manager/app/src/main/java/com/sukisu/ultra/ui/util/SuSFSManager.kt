@@ -4,6 +4,9 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.SharedPreferences
 import android.widget.Toast
+import androidx.compose.ui.res.stringResource
+import com.dergoogler.mmrl.platform.Platform
+import com.dergoogler.mmrl.platform.Platform.Companion.context
 import com.sukisu.ultra.R
 import com.topjohnwu.superuser.Shell
 import kotlinx.coroutines.Dispatchers
@@ -59,7 +62,8 @@ object SuSFSManager {
      */
     data class EnabledFeature(
         val name: String,
-        val isEnabled: Boolean
+        val isEnabled: Boolean,
+        val statusText: String = if (isEnabled) context.getString(R.string.susfs_feature_enabled) else context.getString(R.string.susfs_feature_disabled)
     )
 
     /**
@@ -587,7 +591,8 @@ object SuSFSManager {
         featureMappings.forEach { mapping ->
             val displayName = featureNameMap[mapping.id] ?: mapping.id
             val isEnabled = outputLines.contains(mapping.config)
-            features.add(EnabledFeature(displayName, isEnabled))
+            val statusText = if (isEnabled) context.getString(R.string.susfs_feature_enabled) else context.getString(R.string.susfs_feature_disabled)
+            features.add(EnabledFeature(displayName, isEnabled, statusText))
         }
 
         return features.sortedBy { it.name }
