@@ -1090,107 +1090,106 @@ fun MoreSettingsScreen(
                     onChange = onHideLinkCardChange
                 )
             }
+            KsuIsValid {
+                // 高级设置
+                SettingsCard(
+                    title = stringResource(R.string.advanced_settings)
+                ) {
+                    // SELinux 开关
+                        SwitchSettingItem(
+                            icon = Icons.Filled.Security,
+                            title = stringResource(R.string.selinux),
+                            summary = if (selinuxEnabled)
+                                stringResource(R.string.selinux_enabled) else
+                                stringResource(R.string.selinux_disabled),
+                            checked = selinuxEnabled,
+                            onChange = { enabled ->
+                                val command = if (enabled) "setenforce 1" else "setenforce 0"
+                                Shell.getShell().newJob().add(command).exec().let { result ->
+                                    if (result.isSuccess) {
+                                        selinuxEnabled = enabled
+                                        // 显示成功提示
+                                        val message = if (enabled)
+                                            context.getString(R.string.selinux_enabled_toast)
+                                        else
+                                            context.getString(R.string.selinux_disabled_toast)
 
-            // 高级设置
-            SettingsCard(
-                title = stringResource(R.string.advanced_settings)
-            ) {
-                // SELinux 开关
-                KsuIsValid {
-                    SwitchSettingItem(
-                        icon = Icons.Filled.Security,
-                        title = stringResource(R.string.selinux),
-                        summary = if (selinuxEnabled)
-                            stringResource(R.string.selinux_enabled) else
-                            stringResource(R.string.selinux_disabled),
-                        checked = selinuxEnabled,
-                        onChange = { enabled ->
-                            val command = if (enabled) "setenforce 1" else "setenforce 0"
-                            Shell.getShell().newJob().add(command).exec().let { result ->
-                                if (result.isSuccess) {
-                                    selinuxEnabled = enabled
-                                    // 显示成功提示
-                                    val message = if (enabled)
-                                        context.getString(R.string.selinux_enabled_toast)
-                                    else
-                                        context.getString(R.string.selinux_disabled_toast)
+                                        Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                                    } else {
+                                        // 显示失败提示
+                                        Toast.makeText(
+                                            context,
+                                            context.getString(R.string.selinux_change_failed),
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    }
+                                }
+                            }
+                        )
 
-                                    Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-                                } else {
-                                    // 显示失败提示
+                    // SuSFS 配置（仅在支持时显示存）
+                    if (getSuSFS() == "Supported" && SuSFSManager.isBinaryAvailable(context)) {
+                        SettingItem(
+                            icon = Icons.Default.Settings,
+                            title = stringResource(R.string.susfs_config_setting_title),
+                            subtitle = stringResource(
+                                R.string.susfs_config_setting_summary,
+                                SuSFSManager.getUnameValue(context)
+                            ),
+                            onClick = { showSuSFSConfigDialog = true }
+                        )
+                    }
+
+                    // SuSFS 开关（仅在支持时显示）
+                    val suSFS = getSuSFS()
+                    val isSUS_SU = getSuSFSFeatures()
+                    if (suSFS == "Supported" && isSUS_SU == "CONFIG_KSU_SUSFS_SUS_SU") {
+                        // 默认启用
+                        var isEnabled by rememberSaveable {
+                            mutableStateOf(true)
+                        }
+
+                        // 在启动时检查状态
+                        LaunchedEffect(Unit) {
+                            // 如果当前模式不是2就强制启用
+                            val currentMode = susfsSUS_SU_Mode()
+                            val wasManuallyDisabled = prefs.getBoolean("enable_sus_su", true)
+                            if (currentMode != "2" && wasManuallyDisabled) {
+                                susfsSUS_SU_2() // 强制切换到模式2
+                                prefs.edit { putBoolean("enable_sus_su", true) }
+                            }
+                            isEnabled = currentMode == "2"
+                        }
+
+                        SwitchSettingItem(
+                            icon = Icons.Filled.Security,
+                            title = stringResource(id = R.string.settings_susfs_toggle),
+                            summary = stringResource(id = R.string.settings_susfs_toggle_summary),
+                            checked = isEnabled,
+                            onChange = {
+                                if (it) {
+                                    // 手动启用
+                                    susfsSUS_SU_2()
+                                    prefs.edit { putBoolean("enable_sus_su", true) }
                                     Toast.makeText(
                                         context,
-                                        context.getString(R.string.selinux_change_failed),
+                                        context.getString(R.string.susfs_enabled),
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                } else {
+                                    // 手动关闭
+                                    susfsSUS_SU_0()
+                                    prefs.edit { putBoolean("enable_sus_su", false) }
+                                    Toast.makeText(
+                                        context,
+                                        context.getString(R.string.susfs_disabled),
                                         Toast.LENGTH_SHORT
                                     ).show()
                                 }
+                                isEnabled = it
                             }
-                        }
-                    )
-                }
-
-                // SuSFS 配置（仅在支持时显示存）
-                if (getSuSFS() == "Supported" && SuSFSManager.isBinaryAvailable(context)) {
-                    SettingItem(
-                        icon = Icons.Default.Settings,
-                        title = stringResource(R.string.susfs_config_setting_title),
-                        subtitle = stringResource(
-                            R.string.susfs_config_setting_summary,
-                            SuSFSManager.getUnameValue(context)
-                        ),
-                        onClick = { showSuSFSConfigDialog = true }
-                    )
-                }
-
-                // SuSFS 开关（仅在支持时显示）
-                val suSFS = getSuSFS()
-                val isSUS_SU = getSuSFSFeatures()
-                if (suSFS == "Supported" && isSUS_SU == "CONFIG_KSU_SUSFS_SUS_SU") {
-                    // 默认启用
-                    var isEnabled by rememberSaveable {
-                        mutableStateOf(true)
+                        )
                     }
-
-                    // 在启动时检查状态
-                    LaunchedEffect(Unit) {
-                        // 如果当前模式不是2就强制启用
-                        val currentMode = susfsSUS_SU_Mode()
-                        val wasManuallyDisabled = prefs.getBoolean("enable_sus_su", true)
-                        if (currentMode != "2" && wasManuallyDisabled) {
-                            susfsSUS_SU_2() // 强制切换到模式2
-                            prefs.edit { putBoolean("enable_sus_su", true) }
-                        }
-                        isEnabled = currentMode == "2"
-                    }
-
-                    SwitchSettingItem(
-                        icon = Icons.Filled.Security,
-                        title = stringResource(id = R.string.settings_susfs_toggle),
-                        summary = stringResource(id = R.string.settings_susfs_toggle_summary),
-                        checked = isEnabled,
-                        onChange = {
-                            if (it) {
-                                // 手动启用
-                                susfsSUS_SU_2()
-                                prefs.edit { putBoolean("enable_sus_su", true) }
-                                Toast.makeText(
-                                    context,
-                                    context.getString(R.string.susfs_enabled),
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                            } else {
-                                // 手动关闭
-                                susfsSUS_SU_0()
-                                prefs.edit { putBoolean("enable_sus_su", false) }
-                                Toast.makeText(
-                                    context,
-                                    context.getString(R.string.susfs_disabled),
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                            }
-                            isEnabled = it
-                        }
-                    )
                 }
             }
         }

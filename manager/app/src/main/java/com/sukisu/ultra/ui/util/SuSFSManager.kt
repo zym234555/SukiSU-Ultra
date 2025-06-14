@@ -1,5 +1,6 @@
 package com.sukisu.ultra.ui.util
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.SharedPreferences
 import android.widget.Toast
@@ -21,10 +22,42 @@ object SuSFSManager {
     private const val KEY_IS_ENABLED = "is_enabled"
     private const val KEY_AUTO_START_ENABLED = "auto_start_enabled"
     private const val KEY_LAST_APPLIED_VALUE = "last_applied_value"
+    private const val KEY_SUS_PATHS = "sus_paths"
+    private const val KEY_SUS_MOUNTS = "sus_mounts"
+    private const val KEY_TRY_UMOUNTS = "try_umounts"
+    private const val KEY_ANDROID_DATA_PATH = "android_data_path"
+    private const val KEY_SDCARD_PATH = "sdcard_path"
     private const val SUSFS_BINARY_NAME = "ksu_susfs"
     private const val DEFAULT_UNAME = "default"
     private const val STARTUP_SCRIPT_PATH = "/data/adb/service.d/susfs_startup.sh"
     private const val SUSFS_TARGET_PATH = "/data/adb/ksu/bin/$SUSFS_BINARY_NAME"
+
+    /**
+     * 启用功能状态数据类
+     */
+    data class EnabledFeature(
+        val name: String,
+        val isEnabled: Boolean
+    )
+
+    /**
+     * 功能配置映射数据类
+     */
+    private data class FeatureMapping(
+        val id: String,
+        val config: String
+    )
+
+    /**
+     * 执行Shell命令并返回输出
+     */
+    private fun runCmd(shell: Shell, cmd: String): String {
+        return shell.newJob()
+            .add(cmd)
+            .to(mutableListOf<String>(), null)
+            .exec().out
+            .joinToString("\n")
+    }
 
     /**
      * 获取Root Shell实例
@@ -102,6 +135,93 @@ object SuSFSManager {
     }
 
     /**
+     * 保存SUS路径列表
+     */
+    fun saveSusPaths(context: Context, paths: Set<String>) {
+        getPrefs(context).edit().apply {
+            putStringSet(KEY_SUS_PATHS, paths)
+            apply()
+        }
+    }
+
+    /**
+     * 获取SUS路径列表
+     */
+    fun getSusPaths(context: Context): Set<String> {
+        return getPrefs(context).getStringSet(KEY_SUS_PATHS, emptySet()) ?: emptySet()
+    }
+
+    /**
+     * 保存SUS挂载列表
+     */
+    fun saveSusMounts(context: Context, mounts: Set<String>) {
+        getPrefs(context).edit().apply {
+            putStringSet(KEY_SUS_MOUNTS, mounts)
+            apply()
+        }
+    }
+
+    /**
+     * 获取SUS挂载列表
+     */
+    fun getSusMounts(context: Context): Set<String> {
+        return getPrefs(context).getStringSet(KEY_SUS_MOUNTS, emptySet()) ?: emptySet()
+    }
+
+    /**
+     * 保存尝试卸载列表
+     */
+    fun saveTryUmounts(context: Context, umounts: Set<String>) {
+        getPrefs(context).edit().apply {
+            putStringSet(KEY_TRY_UMOUNTS, umounts)
+            apply()
+        }
+    }
+
+    /**
+     * 获取尝试卸载列表
+     */
+    fun getTryUmounts(context: Context): Set<String> {
+        return getPrefs(context).getStringSet(KEY_TRY_UMOUNTS, emptySet()) ?: emptySet()
+    }
+
+    /**
+     * 保存Android Data路径
+     */
+    fun saveAndroidDataPath(context: Context, path: String) {
+        getPrefs(context).edit().apply {
+            putString(KEY_ANDROID_DATA_PATH, path)
+            apply()
+        }
+    }
+
+    /**
+     * 获取Android Data路径
+     */
+    @SuppressLint("SdCardPath")
+    fun getAndroidDataPath(context: Context): String {
+        return getPrefs(context).getString(KEY_ANDROID_DATA_PATH, "/sdcard/Android/data") ?: "/sdcard/Android/data"
+    }
+
+    /**
+     * 保存SD卡路径
+     */
+    fun saveSdcardPath(context: Context, path: String) {
+        getPrefs(context).edit().apply {
+            putString(KEY_SDCARD_PATH, path)
+            apply()
+        }
+    }
+
+    /**
+     * 获取SD卡路径
+     */
+    @SuppressLint("SdCardPath")
+    fun getSdcardPath(context: Context): String {
+        return getPrefs(context).getString(KEY_SDCARD_PATH, "/sdcard") ?: "/sdcard"
+    }
+
+    /**
      * 从assets复制ksu_susfs文件到/data/adb/ksu/bin/
      */
     private suspend fun copyBinaryFromAssets(context: Context): String? = withContext(Dispatchers.IO) {
@@ -151,26 +271,81 @@ object SuSFSManager {
     /**
      * 创建开机自启动脚本
      */
-    private suspend fun createStartupScript(unameValue: String): Boolean = withContext(Dispatchers.IO) {
+    @SuppressLint("SdCardPath")
+    private suspend fun createStartupScript(context: Context): Boolean = withContext(Dispatchers.IO) {
         try {
-            val scriptContent = """#!/system/bin/sh
-# SuSFS 开机自启动脚本
-# 由 KernelSU Manager 自动生成
+            val unameValue = getUnameValue(context)
+            val susPaths = getSusPaths(context)
+            val susMounts = getSusMounts(context)
+            val tryUmounts = getTryUmounts(context)
+            val androidDataPath = getAndroidDataPath(context)
+            val sdcardPath = getSdcardPath(context)
 
-# 等待系统完全启动
-sleep 30
+            val scriptContent = buildString {
+                appendLine("#!/system/bin/sh")
+                appendLine("# SuSFS 开机自启动脚本")
+                appendLine("# 由 KernelSU Manager 自动生成")
+                appendLine()
+                appendLine("# 等待系统完全启动")
+                appendLine("sleep 60")
+                appendLine()
+                appendLine("# 检查二进制文件是否存在")
+                appendLine("if [ -f \"$SUSFS_TARGET_PATH\" ]; then")
+                appendLine("    # 创建日志目录")
+                appendLine("    mkdir -p /data/adb/ksu/log")
+                appendLine()
 
-# 检查二进制文件是否存在
-if [ -f "$SUSFS_TARGET_PATH" ]; then
-    # 执行 SuSFS setUname 命令
-    $SUSFS_TARGET_PATH set_uname '$unameValue' '$DEFAULT_UNAME'
-    
-    # 记录日志
-    echo "\$(date): SuSFS setUname executed with value: $unameValue" >> /data/adb/ksu/log/susfs_startup.log
-else
-    echo "\$(date): SuSFS binary not found at $SUSFS_TARGET_PATH" >> /data/adb/ksu/log/susfs_startup.log
-fi
-"""
+                // 设置Android Data路径
+                if (androidDataPath != "/sdcard/Android/data") {
+                    appendLine("    # 设置Android Data路径")
+                    appendLine("    $SUSFS_TARGET_PATH set_android_data_root_path '$androidDataPath'")
+                    appendLine("    echo \"\\$(date): Android Data路径设置为: $androidDataPath\" >> /data/adb/ksu/log/susfs_startup.log")
+                }
+
+                // 设置SD卡路径
+                if (sdcardPath != "/sdcard") {
+                    appendLine("    # 设置SD卡路径")
+                    appendLine("    $SUSFS_TARGET_PATH set_sdcard_root_path '$sdcardPath'")
+                    appendLine("    echo \"\\$(date): SD卡路径设置为: $sdcardPath\" >> /data/adb/ksu/log/susfs_startup.log")
+                }
+
+                // 添加SUS路径
+                susPaths.forEach { path ->
+                    appendLine("    # 添加SUS路径: $path")
+                    appendLine("    $SUSFS_TARGET_PATH add_sus_path '$path'")
+                    appendLine("    echo \"\\$(date): 添加SUS路径: $path\" >> /data/adb/ksu/log/susfs_startup.log")
+                }
+
+                // 添加SUS挂载
+                susMounts.forEach { mount ->
+                    appendLine("    # 添加SUS挂载: $mount")
+                    appendLine("    $SUSFS_TARGET_PATH add_sus_mount '$mount'")
+                    appendLine("    echo \"\\$(date): 添加SUS挂载: $mount\" >> /data/adb/ksu/log/susfs_startup.log")
+                }
+
+                // 添加尝试卸载
+                tryUmounts.forEach { umount ->
+                    val parts = umount.split("|")
+                    if (parts.size == 2) {
+                        val path = parts[0]
+                        val mode = parts[1]
+                        appendLine("    # 添加尝试卸载: $path (模式: $mode)")
+                        appendLine("    $SUSFS_TARGET_PATH add_try_umount '$path' $mode")
+                        appendLine("    echo \"\\$(date): 添加尝试卸载: $path (模式: $mode)\" >> /data/adb/ksu/log/susfs_startup.log")
+                    }
+                }
+
+                // 设置uname
+                if (unameValue != DEFAULT_UNAME) {
+                    appendLine("    # 设置uname")
+                    appendLine("    $SUSFS_TARGET_PATH set_uname '$unameValue' '$DEFAULT_UNAME'")
+                    appendLine("    echo \"\\$(date): 设置uname为: $unameValue\" >> /data/adb/ksu/log/susfs_startup.log")
+                }
+
+                appendLine("else")
+                appendLine("    echo \"\\$(date): SuSFS二进制文件未找到: $SUSFS_TARGET_PATH\" >> /data/adb/ksu/log/susfs_startup.log")
+                appendLine("fi")
+            }
 
             val shell = getRootShell()
             val commands = arrayOf(
@@ -210,6 +385,306 @@ fi
     }
 
     /**
+     * 执行SuSFS命令
+     */
+    private suspend fun executeSusfsCommand(context: Context, command: String): Boolean = withContext(Dispatchers.IO) {
+        try {
+            // 确保二进制文件存在
+            val binaryPath = copyBinaryFromAssets(context)
+            if (binaryPath == null) {
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(
+                        context,
+                        context.getString(R.string.susfs_binary_not_found),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+                return@withContext false
+            }
+
+            // 执行命令
+            val fullCommand = "$binaryPath $command"
+            val result = getRootShell().newJob().add(fullCommand).exec()
+
+            if (!result.isSuccess) {
+                withContext(Dispatchers.Main) {
+                    val errorOutput = result.out.joinToString("\n") + "\n" + result.err.joinToString("\n")
+                    Toast.makeText(
+                        context,
+                        context.getString(R.string.susfs_command_failed) + "\n$errorOutput",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+            }
+
+            result.isSuccess
+        } catch (e: Exception) {
+            e.printStackTrace()
+            withContext(Dispatchers.Main) {
+                Toast.makeText(
+                    context,
+                    context.getString(R.string.susfs_command_error, e.message ?: "Unknown error"),
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+            false
+        }
+    }
+
+    /**
+     * 获取功能配置映射表
+     */
+    private fun getFeatureMappings(): List<FeatureMapping> {
+        return listOf(
+            FeatureMapping("status_sus_path", "CONFIG_KSU_SUSFS_SUS_PATH"),
+            FeatureMapping("status_sus_mount", "CONFIG_KSU_SUSFS_SUS_MOUNT"),
+            FeatureMapping("status_auto_default_mount", "CONFIG_KSU_SUSFS_AUTO_ADD_SUS_KSU_DEFAULT_MOUNT"),
+            FeatureMapping("status_auto_bind_mount", "CONFIG_KSU_SUSFS_AUTO_ADD_SUS_BIND_MOUNT"),
+            FeatureMapping("status_sus_kstat", "CONFIG_KSU_SUSFS_SUS_KSTAT"),
+            FeatureMapping("status_try_umount", "CONFIG_KSU_SUSFS_TRY_UMOUNT"),
+            FeatureMapping("status_auto_try_umount_bind", "CONFIG_KSU_SUSFS_AUTO_ADD_TRY_UMOUNT_FOR_BIND_MOUNT"),
+            FeatureMapping("status_spoof_uname", "CONFIG_KSU_SUSFS_SPOOF_UNAME"),
+            FeatureMapping("status_enable_log", "CONFIG_KSU_SUSFS_ENABLE_LOG"),
+            FeatureMapping("status_hide_symbols", "CONFIG_KSU_SUSFS_HIDE_KSU_SUSFS_SYMBOLS"),
+            FeatureMapping("status_spoof_cmdline", "CONFIG_KSU_SUSFS_SPOOF_CMDLINE_OR_BOOTCONFIG"),
+            FeatureMapping("status_open_redirect", "CONFIG_KSU_SUSFS_OPEN_REDIRECT"),
+            FeatureMapping("status_magic_mount", "CONFIG_KSU_SUSFS_HAS_MAGIC_MOUNT"),
+            FeatureMapping("status_overlayfs_auto_kstat", "CONFIG_KSU_SUSFS_SUS_OVERLAYFS")
+        )
+    }
+
+    /**
+     * 获取启用功能状态
+     */
+    suspend fun getEnabledFeatures(context: Context): List<EnabledFeature> = withContext(Dispatchers.IO) {
+        try {
+            // 每次都重新执行命令获取最新状态
+            val shell = getRootShell()
+
+            // 首先检查二进制文件是否存在于目标位置
+            val checkResult = shell.newJob().add("test -f '$SUSFS_TARGET_PATH'").exec()
+
+            val binaryPath = if (checkResult.isSuccess) {
+                // 如果目标位置存在，直接使用
+                SUSFS_TARGET_PATH
+            } else {
+                // 如果不存在，尝试从assets复制
+                copyBinaryFromAssets(context)
+            }
+
+            if (binaryPath == null) {
+                return@withContext emptyList()
+            }
+
+            // 使用runCmd执行show enabled_features命令获取实时状态
+            val command = "$binaryPath show enabled_features"
+            val output = runCmd(shell, command)
+
+            if (output.isNotEmpty()) {
+                parseEnabledFeatures(context, output)
+            } else {
+                // 如果命令输出为空，返回空列表
+                emptyList()
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            emptyList()
+        }
+    }
+
+    /**
+     * 解析启用功能状态输出
+     */
+    private fun parseEnabledFeatures(context: Context, output: String): List<EnabledFeature> {
+        val features = mutableListOf<EnabledFeature>()
+
+        // 将输出按行分割并保存到集合中进行快速查找
+        val outputLines = output.lines().map { it.trim() }.filter { it.isNotEmpty() }.toSet()
+
+        // 获取功能配置映射表
+        val featureMappings = getFeatureMappings()
+
+        // 定义功能名称映射（id到显示名称）
+        val featureNameMap = mapOf(
+            "status_sus_path" to context.getString(R.string.sus_path_feature_label),
+            "status_sus_mount" to context.getString(R.string.sus_mount_feature_label),
+            "status_try_umount" to context.getString(R.string.try_umount_feature_label),
+            "status_spoof_uname" to context.getString(R.string.spoof_uname_feature_label),
+            "status_spoof_cmdline" to context.getString(R.string.spoof_cmdline_feature_label),
+            "status_open_redirect" to context.getString(R.string.open_redirect_feature_label),
+            "status_enable_log" to context.getString(R.string.enable_log_feature_label),
+            "status_auto_default_mount" to context.getString(R.string.auto_default_mount_feature_label),
+            "status_auto_bind_mount" to context.getString(R.string.auto_bind_mount_feature_label),
+            "status_auto_try_umount_bind" to context.getString(R.string.auto_try_umount_bind_feature_label),
+            "status_hide_symbols" to context.getString(R.string.hide_symbols_feature_label),
+            "status_sus_kstat" to context.getString(R.string.sus_kstat_feature_label),
+            "status_magic_mount" to context.getString(R.string.magic_mount_feature_label),
+            "status_overlayfs_auto_kstat" to context.getString(R.string.overlayfs_auto_kstat_feature_label)
+        )
+
+        // 根据映射表检查每个功能的启用状态
+        featureMappings.forEach { mapping ->
+            val displayName = featureNameMap[mapping.id] ?: mapping.id
+            val isEnabled = outputLines.contains(mapping.config)
+            features.add(EnabledFeature(displayName, isEnabled))
+        }
+
+        return features.sortedBy { it.name }
+    }
+
+    /**
+     * 添加SUS路径
+     */
+    suspend fun addSusPath(context: Context, path: String): Boolean {
+        val success = executeSusfsCommand(context, "add_sus_path '$path'")
+        if (success) {
+            val currentPaths = getSusPaths(context).toMutableSet()
+            currentPaths.add(path)
+            saveSusPaths(context, currentPaths)
+
+            // 如果开启了开机自启动，更新启动脚本
+            if (isAutoStartEnabled(context)) {
+                createStartupScript(context)
+            }
+        }
+        return success
+    }
+
+    /**
+     * 移除SUS路径
+     */
+    suspend fun removeSusPath(context: Context, path: String): Boolean {
+        val currentPaths = getSusPaths(context).toMutableSet()
+        currentPaths.remove(path)
+        saveSusPaths(context, currentPaths)
+
+        // 如果开启了开机自启动，更新启动脚本
+        if (isAutoStartEnabled(context)) {
+            createStartupScript(context)
+        }
+
+        withContext(Dispatchers.Main) {
+            Toast.makeText(context, "已移除SUS路径: $path", Toast.LENGTH_SHORT).show()
+        }
+        return true
+    }
+
+    /**
+     * 添加SUS挂载
+     */
+    suspend fun addSusMount(context: Context, mount: String): Boolean {
+        val success = executeSusfsCommand(context, "add_sus_mount '$mount'")
+        if (success) {
+            val currentMounts = getSusMounts(context).toMutableSet()
+            currentMounts.add(mount)
+            saveSusMounts(context, currentMounts)
+
+            // 如果开启了开机自启动，更新启动脚本
+            if (isAutoStartEnabled(context)) {
+                createStartupScript(context)
+            }
+        }
+        return success
+    }
+
+    /**
+     * 移除SUS挂载
+     */
+    suspend fun removeSusMount(context: Context, mount: String): Boolean {
+        val currentMounts = getSusMounts(context).toMutableSet()
+        currentMounts.remove(mount)
+        saveSusMounts(context, currentMounts)
+
+        // 如果开启了开机自启动，更新启动脚本
+        if (isAutoStartEnabled(context)) {
+            createStartupScript(context)
+        }
+
+        withContext(Dispatchers.Main) {
+            Toast.makeText(context, "已移除SUS挂载: $mount", Toast.LENGTH_SHORT).show()
+        }
+        return true
+    }
+
+    /**
+     * 添加尝试卸载
+     */
+    suspend fun addTryUmount(context: Context, path: String, mode: Int): Boolean {
+        val success = executeSusfsCommand(context, "add_try_umount '$path' $mode")
+        if (success) {
+            val currentUmounts = getTryUmounts(context).toMutableSet()
+            currentUmounts.add("$path|$mode")
+            saveTryUmounts(context, currentUmounts)
+
+            // 如果开启了开机自启动，更新启动脚本
+            if (isAutoStartEnabled(context)) {
+                createStartupScript(context)
+            }
+        }
+        return success
+    }
+
+    /**
+     * 移除尝试卸载
+     */
+    suspend fun removeTryUmount(context: Context, umountEntry: String): Boolean {
+        val currentUmounts = getTryUmounts(context).toMutableSet()
+        currentUmounts.remove(umountEntry)
+        saveTryUmounts(context, currentUmounts)
+
+        // 如果开启了开机自启动，更新启动脚本
+        if (isAutoStartEnabled(context)) {
+            createStartupScript(context)
+        }
+
+        val parts = umountEntry.split("|")
+        val path = if (parts.isNotEmpty()) parts[0] else umountEntry
+        withContext(Dispatchers.Main) {
+            Toast.makeText(context, "已移除尝试卸载: $path", Toast.LENGTH_SHORT).show()
+        }
+        return true
+    }
+
+    /**
+     * 运行尝试卸载
+     */
+    suspend fun runTryUmount(context: Context): Boolean {
+        return executeSusfsCommand(context, "run_try_umount")
+    }
+
+    /**
+     * 设置Android Data路径
+     */
+    suspend fun setAndroidDataPath(context: Context, path: String): Boolean {
+        val success = executeSusfsCommand(context, "set_android_data_root_path '$path'")
+        if (success) {
+            saveAndroidDataPath(context, path)
+
+            // 如果开启了开机自启动，更新启动脚本
+            if (isAutoStartEnabled(context)) {
+                createStartupScript(context)
+            }
+        }
+        return success
+    }
+
+    /**
+     * 设置SD卡路径
+     */
+    suspend fun setSdcardPath(context: Context, path: String): Boolean {
+        val success = executeSusfsCommand(context, "set_sdcard_root_path '$path'")
+        if (success) {
+            saveSdcardPath(context, path)
+
+            // 如果开启了开机自启动，更新启动脚本
+            if (isAutoStartEnabled(context)) {
+                createStartupScript(context)
+            }
+        }
+        return success
+    }
+
+    /**
      * 执行SuSFS命令设置uname
      */
     suspend fun setUname(context: Context, unameValue: String): Boolean = withContext(Dispatchers.IO) {
@@ -241,7 +716,7 @@ fi
 
                 // 如果开启了开机自启动，更新启动脚本
                 if (isAutoStartEnabled(context)) {
-                    createStartupScript(unameValue)
+                    createStartupScript(context)
                 }
 
                 withContext(Dispatchers.Main) {
@@ -284,7 +759,8 @@ fi
             if (enabled) {
                 // 启用开机自启动
                 val lastValue = getLastAppliedValue(context)
-                if (lastValue == DEFAULT_UNAME) {
+                if (lastValue == DEFAULT_UNAME && getSusPaths(context).isEmpty() &&
+                    getSusMounts(context).isEmpty() && getTryUmounts(context).isEmpty()) {
                     withContext(Dispatchers.Main) {
                         Toast.makeText(
                             context,
@@ -314,7 +790,7 @@ fi
                     }
                 }
 
-                val success = createStartupScript(lastValue)
+                val success = createStartupScript(context)
                 if (success) {
                     setAutoStartEnabled(context, true)
                     withContext(Dispatchers.Main) {
