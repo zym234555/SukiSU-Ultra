@@ -2,6 +2,8 @@ package com.sukisu.ultra.ui.screen
 
 import android.annotation.SuppressLint
 import android.app.Activity.*
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -37,6 +39,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.*
 import androidx.compose.ui.res.painterResource
@@ -898,6 +901,12 @@ fun ModuleItem(
     val context = LocalContext.current
     val prefs = context.getSharedPreferences("settings", MODE_PRIVATE)
     val isHideTagRow = prefs.getBoolean("is_hide_tag_row", false)
+    // 获取显示更多模块信息的设置
+    val showMoreModuleInfo = prefs.getBoolean("show_more_module_info", false)
+
+    // 剪贴板管理器和触觉反馈
+    val clipboardManager = context.getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
+    val hapticFeedback = LocalHapticFeedback.current
 
     ElevatedCard(
         colors = getCardColors(MaterialTheme.colorScheme.surfaceContainerHigh),
@@ -966,6 +975,43 @@ fun ModuleItem(
                         fontFamily = MaterialTheme.typography.bodySmall.fontFamily,
                         textDecoration = textDecoration,
                     )
+
+                    // 显示更多模块信息时添加updateJson
+                    if (showMoreModuleInfo && module.updateJson.isNotEmpty()) {
+                        val updateJsonLabel = stringResource(R.string.module_update_json)
+                        Text(
+                            text = "$updateJsonLabel: ${module.updateJson}",
+                            fontSize = MaterialTheme.typography.bodySmall.fontSize,
+                            lineHeight = MaterialTheme.typography.bodySmall.lineHeight,
+                            fontFamily = MaterialTheme.typography.bodySmall.fontFamily,
+                            textDecoration = textDecoration,
+                            color = MaterialTheme.colorScheme.primary,
+                            maxLines = 5,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .combinedClickable(
+                                    onClick = {
+                                    },
+                                    onLongClick = {
+                                        // 长按复制updateJson地址
+                                        val clipData = ClipData.newPlainText(
+                                            "Update JSON URL",
+                                            module.updateJson
+                                        )
+                                        clipboardManager.setPrimaryClip(clipData)
+                                        hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+
+                                        // 显示复制成功的提示
+                                        Toast.makeText(
+                                            context,
+                                            context.getString(R.string.module_update_json_copied),
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    }
+                                ),
+                        )
+                    }
                 }
 
                 Spacer(modifier = Modifier.weight(1f))
@@ -995,17 +1041,15 @@ fun ModuleItem(
                 maxLines = 4,
                 textDecoration = textDecoration,
             )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // 标签行
             if (!isHideTagRow) {
+
+                Spacer(modifier = Modifier.height(12.dp))
+                // 文件夹名称和大小标签
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    // 文件夹名称标签
                     Surface(
                         shape = RoundedCornerShape(4.dp),
                         color = MaterialTheme.colorScheme.primary,
@@ -1020,8 +1064,6 @@ fun ModuleItem(
                             overflow = TextOverflow.Ellipsis
                         )
                     }
-
-                    // 大小标签
                     Surface(
                         shape = RoundedCornerShape(4.dp),
                         color = MaterialTheme.colorScheme.secondaryContainer,
@@ -1036,9 +1078,9 @@ fun ModuleItem(
                         )
                     }
                 }
-
-                Spacer(modifier = Modifier.height(16.dp))
             }
+
+            Spacer(modifier = Modifier.height(16.dp))
 
             HorizontalDivider(thickness = Dp.Hairline)
 

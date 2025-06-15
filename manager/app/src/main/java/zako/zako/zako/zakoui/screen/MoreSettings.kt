@@ -238,6 +238,11 @@ fun MoreSettingsScreen(
         mutableStateOf(prefs.getBoolean("is_hide_tag_row", false))
     }
 
+    // 显示更多模块信息开关状态
+    var showMoreModuleInfo by remember {
+        mutableStateOf(prefs.getBoolean("show_more_module_info", false))
+    }
+
     // SELinux状态
     var selinuxEnabled by remember {
         mutableStateOf(Shell.cmd("getenforce").exec().out.firstOrNull() == "Enforcing")
@@ -324,6 +329,12 @@ fun MoreSettingsScreen(
     val onHideTagRowChange = { newValue: Boolean ->
         prefs.edit { putBoolean("is_hide_tag_row", newValue) }
         isHideTagRow = newValue
+    }
+
+    // 显示更多模块信息开关状态
+    val onShowMoreModuleInfoChange = { newValue: Boolean ->
+        prefs.edit { putBoolean("show_more_module_info", newValue) }
+        showMoreModuleInfo = newValue
     }
 
     // 备用图标开关状态
@@ -1034,6 +1045,15 @@ fun MoreSettingsScreen(
                     summary = stringResource(R.string.icon_switch_summary),
                     checked = useAltIcon,
                     onChange = onUseAltIconChange
+                )
+
+                // 显示更多模块信息开关
+                SwitchSettingItem(
+                    icon = Icons.Filled.Info,
+                    title = stringResource(R.string.show_more_module_info),
+                    summary = stringResource(R.string.show_more_module_info_summary),
+                    checked = showMoreModuleInfo,
+                    onChange = onShowMoreModuleInfoChange
                 )
 
                 // 添加简洁模式开关

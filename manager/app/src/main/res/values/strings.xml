@@ -515,4 +515,12 @@
     <string name="susfs_log_config_title">SuSFS Logging Configuration</string>
     <string name="susfs_log_enabled">Enabling SuSFS Logging</string>
     <string name="susfs_log_disabled">Turn off SuSFS logging</string>
+    <string name="module_update_json">Update JSON</string>
+    <string name="module_update_json_copied">Update JSON URL copied to clipboard</string>
+    <string name="module_update_json_not_available">Update JSON not available</string>
+    <!-- Settings related strings -->
+    <string name="show_module_update_json">Show Module Update JSON</string>
+    <string name="show_module_update_json_summary">Display update JSON URL in module details</string>
+    <string name="show_more_module_info">Show More Module Info</string>
+    <string name="show_more_module_info_summary">Display additional module information like update JSON URLs</string>
 </resources>
