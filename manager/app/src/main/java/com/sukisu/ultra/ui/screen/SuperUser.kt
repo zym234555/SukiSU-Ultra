@@ -785,6 +785,7 @@ private fun AppItem(
         supportingContent = {
             Column {
                 Text(app.packageName)
+                
                 Spacer(modifier = Modifier.height(4.dp))
 
                 FlowRow(
@@ -811,6 +812,13 @@ private fun AppItem(
                             style = LabelItemDefaults.style.copy(
                                 containerColor = MaterialTheme.colorScheme.onTertiary,
                                 contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                            )
+                        )
+                    } else if (!app.allowSu) {
+                        LabelItem(
+                            text = "DEFAULT",
+                            style = LabelItemDefaults.style.copy(
+                                containerColor = Color.Gray
                             )
                         )
                     }
