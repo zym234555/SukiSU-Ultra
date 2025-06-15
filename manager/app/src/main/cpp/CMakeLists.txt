@@ -1,4 +1,3 @@
-
 # For more information about using CMake with Android Studio, read the
 # documentation: https://d.android.com/studio/projects/add-native-code.html
 
@@ -7,14 +6,11 @@ cmake_minimum_required(VERSION 3.18.1)
 
 project("kernelsu")
 
-find_package(cxx REQUIRED CONFIG)
-link_libraries(cxx::cxx)
-
 add_library(zako
         SHARED
-        jni.cc
-        ksu.cc
-        )
+        jni.c
+        ksu.c
+)
 
 find_library(log-lib log)
 

@@ -1,5 +1,6 @@
 package com.sukisu.ultra.ui.screen
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Build
 import android.os.PowerManager
@@ -741,6 +742,7 @@ private fun InfoCard(
     }
 }
 
+@SuppressLint("ComposableNaming")
 @Composable
 private fun SuSFSInfoText(systemInfo: HomeViewModel.SystemInfo): String = buildString {
     append(systemInfo.suSFSVersion)

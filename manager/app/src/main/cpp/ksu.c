@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <unistd.h>
 
+#include "prelude.h"
 #include "ksu.h"
 
 #define KERNEL_SU_OPTION 0xDEADBEEF
@@ -34,8 +35,9 @@
 
 static bool ksuctl(int cmd, void* arg1, void* arg2) {
     int32_t result = 0;
-    prctl(KERNEL_SU_OPTION, cmd, arg1, arg2, &result);
-    return result == KERNEL_SU_OPTION;
+    int32_t rtn = prctl(KERNEL_SU_OPTION, cmd, arg1, arg2, &result);
+
+    return result == KERNEL_SU_OPTION && rtn == -1;
 }
 
 bool become_manager(const char* pkg) {
@@ -48,7 +50,7 @@ bool become_manager(const char* pkg) {
         snprintf(param, sizeof(param), "/data/user/%d/%s", userId, pkg);
     }
 
-    return ksuctl(CMD_BECOME_MANAGER, param, nullptr);
+    return ksuctl(CMD_BECOME_MANAGER, param, NULL);
 }
 
 // cache the result to avoid unnecessary syscall
@@ -68,7 +70,7 @@ bool get_allow_list(int *uids, int *size) {
 }
 
 bool is_safe_mode() {
-    return ksuctl(CMD_CHECK_SAFEMODE, nullptr, nullptr);
+    return ksuctl(CMD_CHECK_SAFEMODE, NULL, NULL);
 }
 
 bool is_lkm_mode() {
@@ -77,41 +79,48 @@ bool is_lkm_mode() {
 }
 
 bool uid_should_umount(int uid) {
-    bool should;
-    return ksuctl(CMD_IS_UID_SHOULD_UMOUNT, reinterpret_cast<void*>(uid), &should) && should;
+    int should;
+    return ksuctl(CMD_IS_UID_SHOULD_UMOUNT, (void*) ((size_t) uid), &should) && should;
 }
 
-bool set_app_profile(const app_profile *profile) {
-    return ksuctl(CMD_SET_APP_PROFILE, (void*) profile, nullptr);
+bool set_app_profile(const struct app_profile* profile) {
+    return ksuctl(CMD_SET_APP_PROFILE, (void*) profile, NULL);
 }
 
-bool get_app_profile(p_key_t key, app_profile *profile) {
-    return ksuctl(CMD_GET_APP_PROFILE, (void*) profile, nullptr);
+bool get_app_profile(char* key, struct app_profile* profile) {
+    return ksuctl(CMD_GET_APP_PROFILE, profile, NULL);
 }
 
 bool set_su_enabled(bool enabled) {
-    return ksuctl(CMD_ENABLE_SU, (void*) enabled, nullptr);
+    return ksuctl(CMD_ENABLE_SU, (void*) enabled, NULL);
 }
 
 bool is_su_enabled() {
-    bool enabled = true;
+    int enabled = true;
     // if ksuctl failed, we assume su is enabled, and it cannot be disabled.
-    ksuctl(CMD_IS_SU_ENABLED, &enabled, nullptr);
+    ksuctl(CMD_IS_SU_ENABLED, &enabled, NULL);
     return enabled;
 }
 
 bool is_KPM_enable() {
-    bool enabled = false;
-    return ksuctl(CMD_ENABLE_KPM, &enabled, nullptr), enabled;
+    int enabled = false;
+    ksuctl(CMD_ENABLE_KPM, &enabled, NULL);
+    return enabled;
 }
 
-const char* get_hook_type() {
-    static char hook_type[16] = {0};
-    if (hook_type[0] == '\0') {
-        if (ksuctl(CMD_HOOK_TYPE, hook_type, nullptr)) {
-            return hook_type;
-        }
-        strcpy(hook_type, "Unknown");
+bool get_hook_type(char* hook_type, size_t size) {
+    if (hook_type == NULL || size == 0) {
+        return false;
     }
-    return hook_type;
+
+    static char cached_hook_type[16] = {0};
+    if (cached_hook_type[0] == '\0') {
+        if (!ksuctl(CMD_HOOK_TYPE, cached_hook_type, NULL)) {
+            strcpy(cached_hook_type, "Unknown");
+        }
+    }
+
+    strncpy(hook_type, cached_hook_type, size);
+    hook_type[size - 1] = '\0';
+    return true;
 }

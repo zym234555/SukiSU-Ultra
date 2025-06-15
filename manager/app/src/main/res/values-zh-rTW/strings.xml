@@ -503,12 +503,6 @@
     <string name="magic_mount_feature_label">魔法掛載支援</string>
     <string name="overlayfs_auto_kstat_feature_label">OverlayFS 自動核心統計支援</string>
     <string name="sus_kstat_feature_label">SUS 核心統計支援</string>
-    <!-- 無障礙內容描述 -->
-    <string name="susfs_add_button_description">新增項目</string>
-    <string name="susfs_run_button_description">執行卸載操作</string>
-    <string name="susfs_delete_button_description">删除項目</string>
-    <string name="susfs_reset_section_description">重設此區段</string>
-    <string name="susfs_refresh_button_description">重新整理功能狀態</string>
     <!-- 可切換狀態 -->
     <string name="susfs_configure">SuSFS 配置</string>
     <string name="susfs_feature_configurable">可配置的 SuSFS 功能</string>
