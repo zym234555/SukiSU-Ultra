@@ -17,9 +17,15 @@ import com.sukisu.ultra.ui.util.listModules
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
+import java.io.BufferedReader
+import java.io.File
+import java.io.InputStreamReader
 import java.text.Collator
+import java.text.DecimalFormat
 import java.util.Locale
 import java.util.concurrent.TimeUnit
+import kotlin.math.log10
+import kotlin.math.pow
 
 /**
  * @author ShirkNeko
@@ -31,6 +37,11 @@ class ModuleViewModel : ViewModel() {
         private const val TAG = "ModuleViewModel"
         private var modules by mutableStateOf<List<ModuleInfo>>(emptyList())
         private const val CUSTOM_USER_AGENT = "SukiSU-Ultra/2.0"
+    }
+
+    fun getModuleSize(dirId: String): String {
+        val size = getModuleFolderSize(dirId)
+        return formatFileSize(size)
     }
 
     class ModuleInfo(
@@ -220,4 +231,60 @@ class ModuleViewModel : ViewModel() {
 
         return Triple(zipUrl, version, changelog)
     }
+}
+
+/**
+ * 格式化文件大小的工具函数
+ */
+fun formatFileSize(bytes: Long): String {
+    if (bytes <= 0) return "0 KB"
+
+    val units = arrayOf("B", "KB", "MB", "GB", "TB")
+    val digitGroups = (log10(bytes.toDouble()) / log10(1024.0)).toInt()
+
+    return DecimalFormat("#,##0.#").format(
+        bytes / 1024.0.pow(digitGroups.toDouble())
+    ) + " " + units[digitGroups]
+}
+
+/**
+ * 使用 su 权限调用 du 命令获取模块文件夹大小
+ */
+fun getModuleFolderSize(dirId: String): Long {
+    return try {
+        val process = Runtime.getRuntime().exec(arrayOf("su", "-c", "du -sb /data/adb/modules/$dirId"))
+        val reader = BufferedReader(InputStreamReader(process.inputStream))
+        val output = reader.readLine()
+        process.waitFor()
+        reader.close()
+
+        if (output != null) {
+            val sizeStr = output.split("\t").firstOrNull()
+            sizeStr?.toLongOrNull() ?: 0L
+        } else {
+            0L
+        }
+    } catch (e: Exception) {
+        Log.e("ModuleItem", "Error calculating module size with su for $dirId: ${e.message}")
+        0L
+    }
+}
+
+/**
+ * 递归计算目录大小（备用）
+ */
+private fun calculateDirectorySize(directory: File): Long {
+    var size = 0L
+    try {
+        directory.listFiles()?.forEach { file ->
+            size += if (file.isDirectory) {
+                calculateDirectorySize(file)
+            } else {
+                file.length()
+            }
+        }
+    } catch (e: Exception) {
+        Log.e("ModuleItem", "Error calculating directory size: ${e.message}")
+    }
+    return size
 }

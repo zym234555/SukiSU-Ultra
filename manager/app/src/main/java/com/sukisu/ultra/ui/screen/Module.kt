@@ -897,6 +897,9 @@ fun ModuleItem(
         val interactionSource = remember { MutableInteractionSource() }
         val indication = LocalIndication.current
         val viewModel = viewModel<ModuleViewModel>()
+        val moduleSize by remember(module.dirId) {
+            mutableStateOf(viewModel.getModuleSize(module.dirId))
+        }
 
         Column(
             modifier = Modifier
@@ -980,6 +983,46 @@ fun ModuleItem(
                 maxLines = 4,
                 textDecoration = textDecoration,
             )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // 标签行
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                // 文件夹名称标签
+                Surface(
+                    shape = RoundedCornerShape(4.dp),
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier
+                ) {
+                    Text(
+                        text = module.dirId,
+                        style = MaterialTheme.typography.labelSmall,
+                        modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp),
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+
+                // 大小标签
+                Surface(
+                    shape = RoundedCornerShape(4.dp),
+                    color = MaterialTheme.colorScheme.secondaryContainer,
+                    modifier = Modifier
+                ) {
+                    Text(
+                        text = moduleSize,
+                        style = MaterialTheme.typography.labelSmall,
+                        modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp),
+                        color = MaterialTheme.colorScheme.onSecondaryContainer,
+                        maxLines = 1
+                    )
+                }
+            }
 
             Spacer(modifier = Modifier.height(16.dp))
 
