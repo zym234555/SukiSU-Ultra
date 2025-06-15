@@ -785,7 +785,7 @@ private fun AppItem(
         supportingContent = {
             Column {
                 Text(app.packageName)
-                
+
                 Spacer(modifier = Modifier.height(4.dp))
 
                 FlowRow(

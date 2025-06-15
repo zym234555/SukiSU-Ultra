@@ -421,11 +421,11 @@
     <string name="susfs_uname_set_success" formatted="false">SuSFS uname and build time set successfully: %s, %s</string>
     <!-- SuSFS Settings Item -->
     <string name="susfs_config_setting_title">SuSFS Configuration</string>
-    <string name="susfs_config_setting_summary">Configure SuSFS uname value and build time spoofing (Current: %s)</string>
+    <string name="susfs_config_setting_summary">Configuring Uname and Build Time Artifacts and More for SuSFS (Current: %s)</string>
     <!-- 开机自启动相关 -->
     <string name="susfs_autostart_title">Auto Start</string>
-    <string name="susfs_autostart_description">Automatically apply uname configuration at system startup</string>
-    <string name="susfs_autostart_requirement">Need to configure uname or add paths to enable</string>
+    <string name="susfs_autostart_description">Automatically apply all non-default configurations on reboot</string>
+    <string name="susfs_autostart_requirement">Configuration needs to be added to enable</string>
     <string name="susfs_autostart_enabled">Auto Start enabled</string>
     <string name="susfs_autostart_disabled">Auto Start disabled</string>
     <string name="susfs_autostart_enable_failed">Failed to enable auto start</string>
