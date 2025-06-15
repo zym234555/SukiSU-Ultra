@@ -1,11 +1,17 @@
 package com.sukisu.ultra.ui.component
 
 import android.annotation.SuppressLint
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.animation.core.*
+import androidx.compose.animation.*
 import androidx.compose.runtime.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.unit.dp
 
 @SuppressLint("AutoboxingStateCreation")
 @Composable
@@ -42,11 +48,26 @@ fun AnimatedFab(
     visible: Boolean,
     content: @Composable () -> Unit
 ) {
+    val scale by animateFloatAsState(
+        targetValue = if (visible) 1f else 0f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessLow
+        )
+    )
+
     AnimatedVisibility(
         visible = visible,
-        enter = fadeIn(),
-        exit = fadeOut()
+        enter = fadeIn() + scaleIn(),
+        exit = fadeOut() + scaleOut(targetScale = 0.8f)
     ) {
-        content()
+        Box(
+            modifier = Modifier
+                .clip(RoundedCornerShape(16.dp))
+                .scale(scale)
+                .alpha(scale)
+        ) {
+            content()
+        }
     }
 }
