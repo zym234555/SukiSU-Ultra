@@ -195,6 +195,8 @@
     <string name="hide_susfs_status_summary">隐藏主页上的 SuSFS 状态信息</string>
     <string name="hide_link_card">隐藏链接卡片</string>
     <string name="hide_link_card_summary">隐藏主页上的链接卡片信息</string>
+    <string name="hide_tag_card">隐藏模块标签行</string>
+    <string name="hide_tag_card_summary">隐藏模块卡片中的文件夹名称和大小标签</string>
     <string name="theme_mode">主题模式</string>
     <string name="theme_follow_system">跟随系统</string>
     <string name="theme_light">浅色</string>

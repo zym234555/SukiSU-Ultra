@@ -233,6 +233,11 @@ fun MoreSettingsScreen(
         mutableStateOf(prefs.getBoolean("is_hide_link_card", false))
     }
 
+    // 隐藏标签行开关状态
+    var isHideTagRow by remember {
+        mutableStateOf(prefs.getBoolean("is_hide_tag_row", false))
+    }
+
     // SELinux状态
     var selinuxEnabled by remember {
         mutableStateOf(Shell.cmd("getenforce").exec().out.firstOrNull() == "Enforcing")
@@ -313,6 +318,12 @@ fun MoreSettingsScreen(
     val onHideLinkCardChange = { newValue: Boolean ->
         prefs.edit { putBoolean("is_hide_link_card", newValue) }
         isHideLinkCard = newValue
+    }
+
+    // 隐藏标签行开关状态
+    val onHideTagRowChange = { newValue: Boolean ->
+        prefs.edit { putBoolean("is_hide_tag_row", newValue) }
+        isHideTagRow = newValue
     }
 
     // 备用图标开关状态
@@ -1079,6 +1090,15 @@ fun MoreSettingsScreen(
                     summary = stringResource(R.string.hide_link_card_summary),
                     checked = isHideLinkCard,
                     onChange = onHideLinkCardChange
+                )
+
+                // 隐藏标签行
+                SwitchSettingItem(
+                    icon = Icons.Filled.VisibilityOff,
+                    title = stringResource(R.string.hide_tag_card),
+                    summary = stringResource(R.string.hide_tag_card_summary),
+                    checked = isHideTagRow,
+                    onChange = onHideTagRowChange
                 )
             }
             KsuIsValid {

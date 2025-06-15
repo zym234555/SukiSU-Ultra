@@ -112,6 +112,11 @@ fun ModuleScreen(navigator: DestinationsNavigator) {
     val confirmDialog = rememberConfirmDialog()
     var lastClickTime by remember { mutableStateOf(0L) }
 
+    // 初始化缓存系统
+    LaunchedEffect(Unit) {
+        viewModel.initializeCache(context)
+    }
+
     // BottomSheet状态
     val bottomSheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = true
@@ -742,6 +747,7 @@ private fun ModuleList(
 
         if (success) {
             viewModel.fetchModuleList()
+            viewModel.markNeedRefresh()
         }
         if (!isUninstall) return
         val message = if (success) {
@@ -889,6 +895,10 @@ fun ModuleItem(
     onUpdate: (ModuleViewModel.ModuleInfo) -> Unit,
     onClick: (ModuleViewModel.ModuleInfo) -> Unit
 ) {
+    val context = LocalContext.current
+    val prefs = context.getSharedPreferences("settings", MODE_PRIVATE)
+    val isHideTagRow = prefs.getBoolean("is_hide_tag_row", false)
+
     ElevatedCard(
         colors = getCardColors(MaterialTheme.colorScheme.surfaceContainerHigh),
         elevation = getCardElevation(),
@@ -897,8 +907,10 @@ fun ModuleItem(
         val interactionSource = remember { MutableInteractionSource() }
         val indication = LocalIndication.current
         val viewModel = viewModel<ModuleViewModel>()
-        val moduleSize by remember(module.dirId) {
-            mutableStateOf(viewModel.getModuleSize(module.dirId))
+
+        // 使用缓存系统获取模块大小
+        val sizeStr = remember(module.dirId) {
+            viewModel.getModuleSize(module.dirId)
         }
 
         Column(
@@ -987,44 +999,46 @@ fun ModuleItem(
             Spacer(modifier = Modifier.height(12.dp))
 
             // 标签行
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                // 文件夹名称标签
-                Surface(
-                    shape = RoundedCornerShape(4.dp),
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier
+            if (!isHideTagRow) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text(
-                        text = module.dirId,
-                        style = MaterialTheme.typography.labelSmall,
-                        modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp),
-                        color = MaterialTheme.colorScheme.onPrimary,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
+                    // 文件夹名称标签
+                    Surface(
+                        shape = RoundedCornerShape(4.dp),
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier
+                    ) {
+                        Text(
+                            text = module.dirId,
+                            style = MaterialTheme.typography.labelSmall,
+                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp),
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+
+                    // 大小标签
+                    Surface(
+                        shape = RoundedCornerShape(4.dp),
+                        color = MaterialTheme.colorScheme.secondaryContainer,
+                        modifier = Modifier
+                    ) {
+                        Text(
+                            text = sizeStr,
+                            style = MaterialTheme.typography.labelSmall,
+                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp),
+                            color = MaterialTheme.colorScheme.onSecondaryContainer,
+                            maxLines = 1
+                        )
+                    }
                 }
 
-                // 大小标签
-                Surface(
-                    shape = RoundedCornerShape(4.dp),
-                    color = MaterialTheme.colorScheme.secondaryContainer,
-                    modifier = Modifier
-                ) {
-                    Text(
-                        text = moduleSize,
-                        style = MaterialTheme.typography.labelSmall,
-                        modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp),
-                        color = MaterialTheme.colorScheme.onSecondaryContainer,
-                        maxLines = 1
-                    )
-                }
+                Spacer(modifier = Modifier.height(16.dp))
             }
-
-            Spacer(modifier = Modifier.height(16.dp))
 
             HorizontalDivider(thickness = Dp.Hairline)
 
@@ -1060,7 +1074,7 @@ fun ModuleItem(
                         interactionSource = interactionSource,
                         contentPadding = ButtonDefaults.TextButtonContentPadding,
 
-                    ) {
+                        ) {
                         Icon(
                             modifier = Modifier.size(20.dp),
                             imageVector = Icons.AutoMirrored.Outlined.Wysiwyg,
