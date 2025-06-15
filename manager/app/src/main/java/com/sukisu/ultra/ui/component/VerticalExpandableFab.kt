@@ -226,14 +226,14 @@ object FabMenuPresets {
         onScrollToBottom: () -> Unit
     ) = listOf(
         FabMenuItem(
-            icon = Icons.Filled.KeyboardArrowUp,
-            labelRes = R.string.scroll_to_top,
-            onClick = onScrollToTop
-        ),
-        FabMenuItem(
             icon = Icons.Filled.KeyboardArrowDown,
             labelRes = R.string.scroll_to_bottom,
             onClick = onScrollToBottom
+        ),
+        FabMenuItem(
+            icon = Icons.Filled.KeyboardArrowUp,
+            labelRes = R.string.scroll_to_top,
+            onClick = onScrollToTop
         )
     )
 
