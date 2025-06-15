@@ -1,5 +1,6 @@
 package com.sukisu.ultra.ui.screen
 
+import android.annotation.SuppressLint
 import android.app.Activity.*
 import android.content.Context
 import android.content.Intent
@@ -15,10 +16,12 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -36,6 +39,7 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.*
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
@@ -81,6 +85,8 @@ import com.dergoogler.mmrl.platform.Platform
 import androidx.core.net.toUri
 import com.dergoogler.mmrl.platform.model.ModuleConfig
 import com.dergoogler.mmrl.platform.model.ModuleConfig.Companion.asModuleConfig
+import com.sukisu.ultra.ui.component.AnimatedFab
+import com.sukisu.ultra.ui.component.rememberFabVisibilityState
 import com.sukisu.ultra.ui.theme.getCardElevation
 
 // 菜单项数据类
@@ -94,6 +100,7 @@ data class ModuleBottomSheetMenuItem(
  * @author ShirkNeko
  * @date 2025/5/31.
  */
+@SuppressLint("ResourceType", "AutoboxingStateCreation")
 @OptIn(ExperimentalMaterial3Api::class)
 @Destination<RootGraph>
 @Composable
@@ -110,6 +117,8 @@ fun ModuleScreen(navigator: DestinationsNavigator) {
         skipPartiallyExpanded = true
     )
     var showBottomSheet by remember { mutableStateOf(false) }
+    val listState = rememberLazyListState()
+    val fabVisible by rememberFabVisibilityState(listState)
 
     val selectZipLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
@@ -272,9 +281,10 @@ fun ModuleScreen(navigator: DestinationsNavigator) {
             )
         },
         floatingActionButton = {
-            if (!hideInstallButton) {
-                val moduleInstall = stringResource(id = R.string.module_install)
-                ExtendedFloatingActionButton(
+            AnimatedFab(visible = !hideInstallButton && fabVisible) {
+                FloatingActionButton(
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                    containerColor = MaterialTheme.colorScheme.primary,
                     onClick = {
                         selectZipLauncher.launch(
                             Intent(Intent.ACTION_GET_CONTENT).apply {
@@ -283,18 +293,12 @@ fun ModuleScreen(navigator: DestinationsNavigator) {
                             }
                         )
                     },
-                    icon = {
+                    content = {
                         Icon(
-                            imageVector = Icons.Filled.Add,
-                            contentDescription = moduleInstall,
+                            painter = painterResource(id = R.drawable.package_import),
+                            contentDescription = null
                         )
-                    },
-                    text = {
-                        Text(
-                            text = moduleInstall,
-                        )
-                    },
-                    expanded = true,
+                    }
                 )
             }
         },
@@ -334,6 +338,7 @@ fun ModuleScreen(navigator: DestinationsNavigator) {
                 ModuleList(
                     navigator = navigator,
                     viewModel = viewModel,
+                    listState = listState,
                     modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
                     boxModifier = Modifier.padding(innerPadding),
                     onInstallModule = {
@@ -605,6 +610,7 @@ private fun ModuleBottomSheetMenuItemView(menuItem: ModuleBottomSheetMenuItem) {
 private fun ModuleList(
     navigator: DestinationsNavigator,
     viewModel: ModuleViewModel,
+    listState: LazyListState,
     modifier: Modifier = Modifier,
     boxModifier: Modifier = Modifier,
     onInstallModule: (Uri) -> Unit,
@@ -765,6 +771,7 @@ private fun ModuleList(
         isRefreshing = viewModel.isRefreshing
     ) {
         LazyColumn(
+            state = listState,
             modifier = modifier,
             verticalArrangement = Arrangement.spacedBy(16.dp),
             contentPadding = remember {

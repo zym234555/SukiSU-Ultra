@@ -5,9 +5,13 @@ import android.content.Intent
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -38,6 +42,7 @@ import java.io.FileInputStream
 import java.io.InputStreamReader
 import java.net.*
 import android.app.Activity
+import androidx.compose.ui.res.painterResource
 import com.sukisu.ultra.ui.theme.CardConfig.cardElevation
 
 /**
@@ -56,6 +61,9 @@ fun KpmScreen(
     val scope = rememberCoroutineScope()
     val snackBarHost = remember { SnackbarHostState() }
     val confirmDialog = rememberConfirmDialog()
+
+    val listState = rememberLazyListState()
+    val fabVisible by rememberFabVisibilityState(listState)
 
     val moduleConfirmContentMap = viewModel.moduleList.associate { module ->
         val moduleFileName = module.id
@@ -283,28 +291,29 @@ fun KpmScreen(
             )
         },
         floatingActionButton = {
-            ExtendedFloatingActionButton(
-                onClick = {
-                    selectPatchLauncher.launch(
-                        Intent(Intent.ACTION_GET_CONTENT).apply {
-                            type = "application/octet-stream"
-                        }
-                    )
-                },
-                icon = {
-                    Icon(
-                        imageVector = Icons.Filled.Add,
-                        contentDescription = stringResource(R.string.kpm_install),
-                    )
-                },
-                text = {
-                    Text(
-                        text = stringResource(R.string.kpm_install),
-                    )
-                },
-                expanded = true,
-            )
+            AnimatedFab(visible = fabVisible) {
+                FloatingActionButton(
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    onClick = {
+                        selectPatchLauncher.launch(
+                            Intent(Intent.ACTION_GET_CONTENT).apply {
+                                type = "application/octet-stream"
+                            }
+                        )
+                    },
+                    content = {
+                        Icon(
+                            painter = painterResource(id = R.drawable.package_import),
+                            contentDescription = null
+                        )
+                    }
+                )
+            }
         },
+        contentWindowInsets = WindowInsets.safeDrawing.only(
+            WindowInsetsSides.Top + WindowInsetsSides.Horizontal
+        ),
         snackbarHost = { SnackbarHost(snackBarHost) }
     ) { padding ->
         Column(modifier = Modifier.padding(padding)) {
@@ -378,6 +387,7 @@ fun KpmScreen(
                 }
             } else {
                 LazyColumn(
+                    state = listState,
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
