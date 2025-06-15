@@ -466,6 +466,8 @@
     <string name="susfs_umount_mode_normal_short">Normal</string>
     <string name="susfs_umount_mode_detach_short">Detach</string>
     <string name="susfs_umount_mode_display">Mode: %1$s (%2$s)</string>
+    <string name="susfs_try_umount_added_success">Try to umount path added successfully： %s</string>
+    <string name="susfs_try_umount_added_saved">Attempted umount path save succeeded： %s</string>
     <!-- SuSFS Run Umount -->
     <string name="susfs_run_umount_confirm_title">Confirm Run Try Umount</string>
     <string name="susfs_run_umount_confirm_message">This will immediately execute all configured try umount operations. Are you sure you want to continue?</string>

@@ -35,7 +35,10 @@ object SuSFSManager {
     private const val SUSFS_BINARY_BASE_NAME = "ksu_susfs"
     private const val DEFAULT_UNAME = "default"
     private const val DEFAULT_BUILD_TIME = "default"
-    private const val STARTUP_SCRIPT_PATH = "/data/adb/service.d/susfs_startup.sh"
+
+    // KSU模块路径
+    private const val MODULE_ID = "susfs_manager"
+    private const val MODULE_PATH = "/data/adb/modules/$MODULE_ID"
 
     private fun getSuSFS(): String {
         return try {
@@ -349,11 +352,41 @@ object SuSFSManager {
     }
 
     /**
-     * 创建开机自启动脚本
+     * 创建模块结构
      */
     @SuppressLint("SdCardPath")
-    private suspend fun createStartupScript(context: Context): Boolean = withContext(Dispatchers.IO) {
+    private suspend fun createMagiskModule(context: Context): Boolean = withContext(Dispatchers.IO) {
         try {
+            val shell = getRootShell()
+            val targetPath = getSuSFSTargetPath()
+
+            // 创建模块目录结构
+            val createDirResult = shell.newJob().add("mkdir -p $MODULE_PATH").exec()
+            if (!createDirResult.isSuccess) {
+                return@withContext false
+            }
+
+            // 创建module.prop文件
+            val moduleVersion = "v1.0.0"
+            val moduleVersionCode = "1000"
+            val moduleProp = """
+                id=$MODULE_ID
+                name=SuSFS Manager
+                version=$moduleVersion
+                versionCode=$moduleVersionCode
+                author=ShirkNeko
+                description=SuSFS Manager Auto Configuration Module
+                updateJson=
+            """.trimIndent()
+
+            val createModulePropResult = shell.newJob()
+                .add("cat > $MODULE_PATH/module.prop << 'EOF'\n$moduleProp\nEOF")
+                .exec()
+            if (!createModulePropResult.isSuccess) {
+                return@withContext false
+            }
+
+            // 获取配置信息
             val unameValue = getUnameValue(context)
             val buildTimeValue = getBuildTimeValue(context)
             val susPaths = getSusPaths(context)
@@ -362,97 +395,252 @@ object SuSFSManager {
             val androidDataPath = getAndroidDataPath(context)
             val sdcardPath = getSdcardPath(context)
             val enableLog = getEnableLogState(context)
-            val targetPath = getSuSFSTargetPath()
 
-            val scriptContent = buildString {
+            // 创建service.sh
+            val serviceScript = buildString {
                 appendLine("#!/system/bin/sh")
-                appendLine("# SuSFS 开机自启动脚本")
-                appendLine("# 由 KernelSU Manager 自动生成")
+                appendLine("# SuSFS Service Script")
+                appendLine("# 在系统服务启动后执行")
                 appendLine()
-                appendLine("# 等待系统完全启动")
-                appendLine("sleep 60")
+                appendLine("# 日志目录")
+                appendLine("LOG_DIR=\"/data/adb/ksu/log\"")
+                appendLine("LOG_FILE=\"\$LOG_DIR/susfs_service.log\"")
                 appendLine()
-                appendLine("# 检查二进制文件是否存在")
-                appendLine("if [ -f \"$targetPath\" ]; then")
-                appendLine("    # 创建日志目录")
-                appendLine("    mkdir -p /data/adb/ksu/log")
+                appendLine("# 创建日志目录")
+                appendLine("mkdir -p \"\$LOG_DIR\"")
+                appendLine()
+                appendLine("# 检查SuSFS二进制文件")
+                appendLine("SUSFS_BIN=\"$targetPath\"")
+                appendLine("if [ ! -f \"\$SUSFS_BIN\" ]; then")
+                appendLine("    echo \"\\$(date): SuSFS二进制文件未找到: \$SUSFS_BIN\" >> \"\$LOG_FILE\"")
+                appendLine("    exit 1")
+                appendLine("fi")
                 appendLine()
 
                 // 设置日志启用状态
-                appendLine("    # 设置日志启用状态")
+                appendLine("# 设置日志启用状态")
                 val logValue = if (enableLog) 1 else 0
-                appendLine("    $targetPath enable_log $logValue")
-                appendLine("    echo \"\\$(date): 日志功能设置为: ${if (enableLog) "启用" else "禁用"}\" >> /data/adb/ksu/log/susfs_startup.log")
+                appendLine("\"\$SUSFS_BIN\" enable_log $logValue")
+                appendLine("echo \"\\$(date): 日志功能设置为: ${if (enableLog) "启用" else "禁用"}\" >> \"\$LOG_FILE\"")
+                appendLine()
 
                 // 设置Android Data路径
                 if (androidDataPath != "/sdcard/Android/data") {
-                    appendLine("    # 设置Android Data路径")
-                    appendLine("    $targetPath set_android_data_root_path '$androidDataPath'")
-                    appendLine("    echo \"\\$(date): Android Data路径设置为: $androidDataPath\" >> /data/adb/ksu/log/susfs_startup.log")
+                    appendLine("# 设置Android Data路径")
+                    appendLine("\"\$SUSFS_BIN\" set_android_data_root_path '$androidDataPath'")
+                    appendLine("echo \"\\$(date): Android Data路径设置为: $androidDataPath\" >> \"\$LOG_FILE\"")
+                    appendLine()
                 }
 
                 // 设置SD卡路径
                 if (sdcardPath != "/sdcard") {
-                    appendLine("    # 设置SD卡路径")
-                    appendLine("    $targetPath set_sdcard_root_path '$sdcardPath'")
-                    appendLine("    echo \"\\$(date): SD卡路径设置为: $sdcardPath\" >> /data/adb/ksu/log/susfs_startup.log")
+                    appendLine("# 设置SD卡路径")
+                    appendLine("\"\$SUSFS_BIN\" set_sdcard_root_path '$sdcardPath'")
+                    appendLine("echo \"\\$(date): SD卡路径设置为: $sdcardPath\" >> \"\$LOG_FILE\"")
+                    appendLine()
                 }
 
                 // 添加SUS路径
-                susPaths.forEach { path ->
-                    appendLine("    # 添加SUS路径: $path")
-                    appendLine("    $targetPath add_sus_path '$path'")
-                    appendLine("    echo \"\\$(date): 添加SUS路径: $path\" >> /data/adb/ksu/log/susfs_startup.log")
-                }
-
-                // 添加SUS挂载
-                susMounts.forEach { mount ->
-                    appendLine("    # 添加SUS挂载: $mount")
-                    appendLine("    $targetPath add_sus_mount '$mount'")
-                    appendLine("    echo \"\\$(date): 添加SUS挂载: $mount\" >> /data/adb/ksu/log/susfs_startup.log")
-                }
-
-                // 添加尝试卸载
-                tryUmounts.forEach { umount ->
-                    val parts = umount.split("|")
-                    if (parts.size == 2) {
-                        val path = parts[0]
-                        val mode = parts[1]
-                        appendLine("    # 添加尝试卸载: $path (模式: $mode)")
-                        appendLine("    $targetPath add_try_umount '$path' $mode")
-                        appendLine("    echo \"\\$(date): 添加尝试卸载: $path (模式: $mode)\" >> /data/adb/ksu/log/susfs_startup.log")
+                if (susPaths.isNotEmpty()) {
+                    appendLine("# 添加SUS路径")
+                    susPaths.forEach { path ->
+                        appendLine("\"\$SUSFS_BIN\" add_sus_path '$path'")
+                        appendLine("echo \"\\$(date): 添加SUS路径: $path\" >> \"\$LOG_FILE\"")
                     }
+                    appendLine()
                 }
 
                 // 设置uname和构建时间
                 if (unameValue != DEFAULT_UNAME || buildTimeValue != DEFAULT_BUILD_TIME) {
-                    appendLine("    # 设置uname和构建时间")
-                    appendLine("    $targetPath set_uname '$unameValue' '$buildTimeValue'")
-                    appendLine("    echo \"\\$(date): 设置uname为: $unameValue, 构建时间为: $buildTimeValue\" >> /data/adb/ksu/log/susfs_startup.log")
+                    appendLine("# 设置uname和构建时间")
+                    appendLine("\"\$SUSFS_BIN\" set_uname '$unameValue' '$buildTimeValue'")
+                    appendLine("echo \"\\$(date): 设置uname为: $unameValue, 构建时间为: $buildTimeValue\" >> \"\$LOG_FILE\"")
+                    appendLine()
                 }
 
-                appendLine("else")
-                appendLine("    echo \"\\$(date): SuSFS二进制文件未找到: $targetPath\" >> /data/adb/ksu/log/susfs_startup.log")
+                appendLine("# 隐弱BL 来自 Shamiko 脚本")
+                appendLine("check_reset_prop() {")
+                appendLine("local NAME=$1")
+                appendLine("local EXPECTED=$2")
+                appendLine("local VALUE=$(resetprop \$NAME)")
+                appendLine("[ -z \$VALUE ] || [ \$VALUE = \$EXPECTED ] || resetprop \$NAME \$EXPECTED")
+                appendLine("}")
+                appendLine()
+                appendLine("contains_reset_prop() {")
+                appendLine("local NAME=$1")
+                appendLine("local CONTAINS=$2")
+                appendLine("local NEWVAL=$3")
+                appendLine("[[ \"$(resetprop \$NAME)\" = *\"\$CONTAINS\"* ]] && resetprop \$NAME \$NEWVAL")
+                appendLine("}")
+                appendLine()
+                appendLine("resetprop -w sys.boot_completed 0")
+                appendLine("check_reset_prop \"ro.boot.vbmeta.device_state\" \"locked\"")
+                appendLine("check_reset_prop \"ro.boot.verifiedbootstate\" \"green\"")
+                appendLine("check_reset_prop \"ro.boot.flash.locked\" \"1\"")
+                appendLine("check_reset_prop \"ro.boot.veritymode\" \"enforcing\"")
+                appendLine("check_reset_prop \"ro.boot.warranty_bit\" \"0\"")
+                appendLine("check_reset_prop \"ro.warranty_bit\" \"0\"")
+                appendLine("check_reset_prop \"ro.debuggable\" \"0\"")
+                appendLine("check_reset_prop \"ro.force.debuggable\" \"0\"")
+                appendLine("check_reset_prop \"ro.secure\" \"1\"")
+                appendLine("check_reset_prop \"ro.adb.secure\" \"1\"")
+                appendLine("check_reset_prop \"ro.build.type\" \"user\"")
+                appendLine("check_reset_prop \"ro.build.tags\" \"release-keys\"")
+                appendLine("check_reset_prop \"ro.vendor.boot.warranty_bit\" \"0\"")
+                appendLine("check_reset_prop \"ro.vendor.warranty_bit\" \"0\"")
+                appendLine("check_reset_prop \"vendor.boot.vbmeta.device_state\" \"locked\"")
+                appendLine("check_reset_prop \"vendor.boot.verifiedbootstate\" \"green\"")
+                appendLine("check_reset_prop \"sys.oem_unlock_allowed\" \"0\"")
+                appendLine()
+                appendLine("# MIUI specific")
+                appendLine("check_reset_prop \"ro.secureboot.lockstate\" \"locked\"")
+                appendLine()
+                appendLine("# Realme specific")
+                appendLine("check_reset_prop \"ro.boot.realmebootstate\" \"green\"")
+                appendLine("check_reset_prop \"ro.boot.realme.lockstate\" \"1\"")
+                appendLine()
+                appendLine("# Hide that we booted from recovery when magisk is in recovery mode")
+                appendLine("contains_reset_prop \"ro.bootmode\" \"recovery\" \"unknown\"")
+                appendLine("contains_reset_prop \"ro.boot.bootmode\" \"recovery\" \"unknown\"")
+                appendLine("contains_reset_prop \"vendor.boot.bootmode\" \"recovery\" \"unknown\"")
+                appendLine()
+
+                appendLine("echo \"\\$(date): Service脚本执行完成\" >> \"\$LOG_FILE\"")
+            }
+
+            val createServiceResult = shell.newJob()
+                .add("cat > $MODULE_PATH/service.sh << 'EOF'\n$serviceScript\nEOF")
+                .add("chmod 755 $MODULE_PATH/service.sh")
+                .exec()
+            if (!createServiceResult.isSuccess) {
+                return@withContext false
+            }
+
+            // 创建post-fs-data.sh
+            val postFsDataScript = buildString {
+                appendLine("#!/system/bin/sh")
+                appendLine("# SuSFS Post-FS-Data Script")
+                appendLine("# 在文件系统挂载后但在系统完全启动前执行")
+                appendLine()
+                appendLine("# 日志目录")
+                appendLine("LOG_DIR=\"/data/adb/ksu/log\"")
+                appendLine("LOG_FILE=\"\$LOG_DIR/susfs_post_fs_data.log\"")
+                appendLine()
+                appendLine("# 创建日志目录")
+                appendLine("mkdir -p \"\$LOG_DIR\"")
+                appendLine()
+                appendLine("echo \"\\$(date): Post-FS-Data脚本开始执行\" >> \"\$LOG_FILE\"")
+                appendLine()
+                appendLine()
+                appendLine()
+                appendLine()
+                appendLine("echo \"\\$(date): Post-FS-Data脚本执行完成\" >> \"\$LOG_FILE\"")
+            }
+
+            val createPostFsDataResult = shell.newJob()
+                .add("cat > $MODULE_PATH/post-fs-data.sh << 'EOF'\n$postFsDataScript\nEOF")
+                .add("chmod 755 $MODULE_PATH/post-fs-data.sh")
+                .exec()
+            if (!createPostFsDataResult.isSuccess) {
+                return@withContext false
+            }
+
+            // 创建post-mount.sh
+            val postMountScript = buildString {
+                appendLine("#!/system/bin/sh")
+                appendLine("# SuSFS Post-Mount Script")
+                appendLine("# 在所有分区挂载完成后执行")
+                appendLine()
+                appendLine("# 日志目录")
+                appendLine("LOG_DIR=\"/data/adb/ksu/log\"")
+                appendLine("LOG_FILE=\"\$LOG_DIR/susfs_post_mount.log\"")
+                appendLine()
+                appendLine("# 创建日志目录")
+                appendLine("mkdir -p \"\$LOG_DIR\"")
+                appendLine()
+                appendLine("echo \"\\$(date): Post-Mount脚本开始执行\" >> \"\$LOG_FILE\"")
+                appendLine()
+                appendLine("# 检查SuSFS二进制文件")
+                appendLine("SUSFS_BIN=\"$targetPath\"")
+                appendLine("if [ ! -f \"\$SUSFS_BIN\" ]; then")
+                appendLine("    echo \"\\$(date): SuSFS二进制文件未找到: \$SUSFS_BIN\" >> \"\$LOG_FILE\"")
+                appendLine("    exit 1")
                 appendLine("fi")
-            }
+                appendLine()
 
-            val shell = getRootShell()
-            val commands = arrayOf(
-                "mkdir -p /data/adb/service.d",
-                "cat > $STARTUP_SCRIPT_PATH << 'EOF'\n$scriptContent\nEOF",
-                "chmod 755 $STARTUP_SCRIPT_PATH"
-            )
-
-            var success = true
-            for (command in commands) {
-                val result = shell.newJob().add(command).exec()
-                if (!result.isSuccess) {
-                    success = false
-                    break
+                // 添加SUS挂载
+                if (susMounts.isNotEmpty()) {
+                    appendLine("# 添加SUS挂载")
+                    susMounts.forEach { mount ->
+                        appendLine("\"\$SUSFS_BIN\" add_sus_mount '$mount'")
+                        appendLine("echo \"\\$(date): 添加SUS挂载: $mount\" >> \"\$LOG_FILE\"")
+                    }
+                    appendLine()
                 }
+
+                // 添加尝试卸载
+                if (tryUmounts.isNotEmpty()) {
+                    appendLine("# 添加尝试卸载")
+                    tryUmounts.forEach { umount ->
+                        val parts = umount.split("|")
+                        if (parts.size == 2) {
+                            val path = parts[0]
+                            val mode = parts[1]
+                            appendLine("\"\$SUSFS_BIN\" add_try_umount '$path' $mode")
+                            appendLine("echo \"\\$(date): 添加尝试卸载: $path (模式: $mode)\" >> \"\$LOG_FILE\"")
+                        }
+                    }
+                    appendLine()
+                }
+
+                appendLine("echo \"\\$(date): Post-Mount脚本执行完成\" >> \"\$LOG_FILE\"")
             }
 
-            success
+            val createPostMountResult = shell.newJob()
+                .add("cat > $MODULE_PATH/post-mount.sh << 'EOF'\n$postMountScript\nEOF")
+                .add("chmod 755 $MODULE_PATH/post-mount.sh")
+                .exec()
+            if (!createPostMountResult.isSuccess) {
+                return@withContext false
+            }
+
+            // 创建boot-completed.sh
+            val bootCompletedScript = buildString {
+                appendLine("#!/system/bin/sh")
+                appendLine("# SuSFS Boot-Completed Script")
+                appendLine("# 在系统完全启动后执行")
+                appendLine()
+                appendLine("# 日志目录")
+                appendLine("LOG_DIR=\"/data/adb/ksu/log\"")
+                appendLine("LOG_FILE=\"\$LOG_DIR/susfs_boot_completed.log\"")
+                appendLine()
+                appendLine("# 创建日志目录")
+                appendLine("mkdir -p \"\$LOG_DIR\"")
+                appendLine()
+                appendLine("echo \"\\$(date): Boot-Completed脚本开始执行\" >> \"\$LOG_FILE\"")
+                appendLine()
+                appendLine("# 检查SuSFS二进制文件")
+                appendLine("SUSFS_BIN=\"$targetPath\"")
+                appendLine("if [ ! -f \"\$SUSFS_BIN\" ]; then")
+                appendLine("    echo \"\\$(date): SuSFS二进制文件未找到: \$SUSFS_BIN\" >> \"\$LOG_FILE\"")
+                appendLine("    exit 1")
+                appendLine("fi")
+                appendLine()
+                appendLine()
+                appendLine()
+                appendLine()
+                appendLine("echo \"\\$(date): Boot-Completed脚本执行完成\" >> \"\$LOG_FILE\"")
+            }
+
+            val createBootCompletedResult = shell.newJob()
+                .add("cat > $MODULE_PATH/boot-completed.sh << 'EOF'\n$bootCompletedScript\nEOF")
+                .add("chmod 755 $MODULE_PATH/boot-completed.sh")
+                .exec()
+            if (!createBootCompletedResult.isSuccess) {
+                return@withContext false
+            }
+
+            true
         } catch (e: Exception) {
             e.printStackTrace()
             false
@@ -460,12 +648,12 @@ object SuSFSManager {
     }
 
     /**
-     * 删除开机自启动脚本
+     * 删除模块
      */
-    private suspend fun removeStartupScript(): Boolean = withContext(Dispatchers.IO) {
+    private suspend fun removeMagiskModule(): Boolean = withContext(Dispatchers.IO) {
         try {
             val shell = getRootShell()
-            val result = shell.newJob().add("rm -f $STARTUP_SCRIPT_PATH").exec()
+            val result = shell.newJob().add("rm -rf $MODULE_PATH").exec()
             result.isSuccess
         } catch (e: Exception) {
             e.printStackTrace()
@@ -529,9 +717,9 @@ object SuSFSManager {
         if (success) {
             saveEnableLogState(context, enabled)
 
-            // 如果开启了开机自启动，更新启动脚本
+            // 如果开启了开机自启动，更新模块
             if (isAutoStartEnabled(context)) {
-                createStartupScript(context)
+                createMagiskModule(context)
             }
 
             withContext(Dispatchers.Main) {
@@ -660,9 +848,9 @@ object SuSFSManager {
             currentPaths.add(path)
             saveSusPaths(context, currentPaths)
 
-            // 如果开启了开机自启动，更新启动脚本
+            // 如果开启了开机自启动，更新模块
             if (isAutoStartEnabled(context)) {
-                createStartupScript(context)
+                createMagiskModule(context)
             }
         }
         return success
@@ -676,13 +864,13 @@ object SuSFSManager {
         currentPaths.remove(path)
         saveSusPaths(context, currentPaths)
 
-        // 如果开启了开机自启动，更新启动脚本
+        // 如果开启了开机自启动，更新模块
         if (isAutoStartEnabled(context)) {
-            createStartupScript(context)
+            createMagiskModule(context)
         }
 
         withContext(Dispatchers.Main) {
-            Toast.makeText(context, "已移除SUS路径: $path", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "SUS path removed: $path", Toast.LENGTH_SHORT).show()
         }
         return true
     }
@@ -697,9 +885,9 @@ object SuSFSManager {
             currentMounts.add(mount)
             saveSusMounts(context, currentMounts)
 
-            // 如果开启了开机自启动，更新启动脚本
+            // 如果开启了开机自启动，更新模块
             if (isAutoStartEnabled(context)) {
-                createStartupScript(context)
+                createMagiskModule(context)
             }
         }
         return success
@@ -713,33 +901,53 @@ object SuSFSManager {
         currentMounts.remove(mount)
         saveSusMounts(context, currentMounts)
 
-        // 如果开启了开机自启动，更新启动脚本
+        // 如果开启了开机自启动，更新模块
         if (isAutoStartEnabled(context)) {
-            createStartupScript(context)
+            createMagiskModule(context)
         }
 
         withContext(Dispatchers.Main) {
-            Toast.makeText(context, "已移除SUS挂载: $mount", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "Removed SUS mount: $mount", Toast.LENGTH_SHORT).show()
         }
         return true
     }
 
     /**
      * 添加尝试卸载
+     * 即使命令执行失败，也要保存配置并更新开机自启动脚本
      */
     suspend fun addTryUmount(context: Context, path: String, mode: Int): Boolean {
-        val success = executeSusfsCommand(context, "add_try_umount '$path' $mode")
-        if (success) {
-            val currentUmounts = getTryUmounts(context).toMutableSet()
-            currentUmounts.add("$path|$mode")
-            saveTryUmounts(context, currentUmounts)
+        // 先尝试执行命令
+        val commandSuccess = executeSusfsCommand(context, "add_try_umount '$path' $mode")
 
-            // 如果开启了开机自启动，更新启动脚本
-            if (isAutoStartEnabled(context)) {
-                createStartupScript(context)
+        // 无论命令是否成功，都保存配置
+        val currentUmounts = getTryUmounts(context).toMutableSet()
+        currentUmounts.add("$path|$mode")
+        saveTryUmounts(context, currentUmounts)
+
+        // 如果开启了开机自启动，更新模块
+        if (isAutoStartEnabled(context)) {
+            createMagiskModule(context)
+        }
+
+        // 显示相应的提示信息
+        withContext(Dispatchers.Main) {
+            if (commandSuccess) {
+                Toast.makeText(
+                    context,
+                    context.getString(R.string.susfs_try_umount_added_success, path),
+                    Toast.LENGTH_SHORT
+                ).show()
+            } else {
+                Toast.makeText(
+                    context,
+                    context.getString(R.string.susfs_try_umount_added_saved, path),
+                    Toast.LENGTH_LONG
+                ).show()
             }
         }
-        return success
+
+        return true
     }
 
     /**
@@ -750,15 +958,15 @@ object SuSFSManager {
         currentUmounts.remove(umountEntry)
         saveTryUmounts(context, currentUmounts)
 
-        // 如果开启了开机自启动，更新启动脚本
+        // 如果开启了开机自启动，更新模块
         if (isAutoStartEnabled(context)) {
-            createStartupScript(context)
+            createMagiskModule(context)
         }
 
         val parts = umountEntry.split("|")
         val path = if (parts.isNotEmpty()) parts[0] else umountEntry
         withContext(Dispatchers.Main) {
-            Toast.makeText(context, "已移除尝试卸载: $path", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "Removed Try to uninstall: $path", Toast.LENGTH_SHORT).show()
         }
         return true
     }
@@ -778,9 +986,9 @@ object SuSFSManager {
         if (success) {
             saveAndroidDataPath(context, path)
 
-            // 如果开启了开机自启动，更新启动脚本
+            // 如果开启了开机自启动，更新模块
             if (isAutoStartEnabled(context)) {
-                createStartupScript(context)
+                createMagiskModule(context)
             }
         }
         return success
@@ -794,9 +1002,9 @@ object SuSFSManager {
         if (success) {
             saveSdcardPath(context, path)
 
-            // 如果开启了开机自启动，更新启动脚本
+            // 如果开启了开机自启动，更新模块
             if (isAutoStartEnabled(context)) {
-                createStartupScript(context)
+                createMagiskModule(context)
             }
         }
         return success
@@ -834,9 +1042,9 @@ object SuSFSManager {
                 saveLastAppliedBuildTime(context, buildTimeValue)
                 setEnabled(context, true)
 
-                // 如果开启了开机自启动，更新启动脚本
+                // 如果开启了开机自启动，更新模块
                 if (isAutoStartEnabled(context)) {
-                    createStartupScript(context)
+                    createMagiskModule(context)
                 }
 
                 withContext(Dispatchers.Main) {
@@ -930,14 +1138,14 @@ object SuSFSManager {
                     }
                 }
 
-                val success = createStartupScript(context)
+                val success = createMagiskModule(context)
                 if (success) {
                     setAutoStartEnabled(context, true)
                     withContext(Dispatchers.Main) {
                         Toast.makeText(
                             context,
-                            context.getString(R.string.susfs_autostart_enabled),
-                            Toast.LENGTH_SHORT
+                            "SuSFS self-startup module is enabled, module path：$MODULE_PATH",
+                            Toast.LENGTH_LONG
                         ).show()
                     }
                 } else {
@@ -952,13 +1160,13 @@ object SuSFSManager {
                 success
             } else {
                 // 禁用开机自启动
-                val success = removeStartupScript()
+                val success = removeMagiskModule()
                 if (success) {
                     setAutoStartEnabled(context, false)
                     withContext(Dispatchers.Main) {
                         Toast.makeText(
                             context,
-                            context.getString(R.string.susfs_autostart_disabled),
+                            "SuSFS自启动模块已禁用",
                             Toast.LENGTH_SHORT
                         ).show()
                     }
