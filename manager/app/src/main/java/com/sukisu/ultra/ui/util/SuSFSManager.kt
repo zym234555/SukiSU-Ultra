@@ -13,6 +13,7 @@ import kotlinx.coroutines.withContext
 import java.io.FileOutputStream
 import java.io.IOException
 import java.io.File
+import java.util.zip.GZIPInputStream
 
 /**
  * SuSFS 配置管理器
@@ -300,6 +301,56 @@ object SuSFSManager {
     @SuppressLint("SdCardPath")
     fun getSdcardPath(context: Context): String {
         return getPrefs(context).getString(KEY_SDCARD_PATH, "/sdcard") ?: "/sdcard"
+    }
+
+    /**
+     * 读取并解析/proc/config.gz文件
+     */
+    private suspend fun readProcConfig(): Map<String, String> = withContext(Dispatchers.IO) {
+        val configMap = mutableMapOf<String, String>()
+        try {
+            val shell = getRootShell()
+
+            // 首先检查/proc/config.gz是否存在
+            val checkResult = shell.newJob().add("test -f /proc/config.gz").exec()
+            if (!checkResult.isSuccess) {
+                return@withContext configMap
+            }
+
+            // 读取并解压/proc/config.gz
+            val result = shell.newJob().add("zcat /proc/config.gz").exec()
+            if (result.isSuccess) {
+                result.out.forEach { line ->
+                    val trimmedLine = line.trim()
+                    when {
+                        // 处理启用的配置项 CONFIG_XXX=y
+                        trimmedLine.contains("=y") -> {
+                            val configName = trimmedLine.substringBefore("=y")
+                            if (configName.startsWith("CONFIG_")) {
+                                configMap[configName] = "y"
+                            }
+                        }
+                        // 处理未启用的配置项 # CONFIG_XXX is not set
+                        trimmedLine.startsWith("# ") && trimmedLine.endsWith(" is not set") -> {
+                            val configName = trimmedLine.removePrefix("# ").removeSuffix(" is not set")
+                            if (configName.startsWith("CONFIG_")) {
+                                configMap[configName] = "not_set"
+                            }
+                        }
+                        // 处理其他类型的配置项 CONFIG_XXX=value
+                        trimmedLine.contains("=") && trimmedLine.startsWith("CONFIG_") -> {
+                            val parts = trimmedLine.split("=", limit = 2)
+                            if (parts.size == 2) {
+                                configMap[parts[0]] = parts[1]
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        configMap
     }
 
     /**
@@ -751,7 +802,8 @@ object SuSFSManager {
             FeatureMapping("status_spoof_cmdline", "CONFIG_KSU_SUSFS_SPOOF_CMDLINE_OR_BOOTCONFIG"),
             FeatureMapping("status_open_redirect", "CONFIG_KSU_SUSFS_OPEN_REDIRECT"),
             FeatureMapping("status_magic_mount", "CONFIG_KSU_SUSFS_HAS_MAGIC_MOUNT"),
-            FeatureMapping("status_overlayfs_auto_kstat", "CONFIG_KSU_SUSFS_SUS_OVERLAYFS")
+            FeatureMapping("status_overlayfs_auto_kstat", "CONFIG_KSU_SUSFS_SUS_OVERLAYFS"),
+            FeatureMapping("status_sus_su", "CONFIG_KSU_SUSFS_SUS_SU")
         )
     }
 
@@ -783,8 +835,11 @@ object SuSFSManager {
             val command = "$binaryPath show enabled_features"
             val output = runCmd(shell, command)
 
+            // 读取/proc/config.gz进行二次检查
+            val procConfig = readProcConfig()
+
             if (output.isNotEmpty()) {
-                parseEnabledFeatures(context, output)
+                parseEnabledFeatures(context, output, procConfig)
             } else {
                 // 如果命令输出为空，返回空列表
                 emptyList()
@@ -798,7 +853,7 @@ object SuSFSManager {
     /**
      * 解析启用功能状态输出
      */
-    private fun parseEnabledFeatures(context: Context, output: String): List<EnabledFeature> {
+    private fun parseEnabledFeatures(context: Context, output: String, procConfig: Map<String, String>): List<EnabledFeature> {
         val features = mutableListOf<EnabledFeature>()
 
         // 将输出按行分割并保存到集合中进行快速查找
@@ -822,13 +877,36 @@ object SuSFSManager {
             "status_hide_symbols" to context.getString(R.string.hide_symbols_feature_label),
             "status_sus_kstat" to context.getString(R.string.sus_kstat_feature_label),
             "status_magic_mount" to context.getString(R.string.magic_mount_feature_label),
-            "status_overlayfs_auto_kstat" to context.getString(R.string.overlayfs_auto_kstat_feature_label)
+            "status_overlayfs_auto_kstat" to context.getString(R.string.overlayfs_auto_kstat_feature_label),
+            "status_sus_su" to context.getString(R.string.sus_su_feature_label)
         )
 
         // 根据映射表检查每个功能的启用状态
         featureMappings.forEach { mapping ->
             val displayName = featureNameMap[mapping.id] ?: mapping.id
-            val isEnabled = outputLines.contains(mapping.config)
+
+            // 检查show enabled_features命令输出中是否存在该配置
+            val existsInOutput = outputLines.contains(mapping.config)
+
+            // 检查/proc/config.gz中的配置状态
+            val procConfigValue = procConfig[mapping.config]
+
+            val isEnabled = when {
+                // 如果show enabled_features命令中存在该CONFIG，则认为启用
+                existsInOutput -> true
+
+                // 如果show enabled_features命令中不存在该CONFIG，则检查/proc/config.gz中是否存在y
+                !existsInOutput && procConfigValue == "y" -> true
+
+                // 如果/proc/config.gz中对应的为is not set，则为未启用
+                procConfigValue == "not_set" -> false
+
+                // 如果/proc/config.gz中没有对应的CONFIG，则按照show enabled_features命令为主
+                procConfigValue == null -> false
+
+                else -> false
+            }
+
             val statusText = if (isEnabled) context.getString(R.string.susfs_feature_enabled) else context.getString(R.string.susfs_feature_disabled)
             // 只有 enable_log 功能可以配置
             val canConfigure = mapping.id == "status_enable_log"
