@@ -526,6 +526,7 @@
     <string name="show_more_module_info">Show More Module Info</string>
     <string name="show_more_module_info_summary">Display additional module information like update JSON URLs</string>
     <string name="susfs_execution_location_label">Execution Location</string>
+    <string name="susfs_current_execution_location">Current execution location: %s</string>
     <string name="susfs_execution_location_service">Service</string>
     <string name="susfs_execution_location_post_fs_data">Post-FS-Data</string>
     <string name="susfs_execution_location_service_description">Execute after system services start</string>

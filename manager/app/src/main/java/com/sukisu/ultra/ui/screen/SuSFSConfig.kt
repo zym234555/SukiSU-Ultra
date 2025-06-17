@@ -1178,7 +1178,7 @@ private fun BasicSettingsContent(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Text(
-                text = "当前执行位置: ${if (SuSFSManager.getExecuteInPostFsData(context)) "Post-FS-Data" else "Service"}",
+                text = stringResource(R.string.susfs_current_execution_location, if (SuSFSManager.getExecuteInPostFsData(context)) "Post-FS-Data" else "Service"),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
