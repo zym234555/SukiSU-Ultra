@@ -7,26 +7,35 @@ import android.content.pm.PackageInfo
 import android.os.Parcelable
 import android.os.SystemClock
 import android.util.Log
-import android.widget.Toast
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.supervisorScope
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.parcelize.Parcelize
 import com.sukisu.ultra.Natives
 import com.sukisu.ultra.ksuApp
 import com.sukisu.ultra.ui.util.HanziToPinyin
 import java.text.Collator
 import java.util.*
+import java.util.concurrent.ThreadPoolExecutor
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.LinkedBlockingQueue
 import com.dergoogler.mmrl.platform.Platform
 import com.dergoogler.mmrl.platform.TIMEOUT_MILLIS
 import com.sukisu.ultra.ui.webui.getInstalledPackagesAll
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withTimeoutOrNull
 import androidx.core.content.edit
+import kotlinx.coroutines.asCoroutineDispatcher
 
 // 应用分类
 enum class AppCategory(val displayNameRes: Int, val persistKey: String) {
@@ -65,6 +74,7 @@ enum class SortType(val displayNameRes: Int, val persistKey: String) {
  */
 class SuperUserViewModel : ViewModel() {
     val isPlatformAlive get() = Platform.isAlive
+
     companion object {
         private const val TAG = "SuperUserViewModel"
         var apps by mutableStateOf<List<AppInfo>>(emptyList())
@@ -72,6 +82,10 @@ class SuperUserViewModel : ViewModel() {
         private const val KEY_SHOW_SYSTEM_APPS = "show_system_apps"
         private const val KEY_SELECTED_CATEGORY = "selected_category"
         private const val KEY_CURRENT_SORT_TYPE = "current_sort_type"
+        private const val CORE_POOL_SIZE = 4
+        private const val MAX_POOL_SIZE = 8
+        private const val KEEP_ALIVE_TIME = 60L
+        private const val BATCH_SIZE = 20
     }
 
     @Parcelize
@@ -100,6 +114,23 @@ class SuperUserViewModel : ViewModel() {
             }
     }
 
+    private val appProcessingThreadPool = ThreadPoolExecutor(
+        CORE_POOL_SIZE,
+        MAX_POOL_SIZE,
+        KEEP_ALIVE_TIME,
+        TimeUnit.SECONDS,
+        LinkedBlockingQueue()
+    ) { runnable ->
+        Thread(runnable, "AppProcessing-${System.currentTimeMillis()}").apply {
+            isDaemon = true
+            priority = Thread.NORM_PRIORITY
+        }
+    }.asCoroutineDispatcher()
+
+    private val appListMutex = Mutex()
+
+    private val configChangeListeners = mutableSetOf<(String) -> Unit>()
+
     private val prefs: SharedPreferences = ksuApp.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
     var search by mutableStateOf("")
@@ -120,6 +151,12 @@ class SuperUserViewModel : ViewModel() {
         internal set
     var selectedApps by mutableStateOf<Set<String>>(emptySet())
         internal set
+
+    // 加载进度状态
+    var loadingProgress by mutableFloatStateOf(0f)
+        private set
+    var loadingMessage by mutableStateOf("")
+        private set
 
     /**
      * 从SharedPreferences加载显示系统应用设置
@@ -253,19 +290,14 @@ class SuperUserViewModel : ViewModel() {
                 val profile = Natives.getAppProfile(packageName, it.uid)
                 val updatedProfile = profile.copy(allowSu = allowSu)
                 if (Natives.setAppProfile(updatedProfile)) {
-                    apps = apps.map { app ->
-                        if (app.packageName == packageName) {
-                            app.copy(profile = updatedProfile)
-                        } else {
-                            app
-                        }
-                    }
+                    updateAppProfileLocally(packageName, updatedProfile)
+                    notifyConfigChange(packageName)
                 }
             }
         }
         clearSelection()
-        showBatchActions = false // 批量操作完成后退出批量模式
-        fetchAppList() // 刷新列表以显示最新状态
+        showBatchActions = false
+        refreshAppConfigurations()
     }
 
     // 批量更新权限和umount模块设置
@@ -280,6 +312,21 @@ class SuperUserViewModel : ViewModel() {
                     nonRootUseDefault = false
                 )
                 if (Natives.setAppProfile(updatedProfile)) {
+                    updateAppProfileLocally(packageName, updatedProfile)
+                    notifyConfigChange(packageName)
+                }
+            }
+        }
+        clearSelection()
+        showBatchActions = false
+        refreshAppConfigurations()
+    }
+
+    // 更新本地应用配置
+    fun updateAppProfileLocally(packageName: String, updatedProfile: Natives.Profile) {
+        appListMutex.tryLock().let { locked ->
+            if (locked) {
+                try {
                     apps = apps.map { app ->
                         if (app.packageName == packageName) {
                             app.copy(profile = updatedProfile)
@@ -287,27 +334,67 @@ class SuperUserViewModel : ViewModel() {
                             app
                         }
                     }
+                } finally {
+                    appListMutex.unlock()
                 }
             }
         }
-        clearSelection()
-        showBatchActions = false // 批量操作完成后退出批量模式
-        fetchAppList() // 刷新列表以显示最新状态
     }
 
-    // 更新本地应用配置
-    fun updateAppProfileLocally(packageName: String, updatedProfile: Natives.Profile) {
-        apps = apps.map { app ->
-            if (app.packageName == packageName) {
-                app.copy(profile = updatedProfile)
-            } else {
-                app
+    private fun notifyConfigChange(packageName: String) {
+        configChangeListeners.forEach { listener ->
+            try {
+                listener(packageName)
+            } catch (e: Exception) {
+                Log.e(TAG, "Error notifying config change for $packageName", e)
+            }
+        }
+    }
+
+    /**
+     * 刷新应用配置状态
+     */
+    suspend fun refreshAppConfigurations() {
+        withContext(appProcessingThreadPool) {
+            supervisorScope {
+                val currentApps = apps.toList()
+                val batches = currentApps.chunked(BATCH_SIZE)
+
+                loadingProgress = 0f
+
+                val updatedApps = batches.mapIndexed { batchIndex, batch ->
+                    async {
+                        val batchResult = batch.map { app ->
+                            try {
+                                val updatedProfile = Natives.getAppProfile(app.packageName, app.uid)
+                                app.copy(profile = updatedProfile)
+                            } catch (e: Exception) {
+                                Log.e(TAG, "Error refreshing profile for ${app.packageName}", e)
+                                app
+                            }
+                        }
+
+                        val progress = (batchIndex + 1).toFloat() / batches.size
+                        loadingProgress = progress
+
+                        batchResult
+                    }
+                }.awaitAll().flatten()
+
+                appListMutex.withLock {
+                    apps = updatedApps
+                }
+
+                loadingProgress = 1f
+
+                Log.i(TAG, "Refreshed configurations for ${updatedApps.size} apps")
             }
         }
     }
 
     suspend fun fetchAppList() {
         isRefreshing = true
+        loadingProgress = 0f
 
         withContext(Dispatchers.IO) {
             withTimeoutOrNull(TIMEOUT_MILLIS) {
@@ -318,21 +405,87 @@ class SuperUserViewModel : ViewModel() {
             val pm = ksuApp.packageManager
             val start = SystemClock.elapsedRealtime()
 
-            val packages = Platform.getInstalledPackagesAll {
-                Log.e(TAG, "getInstalledPackagesAll:", it)
-                Toast.makeText(ksuApp, "Something went wrong, check logs", Toast.LENGTH_SHORT).show()
+            try {
+                val packages = Platform.getInstalledPackagesAll {
+                    Log.e(TAG, "getInstalledPackagesAll:", it)
+                }
+
+                loadingProgress = 0.3f
+
+                val filteredPackages = packages.filter { it.packageName != ksuApp.packageName }
+
+                withContext(appProcessingThreadPool) {
+                    supervisorScope {
+                        val batches = filteredPackages.chunked(BATCH_SIZE)
+
+                        val processedApps = batches.mapIndexed { batchIndex, batch ->
+                            async {
+                                val batchResult = batch.mapNotNull { packageInfo ->
+                                    try {
+                                        val appInfo = packageInfo.applicationInfo!!
+                                        val uid = appInfo.uid
+
+                                        val labelDeferred = async {
+                                            appInfo.loadLabel(pm).toString()
+                                        }
+                                        val profileDeferred = async {
+                                            Natives.getAppProfile(packageInfo.packageName, uid)
+                                        }
+
+                                        val label = labelDeferred.await()
+                                        val profile = profileDeferred.await()
+
+                                        AppInfo(
+                                            label = label,
+                                            packageInfo = packageInfo,
+                                            profile = profile,
+                                        )
+                                    } catch (e: Exception) {
+                                        Log.e(
+                                            TAG,
+                                            "Error processing app ${packageInfo.packageName}",
+                                            e
+                                        )
+                                        null
+                                    }
+                                }
+
+                                val progress = 0.3f + (batchIndex + 1).toFloat() / batches.size * 0.6f
+                                loadingProgress = progress
+
+                                batchResult
+                            }
+                        }.awaitAll().flatten()
+
+                        appListMutex.withLock {
+                            apps = processedApps
+                        }
+
+                        loadingProgress = 1f
+
+                        val elapsed = SystemClock.elapsedRealtime() - start
+                        Log.i(TAG, "Loaded ${processedApps.size} apps in ${elapsed}ms using concurrent processing")
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error fetching app list", e)
+            } finally {
+                isRefreshing = false
+                loadingProgress = 0f
+                loadingMessage = ""
             }
-            apps = packages.map {
-                val appInfo = it.applicationInfo
-                val uid = appInfo!!.uid
-                val profile = Natives.getAppProfile(it.packageName, uid)
-                AppInfo(
-                    label = appInfo.loadLabel(pm).toString(),
-                    packageInfo = it,
-                    profile = profile,
-                )
-            }.filter { it.packageName != ksuApp.packageName }
-            Log.i(TAG, "load cost: ${SystemClock.elapsedRealtime() - start}")
+        }
+    }
+    /**
+     * 清理资源
+     */
+    override fun onCleared() {
+        super.onCleared()
+        try {
+            appProcessingThreadPool.close()
+            configChangeListeners.clear()
+        } catch (e: Exception) {
+            Log.e(TAG, "Error cleaning up resources", e)
         }
     }
 }
