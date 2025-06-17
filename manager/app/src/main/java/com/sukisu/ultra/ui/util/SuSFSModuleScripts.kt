@@ -19,7 +19,8 @@ object ScriptGenerator {
         susPaths: Set<String>,
         androidDataPath: String,
         sdcardPath: String,
-        enableLog: Boolean
+        enableLog: Boolean,
+        executeInPostFsData: Boolean = false
     ): String {
         return buildString {
             appendLine("#!/system/bin/sh")
@@ -79,8 +80,8 @@ object ScriptGenerator {
                 appendLine()
             }
 
-            // 设置uname和构建时间
-            if (unameValue != "default" || buildTimeValue != "default") {
+            // 设置uname和构建时间 - 只有不在service中执行
+            if (!executeInPostFsData && (unameValue != "default" || buildTimeValue != "default")) {
                 appendLine("# 设置uname和构建时间")
                 appendLine("\"\$SUSFS_BIN\" set_uname '$unameValue' '$buildTimeValue'")
                 appendLine("echo \"\$(get_current_time): 设置uname为: $unameValue, 构建时间为: $buildTimeValue\" >> \"\$LOG_FILE\"")
@@ -177,6 +178,9 @@ object ScriptGenerator {
      */
     fun generatePostFsDataScript(
         targetPath: String,
+        unameValue: String,
+        buildTimeValue: String,
+        executeInPostFsData: Boolean = false
     ): String {
         return buildString {
             appendLine("#!/system/bin/sh")
@@ -204,9 +208,15 @@ object ScriptGenerator {
             appendLine()
             appendLine("echo \"\$(get_current_time): Post-FS-Data脚本开始执行\" >> \"\$LOG_FILE\"")
             appendLine()
-            appendLine()
-            appendLine()
-            appendLine()
+
+            // 设置uname和构建时间 - 只有在选择在post-fs-data中执行时才执行
+            if (executeInPostFsData && (unameValue != "default" || buildTimeValue != "default")) {
+                appendLine("# 设置uname和构建时间")
+                appendLine("\"\$SUSFS_BIN\" set_uname '$unameValue' '$buildTimeValue'")
+                appendLine("echo \"\$(get_current_time): 设置uname为: $unameValue, 构建时间为: $buildTimeValue\" >> \"\$LOG_FILE\"")
+                appendLine()
+            }
+
             appendLine("echo \"\$(get_current_time): Post-FS-Data脚本执行完成\" >> \"\$LOG_FILE\"")
         }
     }
@@ -305,9 +315,6 @@ object ScriptGenerator {
             appendLine("    exit 1")
             appendLine("fi")
             appendLine()
-            appendLine()
-            appendLine()
-            appendLine()
             appendLine("echo \"\$(get_current_time): Boot-Completed脚本执行完成\" >> \"\$LOG_FILE\"")
         }
     }
@@ -325,7 +332,7 @@ object ScriptGenerator {
             version=$moduleVersion
             versionCode=$moduleVersionCode
             author=ShirkNeko
-            description=SuSFS Manager Auto Configuration Module
+            description=SuSFS Manager Auto Configuration Module (自动生成请不要手动卸载或删除该模块! / Automatically generated Please do not manually uninstall or delete the module!)
             updateJson=
         """.trimIndent()
     }

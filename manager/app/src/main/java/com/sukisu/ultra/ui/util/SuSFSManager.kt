@@ -33,6 +33,7 @@ object SuSFSManager {
     private const val KEY_ANDROID_DATA_PATH = "android_data_path"
     private const val KEY_SDCARD_PATH = "sdcard_path"
     private const val KEY_ENABLE_LOG = "enable_log"
+    private const val KEY_EXECUTE_IN_POST_FS_DATA = "execute_in_post_fs_data"
     private const val SUSFS_BINARY_BASE_NAME = "ksu_susfs"
     private const val DEFAULT_UNAME = "default"
     private const val DEFAULT_BUILD_TIME = "default"
@@ -117,6 +118,23 @@ object SuSFSManager {
      */
     fun getBuildTimeValue(context: Context): String {
         return getPrefs(context).getString(KEY_BUILD_TIME_VALUE, DEFAULT_BUILD_TIME) ?: DEFAULT_BUILD_TIME
+    }
+
+    /**
+     * 保存执行位置设置
+     */
+    fun saveExecuteInPostFsData(context: Context, executeInPostFsData: Boolean) {
+        getPrefs(context).edit().apply {
+            putBoolean(KEY_EXECUTE_IN_POST_FS_DATA, executeInPostFsData)
+            apply()
+        }
+    }
+
+    /**
+     * 获取执行位置设置
+     */
+    fun getExecuteInPostFsData(context: Context): Boolean {
+        return getPrefs(context).getBoolean(KEY_EXECUTE_IN_POST_FS_DATA, false)
     }
 
     /**
@@ -360,6 +378,7 @@ object SuSFSManager {
             // 获取配置信息
             val unameValue = getUnameValue(context)
             val buildTimeValue = getBuildTimeValue(context)
+            val executeInPostFsData = getExecuteInPostFsData(context)
             val susPaths = getSusPaths(context)
             val susMounts = getSusMounts(context)
             val tryUmounts = getTryUmounts(context)
@@ -370,7 +389,7 @@ object SuSFSManager {
             // 生成并创建service.sh
             val serviceScript = ScriptGenerator.generateServiceScript(
                 targetPath, unameValue, buildTimeValue, susPaths,
-                androidDataPath, sdcardPath, enableLog
+                androidDataPath, sdcardPath, enableLog, executeInPostFsData
             )
             val createServiceResult = shell.newJob()
                 .add("cat > $MODULE_PATH/service.sh << 'EOF'\n$serviceScript\nEOF")
@@ -381,7 +400,9 @@ object SuSFSManager {
             }
 
             // 生成并创建post-fs-data.sh
-            val postFsDataScript = ScriptGenerator.generatePostFsDataScript(targetPath)
+            val postFsDataScript = ScriptGenerator.generatePostFsDataScript(
+                targetPath, unameValue, buildTimeValue, executeInPostFsData
+            )
             val createPostFsDataResult = shell.newJob()
                 .add("cat > $MODULE_PATH/post-fs-data.sh << 'EOF'\n$postFsDataScript\nEOF")
                 .add("chmod 755 $MODULE_PATH/post-fs-data.sh")
@@ -731,6 +752,7 @@ object SuSFSManager {
     /**
      * 执行SuSFS命令设置uname和构建时间
      */
+    @SuppressLint("StringFormatMatches")
     suspend fun setUname(context: Context, unameValue: String, buildTimeValue: String): Boolean = withContext(Dispatchers.IO) {
         try {
             // 首先复制二进制文件到/data/adb/ksu/bin/

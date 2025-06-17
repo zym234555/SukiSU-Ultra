@@ -120,6 +120,7 @@ fun SuSFSConfigScreen(
     var autoStartEnabled by remember { mutableStateOf(false) }
     var lastAppliedValue by remember { mutableStateOf("") }
     var lastAppliedBuildTime by remember { mutableStateOf("") }
+    var executeInPostFsData by remember { mutableStateOf(false) } // 新增：是否在post-fs-data中执行
 
     // 路径管理相关状态
     var susPaths by remember { mutableStateOf(emptySet<String>()) }
@@ -173,6 +174,7 @@ fun SuSFSConfigScreen(
         autoStartEnabled = SuSFSManager.isAutoStartEnabled(context)
         lastAppliedValue = SuSFSManager.getLastAppliedValue(context)
         lastAppliedBuildTime = SuSFSManager.getLastAppliedBuildTime(context)
+        executeInPostFsData = SuSFSManager.getExecuteInPostFsData(context) // 加载执行位置设置
         susPaths = SuSFSManager.getSusPaths(context)
         susMounts = SuSFSManager.getSusMounts(context)
         tryUmounts = SuSFSManager.getTryUmounts(context)
@@ -706,6 +708,8 @@ fun SuSFSConfigScreen(
                                             if (success) {
                                                 lastAppliedValue = finalUnameValue
                                                 lastAppliedBuildTime = finalBuildTimeValue
+                                                // 保存执行位置设置
+                                                SuSFSManager.saveExecuteInPostFsData(context, executeInPostFsData)
                                             }
                                             isLoading = false
                                         }
@@ -920,6 +924,8 @@ fun SuSFSConfigScreen(
                             onUnameValueChange = { unameValue = it },
                             buildTimeValue = buildTimeValue,
                             onBuildTimeValueChange = { buildTimeValue = it },
+                            executeInPostFsData = executeInPostFsData,
+                            onExecuteInPostFsDataChange = { executeInPostFsData = it },
                             autoStartEnabled = autoStartEnabled,
                             canEnableAutoStart = canEnableAutoStart,
                             isLoading = isLoading,
@@ -1024,18 +1030,23 @@ fun SuSFSConfigScreen(
 /**
  * 基本设置内容组件
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun BasicSettingsContent(
     unameValue: String,
     onUnameValueChange: (String) -> Unit,
     buildTimeValue: String,
     onBuildTimeValueChange: (String) -> Unit,
+    executeInPostFsData: Boolean,
+    onExecuteInPostFsDataChange: (Boolean) -> Unit,
     autoStartEnabled: Boolean,
     canEnableAutoStart: Boolean,
     isLoading: Boolean,
     onAutoStartToggle: (Boolean) -> Unit,
     context: android.content.Context
 ) {
+    var scriptLocationExpanded by remember { mutableStateOf(false) }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -1093,6 +1104,65 @@ private fun BasicSettingsContent(
             shape = RoundedCornerShape(8.dp)
         )
 
+        // 执行位置选择
+        ExposedDropdownMenuBox(
+            expanded = scriptLocationExpanded,
+            onExpandedChange = { scriptLocationExpanded = !scriptLocationExpanded }
+        ) {
+            OutlinedTextField(
+                value = if (executeInPostFsData)
+                    stringResource(R.string.susfs_execution_location_post_fs_data)
+                else
+                    stringResource(R.string.susfs_execution_location_service),
+                onValueChange = { },
+                readOnly = true,
+                label = { Text(stringResource(R.string.susfs_execution_location_label)) },
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = scriptLocationExpanded) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .menuAnchor(MenuAnchorType.PrimaryEditable, true),
+                shape = RoundedCornerShape(8.dp),
+                enabled = !isLoading
+            )
+            ExposedDropdownMenu(
+                expanded = scriptLocationExpanded,
+                onDismissRequest = { scriptLocationExpanded = false }
+            ) {
+                DropdownMenuItem(
+                    text = {
+                        Column {
+                            Text(stringResource(R.string.susfs_execution_location_service))
+                            Text(
+                                stringResource(R.string.susfs_execution_location_service_description),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    },
+                    onClick = {
+                        onExecuteInPostFsDataChange(false)
+                        scriptLocationExpanded = false
+                    }
+                )
+                DropdownMenuItem(
+                    text = {
+                        Column {
+                            Text(stringResource(R.string.susfs_execution_location_post_fs_data))
+                            Text(
+                                stringResource(R.string.susfs_execution_location_post_fs_data_description),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    },
+                    onClick = {
+                        onExecuteInPostFsDataChange(true)
+                        scriptLocationExpanded = false
+                    }
+                )
+            }
+        }
+
         // 当前值显示
         Column(
             verticalArrangement = Arrangement.spacedBy(4.dp)
@@ -1104,6 +1174,11 @@ private fun BasicSettingsContent(
             )
             Text(
                 text = stringResource(R.string.susfs_current_build_time, SuSFSManager.getBuildTimeValue(context)),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Text(
+                text = "当前执行位置: ${if (SuSFSManager.getExecuteInPostFsData(context)) "Post-FS-Data" else "Service"}",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
