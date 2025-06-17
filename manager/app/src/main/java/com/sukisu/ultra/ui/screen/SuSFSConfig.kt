@@ -120,7 +120,7 @@ fun SuSFSConfigScreen(
     var autoStartEnabled by remember { mutableStateOf(false) }
     var lastAppliedValue by remember { mutableStateOf("") }
     var lastAppliedBuildTime by remember { mutableStateOf("") }
-    var executeInPostFsData by remember { mutableStateOf(false) } // 新增：是否在post-fs-data中执行
+    var executeInPostFsData by remember { mutableStateOf(false) } // 是否在post-fs-data中执行
 
     // 路径管理相关状态
     var susPaths by remember { mutableStateOf(emptySet<String>()) }
@@ -844,14 +844,14 @@ fun SuSFSConfigScreen(
                                 )
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text(
-                                    stringResource(R.string.susfs_path_settings),
+                                    stringResource(R.string.susfs_reset_path_title),
                                     fontWeight = FontWeight.Medium
                                 )
                             }
                         }
 
                         SuSFSTab.ENABLED_FEATURES -> {
-                            // 刷新按钮（这个页面没有重置功能，所以显示刷新按钮）
+                            // 刷新按钮
                             Button(
                                 onClick = { loadEnabledFeatures() },
                                 enabled = !isLoadingFeatures,
