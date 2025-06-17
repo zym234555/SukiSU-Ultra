@@ -1311,8 +1311,8 @@ fun SettingItem(
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleMedium,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+                maxLines = Int.MAX_VALUE,
+                overflow = TextOverflow.Visible
             )
             if (subtitle != null) {
                 Spacer(modifier = Modifier.height(2.dp))
@@ -1320,8 +1320,8 @@ fun SettingItem(
                     text = subtitle,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
+                    maxLines = Int.MAX_VALUE,
+                    overflow = TextOverflow.Visible
                 )
             }
         }

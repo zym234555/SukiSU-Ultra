@@ -480,9 +480,9 @@
     <string name="susfs_reset_mounts_message">This will clear all SUS mount configurations. Are you sure you want to continue?</string>
     <string name="susfs_reset_umounts_title">Reset Try Umount</string>
     <string name="susfs_reset_umounts_message">This will clear all try umount configurations. Are you sure you want to continue?</string>
-    <string name="susfs_reset_path_title">Reset Path Settingss</string>
+    <string name="susfs_reset_path_title">Reset Path Settings</string>
     <!-- SuSFS Path Settings -->
-    <string name="susfs_path_settings">Path Settingss</string>
+    <string name="susfs_path_settings">Path Settings</string>
     <string name="susfs_android_data_path_label">Android Data Path</string>
     <string name="susfs_sdcard_path_label">SD Card Path</string>
     <string name="susfs_set_android_data_path">Set Android Data Path</string>
