@@ -77,6 +77,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootGraph
 import com.ramcosta.composedestinations.generated.destinations.InstallScreenDestination
+import com.ramcosta.composedestinations.generated.destinations.SuSFSConfigScreenDestination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import com.sukisu.ultra.KernelVersion
 import com.sukisu.ultra.Natives
@@ -91,6 +92,8 @@ import com.sukisu.ultra.ui.theme.getCardElevation
 import com.sukisu.ultra.ui.util.checkNewVersion
 import com.sukisu.ultra.ui.util.module.LatestVersionInfo
 import com.sukisu.ultra.ui.util.reboot
+import com.sukisu.ultra.ui.util.getSuSFS
+import com.sukisu.ultra.ui.util.SuSFSManager
 import com.sukisu.ultra.ui.viewmodel.HomeViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -127,7 +130,8 @@ fun HomeScreen(navigator: DestinationsNavigator) {
     Scaffold(
         topBar = {
             TopBar(
-                scrollBehavior = scrollBehavior
+                scrollBehavior = scrollBehavior,
+                navigator = navigator
             )
         },
         contentWindowInsets = WindowInsets.safeDrawing.only(
@@ -257,15 +261,17 @@ fun UpdateCard() {
 @Composable
 fun RebootDropdownItem(@StringRes id: Int, reason: String = "") {
     DropdownMenuItem(
-        text = {Text(stringResource(id))}, 
+        text = {Text(stringResource(id))},
         onClick = {reboot(reason)})
-    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun TopBar(
-    scrollBehavior: TopAppBarScrollBehavior? = null
+    scrollBehavior: TopAppBarScrollBehavior? = null,
+    navigator: DestinationsNavigator
 ) {
+    val context = LocalContext.current
     val colorScheme = MaterialTheme.colorScheme
     val cardColor = if (CardConfig.isCustomBackgroundEnabled) {
         colorScheme.surfaceContainerLow
@@ -285,6 +291,19 @@ private fun TopBar(
             scrolledContainerColor = cardColor.copy(alpha = cardAlpha)
         ),
         actions = {
+            // SuSFS 配置按钮
+            if (getSuSFS() == "Supported" && SuSFSManager.isBinaryAvailable(context)) {
+                IconButton(onClick = {
+                    navigator.navigate(SuSFSConfigScreenDestination)
+                }) {
+                    Icon(
+                        imageVector = Icons.Filled.Tune,
+                        contentDescription = stringResource(R.string.susfs_config_setting_title)
+                    )
+                }
+            }
+
+            // 重启按钮
             var showDropdown by remember { mutableStateOf(false) }
             KsuIsValid {
                 IconButton(onClick = {

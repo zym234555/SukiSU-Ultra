@@ -89,7 +89,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.unit.sp
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import com.sukisu.ultra.ksuApp
-import com.ramcosta.composedestinations.generated.destinations.SuSFSConfigScreenDestination
 
 /**
  * @author ShirkNeko
@@ -1157,21 +1156,6 @@ fun MoreSettingsScreen(
                             }
                         }
                     )
-
-                    // SuSFS 配置（仅在支持时显示）
-                    if (getSuSFS() == "Supported" && SuSFSManager.isBinaryAvailable(context)) {
-                        SettingItem(
-                            icon = Icons.Default.Settings,
-                            title = stringResource(R.string.susfs_config_setting_title),
-                            subtitle = stringResource(
-                                R.string.susfs_config_setting_summary,
-                                SuSFSManager.getUnameValue(context)
-                            ),
-                            onClick = {
-                                navigator.navigate(SuSFSConfigScreenDestination)
-                            }
-                        )
-                    }
 
                     // SuSFS 开关（仅在支持时显示）
                     val suSFS = getSuSFS()

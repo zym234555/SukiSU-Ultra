@@ -42,6 +42,15 @@ object SuSFSManager {
     private const val MODULE_ID = "susfs_manager"
     private const val MODULE_PATH = "/data/adb/modules/$MODULE_ID"
 
+    /**
+     * 槽位信息数据类
+     */
+    data class SlotInfo(
+        val slotName: String,
+        val uname: String,
+        val buildTime: String
+    )
+
     private fun getSuSFS(): String {
         return try {
             getSuSFSVersion()
@@ -84,6 +93,74 @@ object SuSFSManager {
      */
     private fun getPrefs(context: Context): SharedPreferences {
         return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+    }
+
+    /**
+     * 执行命令的通用方法
+     */
+    private fun runCmd(shell: Shell, cmd: String): String {
+        return shell.newJob()
+            .add(cmd)
+            .to(mutableListOf<String>(), null)
+            .exec().out
+            .joinToString("\n")
+    }
+
+    /**
+     * 获取当前槽位信息
+     */
+    suspend fun getCurrentSlotInfo(): List<SlotInfo> = withContext(Dispatchers.IO) {
+        try {
+            val shell = getRootShell()
+            val slotInfoList = mutableListOf<SlotInfo>()
+
+            // 获取boot_a槽位信息
+            val bootAUname = runCmd(shell,
+                "strings -n 20 /dev/block/by-name/boot_a | awk '/Linux version/ && ++c==2 {print $3; exit}'"
+            ).trim()
+            val bootABuildTime = runCmd(shell, "strings -n 20 /dev/block/by-name/boot_a | sed -n '/Linux version.*#/{s/.*#/#/p;q}'").trim()
+
+            if (bootAUname.isNotEmpty() && bootABuildTime.isNotEmpty()) {
+                val uname = bootAUname.ifEmpty { "unknown" }
+                val buildTime = bootABuildTime.ifEmpty { "unknown" }
+                slotInfoList.add(SlotInfo("boot_a", uname, buildTime))
+            }
+
+            // 获取boot_b槽位信息
+            val bootBUname = runCmd(shell,
+                "strings -n 20 /dev/block/by-name/boot_b | awk '/Linux version/ && ++c==2 {print $3; exit}'"
+            ).trim()
+            val bootBBuildTime = runCmd(shell, "strings -n 20 /dev/block/by-name/boot_b | sed -n '/Linux version.*#/{s/.*#/#/p;q}'").trim()
+
+            if (bootBUname.isNotEmpty() && bootBBuildTime.isNotEmpty()) {
+                val uname = bootBUname.ifEmpty { "unknown" }
+                val buildTime = bootBBuildTime.ifEmpty { "unknown" }
+                slotInfoList.add(SlotInfo("boot_b", uname, buildTime))
+            }
+
+            slotInfoList
+        } catch (e: Exception) {
+            e.printStackTrace()
+            emptyList()
+        }
+    }
+
+    /**
+     * 获取当前活动槽位
+     */
+    suspend fun getCurrentActiveSlot(): String = withContext(Dispatchers.IO) {
+        try {
+            val shell = getRootShell()
+            val suffix = runCmd(shell, "getprop ro.boot.slot_suffix").trim()
+            when (suffix) {
+                "_a" -> "boot_a"
+                "_b" -> "boot_b"
+                else -> "unknown"
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            "unknown"
+        }
     }
 
     /**
@@ -884,7 +961,7 @@ object SuSFSManager {
                     withContext(Dispatchers.Main) {
                         Toast.makeText(
                             context,
-                            "SuSFS self-startup module is enabled, module path：$MODULE_PATH",
+                            context.getString(R.string.susfs_autostart_enabled_success, MODULE_PATH),
                             Toast.LENGTH_LONG
                         ).show()
                     }
@@ -906,7 +983,7 @@ object SuSFSManager {
                     withContext(Dispatchers.Main) {
                         Toast.makeText(
                             context,
-                            "SuSFS自启动模块已禁用",
+                            context.getString(R.string.susfs_autostart_disabled_success),
                             Toast.LENGTH_SHORT
                         ).show()
                     }

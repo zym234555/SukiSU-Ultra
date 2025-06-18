@@ -28,6 +28,7 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.RestoreFromTrash
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Storage
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -122,6 +123,12 @@ fun SuSFSConfigScreen(
     var lastAppliedBuildTime by remember { mutableStateOf("") }
     var executeInPostFsData by remember { mutableStateOf(false) } // 是否在post-fs-data中执行
 
+    // 槽位信息相关状态
+    var slotInfoList by remember { mutableStateOf(emptyList<SuSFSManager.SlotInfo>()) }
+    var currentActiveSlot by remember { mutableStateOf("") }
+    var isLoadingSlotInfo by remember { mutableStateOf(false) }
+    var showSlotInfoDialog by remember { mutableStateOf(false) }
+
     // 路径管理相关状态
     var susPaths by remember { mutableStateOf(emptySet<String>()) }
     var susMounts by remember { mutableStateOf(emptySet<String>()) }
@@ -167,6 +174,16 @@ fun SuSFSConfigScreen(
         }
     }
 
+    // 加载槽位信息
+    fun loadSlotInfo() {
+        coroutineScope.launch {
+            isLoadingSlotInfo = true
+            slotInfoList = SuSFSManager.getCurrentSlotInfo()
+            currentActiveSlot = SuSFSManager.getCurrentActiveSlot()
+            isLoadingSlotInfo = false
+        }
+    }
+
     // 加载当前配置
     LaunchedEffect(Unit) {
         unameValue = SuSFSManager.getUnameValue(context)
@@ -180,6 +197,9 @@ fun SuSFSConfigScreen(
         tryUmounts = SuSFSManager.getTryUmounts(context)
         androidDataPath = SuSFSManager.getAndroidDataPath(context)
         sdcardPath = SuSFSManager.getSdcardPath(context)
+
+        // 加载槽位信息
+        loadSlotInfo()
     }
 
     // 当切换到启用功能状态标签页时加载数据
@@ -195,6 +215,153 @@ fun SuSFSConfigScreen(
             autoStartEnabled = false
             SuSFSManager.configureAutoStart(context, false)
         }
+    }
+
+    // 槽位信息对话框
+    if (showSlotInfoDialog) {
+        AlertDialog(
+            onDismissRequest = { showSlotInfoDialog = false },
+            title = {
+                Text(
+                    text = stringResource(R.string.susfs_slot_info_title),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Text(
+                        text = stringResource(R.string.susfs_current_active_slot, currentActiveSlot),
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+
+                    if (slotInfoList.isNotEmpty()) {
+                        slotInfoList.forEach { slotInfo ->
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = if (slotInfo.slotName == currentActiveSlot) {
+                                        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+                                    } else {
+                                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                                    }
+                                ),
+                                shape = RoundedCornerShape(8.dp)
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(12.dp),
+                                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Storage,
+                                            contentDescription = null,
+                                            tint = if (slotInfo.slotName == currentActiveSlot) {
+                                                MaterialTheme.colorScheme.primary
+                                            } else {
+                                                MaterialTheme.colorScheme.onSurfaceVariant
+                                            },
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text(
+                                            text = slotInfo.slotName,
+                                            style = MaterialTheme.typography.titleMedium,
+                                            fontWeight = FontWeight.Bold,
+                                            color = if (slotInfo.slotName == currentActiveSlot) {
+                                                MaterialTheme.colorScheme.primary
+                                            } else {
+                                                MaterialTheme.colorScheme.onSurface
+                                            }
+                                        )
+                                        if (slotInfo.slotName == currentActiveSlot) {
+                                            Spacer(modifier = Modifier.width(6.dp))
+                                            Surface(
+                                                shape = RoundedCornerShape(4.dp),
+                                                color = MaterialTheme.colorScheme.primary
+                                            ) {
+                                                Text(
+                                                    text = stringResource(R.string.susfs_slot_current_badge),
+                                                    style = MaterialTheme.typography.labelSmall,
+                                                    color = MaterialTheme.colorScheme.onPrimary,
+                                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                                )
+                                            }
+                                        }
+                                    }
+                                    Text(
+                                        text = stringResource(R.string.susfs_slot_uname, slotInfo.uname),
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                    Text(
+                                        text = stringResource(R.string.susfs_slot_build_time, slotInfo.buildTime),
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        Button(
+                                            onClick = {
+                                                unameValue = slotInfo.uname
+                                                showSlotInfoDialog = false
+                                            },
+                                            modifier = Modifier.weight(1f),
+                                            shape = RoundedCornerShape(6.dp)
+                                        ) {
+                                            Text(stringResource(R.string.susfs_slot_use_uname), fontSize = 12.sp)
+                                        }
+                                        Button(
+                                            onClick = {
+                                                buildTimeValue = slotInfo.buildTime
+                                                showSlotInfoDialog = false
+                                            },
+                                            modifier = Modifier.weight(1f),
+                                            shape = RoundedCornerShape(6.dp)
+                                        ) {
+                                            Text(stringResource(R.string.susfs_slot_use_build_time), fontSize = 12.sp)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        Text(
+                            text = stringResource(R.string.susfs_slot_info_unavailable),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = { loadSlotInfo() },
+                    enabled = !isLoadingSlotInfo,
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text(stringResource(R.string.refresh))
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showSlotInfoDialog = false },
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text(stringResource(R.string.close))
+                }
+            },
+            shape = RoundedCornerShape(12.dp)
+        )
     }
 
     // 各种对话框的定义保持不变
@@ -940,6 +1107,7 @@ fun SuSFSConfigScreen(
                                     }
                                 }
                             },
+                            onShowSlotInfo = { showSlotInfoDialog = true },
                             context = context
                         )
                     }
@@ -1043,6 +1211,7 @@ private fun BasicSettingsContent(
     canEnableAutoStart: Boolean,
     isLoading: Boolean,
     onAutoStartToggle: (Boolean) -> Unit,
+    onShowSlotInfo: () -> Unit,
     context: android.content.Context
 ) {
     var scriptLocationExpanded by remember { mutableStateOf(false) }
@@ -1250,6 +1419,62 @@ private fun BasicSettingsContent(
                     onCheckedChange = onAutoStartToggle,
                     enabled = !isLoading && canEnableAutoStart
                 )
+            }
+        }
+
+        // 槽位信息按钮
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surface
+            ),
+            shape = RoundedCornerShape(12.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(12.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Info,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = stringResource(R.string.susfs_slot_info_title),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+                Text(
+                    text = stringResource(R.string.susfs_slot_info_description),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    lineHeight = 14.sp
+                )
+
+                OutlinedButton(
+                    onClick = onShowSlotInfo,
+                    enabled = !isLoading,
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Storage,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        stringResource(R.string.susfs_slot_info_title),
+                        fontWeight = FontWeight.Medium
+                    )
+                }
             }
         }
     }
