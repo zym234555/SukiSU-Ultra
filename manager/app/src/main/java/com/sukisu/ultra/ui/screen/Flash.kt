@@ -197,7 +197,7 @@ fun FlashScreen(navigator: DestinationsNavigator, flashIt: FlashIt) {
                 }
             }, onStdout = {
                 tempText = "$it\n"
-                if (tempText.startsWith("[H[J")) { // clear command
+                if (tempText.startsWith("[H[J")) { // clear command
                     text = tempText.substring(6)
                 } else {
                     text += tempText
