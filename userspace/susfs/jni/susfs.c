@@ -26,14 +26,14 @@
 #define FEATURE_AUTO_ADD_SUS_KSU_DEFAULT_MOUNT (1 << 2)
 #define FEATURE_AUTO_ADD_SUS_BIND_MOUNT (1 << 3)
 #define FEATURE_SUS_KSTAT (1 << 4)
-#define FEATURE_SUS_OVERLAYFS (1 << 5)
-#define FEATURE_TRY_UMOUNT (1 << 6)
-#define FEATURE_AUTO_ADD_TRY_UMOUNT_FOR_BIND_MOUNT (1 << 7)
-#define FEATURE_SPOOF_UNAME (1 << 8)
-#define FEATURE_ENABLE_LOG (1 << 9)
-#define FEATURE_HIDE_KSU_SUSFS_SYMBOLS (1 << 10)
-#define FEATURE_SPOOF_BOOTCONFIG (1 << 11)
-#define FEATURE_OPEN_REDIRECT (1 << 12)
+#define FEATURE_TRY_UMOUNT (1 << 5)
+#define FEATURE_AUTO_ADD_TRY_UMOUNT_FOR_BIND_MOUNT (1 << 6)
+#define FEATURE_SPOOF_UNAME (1 << 7)
+#define FEATURE_ENABLE_LOG (1 << 8)
+#define FEATURE_HIDE_KSU_SUSFS_SYMBOLS (1 << 9)
+#define FEATURE_SPOOF_BOOTCONFIG (1 << 10)
+#define FEATURE_OPEN_REDIRECT (1 << 11)
+#define FEATURE_SUSFS_HAS_MAGIC_MOUNT (1 << 12)
 #define FEATURE_SUS_SU (1 << 13)
 
 struct st_sus_su {
@@ -150,9 +150,6 @@ void print_features(unsigned long enabled_features) {
     if (is_feature_enabled(enabled_features, FEATURE_SUS_KSTAT)) {
         printf("CONFIG_KSU_SUSFS_SUS_KSTAT\n");
     }
-    if (is_feature_enabled(enabled_features, FEATURE_SUS_OVERLAYFS)) {
-        printf("CONFIG_KSU_SUSFS_SUS_OVERLAYFS\n");
-    }
     if (is_feature_enabled(enabled_features, FEATURE_TRY_UMOUNT)) {
         printf("CONFIG_KSU_SUSFS_TRY_UMOUNT\n");
     }
@@ -173,6 +170,9 @@ void print_features(unsigned long enabled_features) {
     }
     if (is_feature_enabled(enabled_features, FEATURE_OPEN_REDIRECT)) {
         printf("CONFIG_KSU_SUSFS_OPEN_REDIRECT\n");
+    }
+    if (is_feature_enabled(enabled_features, FEATURE_SUSFS_HAS_MAGIC_MOUNT)) {
+        printf("CONFIG_KSU_SUSFS_HAS_MAGIC_MOUNT\n");
     }
     if (is_feature_enabled(enabled_features, FEATURE_SUS_SU)) {
         printf("CONFIG_KSU_SUSFS_SUS_SU\n");
