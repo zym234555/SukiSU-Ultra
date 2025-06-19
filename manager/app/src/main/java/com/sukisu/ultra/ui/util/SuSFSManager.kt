@@ -8,7 +8,9 @@ import com.dergoogler.mmrl.platform.Platform.Companion.context
 import com.sukisu.ultra.Natives
 import com.sukisu.ultra.R
 import com.topjohnwu.superuser.Shell
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import java.io.FileOutputStream
@@ -34,6 +36,8 @@ object SuSFSManager {
     private const val KEY_SDCARD_PATH = "sdcard_path"
     private const val KEY_ENABLE_LOG = "enable_log"
     private const val KEY_EXECUTE_IN_POST_FS_DATA = "execute_in_post_fs_data"
+    private const val KEY_KSTAT_CONFIGS = "kstat_configs"
+    private const val KEY_ADD_KSTAT_PATHS = "add_kstat_paths"
     private const val SUSFS_BINARY_BASE_NAME = "ksu_susfs"
     private const val DEFAULT_UNAME = "default"
     private const val DEFAULT_BUILD_TIME = "default"
@@ -198,12 +202,55 @@ object SuSFSManager {
     }
 
     /**
-     * 保存执行位置设置
+     * 保存执行位置设置并实时更新状态
      */
     fun saveExecuteInPostFsData(context: Context, executeInPostFsData: Boolean) {
+        val oldExecuteInPostFsData = getExecuteInPostFsData(context)
+
         getPrefs(context).edit().apply {
             putBoolean(KEY_EXECUTE_IN_POST_FS_DATA, executeInPostFsData)
             apply()
+        }
+
+        if (oldExecuteInPostFsData != executeInPostFsData && isAutoStartEnabled(context)) {
+            CoroutineScope(Dispatchers.Default).launch {
+                try {
+                    // 删除旧的模块状态
+                    removeMagiskModule()
+
+                    // 重新创建模块以应用新的执行位置设置
+                    val success = createMagiskModule(context)
+
+                    withContext(Dispatchers.Main) {
+                        if (success) {
+                            Toast.makeText(
+                                context,
+                                if (executeInPostFsData) {
+                                    context.getString(R.string.susfs_execute_location_updated_post_fs_data)
+                                } else {
+                                    context.getString(R.string.susfs_execute_location_updated_service)
+                                },
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        } else {
+                            Toast.makeText(
+                                context,
+                                context.getString(R.string.susfs_execute_location_update_failed),
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(
+                            context,
+                            context.getString(R.string.susfs_execute_location_update_error, e.message ?: "Unknown error"),
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }
+            }
         }
     }
 
@@ -344,6 +391,40 @@ object SuSFSManager {
     }
 
     /**
+     * 保存Kstat配置列表
+     */
+    fun saveKstatConfigs(context: Context, configs: Set<String>) {
+        getPrefs(context).edit().apply {
+            putStringSet(KEY_KSTAT_CONFIGS, configs)
+            apply()
+        }
+    }
+
+    /**
+     * 获取Kstat配置列表
+     */
+    fun getKstatConfigs(context: Context): Set<String> {
+        return getPrefs(context).getStringSet(KEY_KSTAT_CONFIGS, emptySet()) ?: emptySet()
+    }
+
+    /**
+     * 保存Add Kstat路径列表
+     */
+    fun saveAddKstatPaths(context: Context, paths: Set<String>) {
+        getPrefs(context).edit().apply {
+            putStringSet(KEY_ADD_KSTAT_PATHS, paths)
+            apply()
+        }
+    }
+
+    /**
+     * 获取Add Kstat路径列表
+     */
+    fun getAddKstatPaths(context: Context): Set<String> {
+        return getPrefs(context).getStringSet(KEY_ADD_KSTAT_PATHS, emptySet()) ?: emptySet()
+    }
+
+    /**
      * 保存Android Data路径
      */
     fun saveAndroidDataPath(context: Context, path: String) {
@@ -462,11 +543,14 @@ object SuSFSManager {
             val androidDataPath = getAndroidDataPath(context)
             val sdcardPath = getSdcardPath(context)
             val enableLog = getEnableLogState(context)
+            val kstatConfigs = getKstatConfigs(context)
+            val addKstatPaths = getAddKstatPaths(context)
 
             // 生成并创建service.sh
             val serviceScript = ScriptGenerator.generateServiceScript(
                 targetPath, unameValue, buildTimeValue, susPaths,
-                androidDataPath, sdcardPath, enableLog, executeInPostFsData
+                androidDataPath, sdcardPath, enableLog, executeInPostFsData,
+                kstatConfigs, addKstatPaths
             )
             val createServiceResult = shell.newJob()
                 .add("cat > $MODULE_PATH/service.sh << 'EOF'\n$serviceScript\nEOF")
@@ -795,6 +879,133 @@ object SuSFSManager {
     }
 
     /**
+     * 添加Kstat静态配置
+     */
+    suspend fun addKstatStatically(
+        context: Context,
+        path: String,
+        ino: String,
+        dev: String,
+        nlink: String,
+        size: String,
+        atime: String,
+        atimeNsec: String,
+        mtime: String,
+        mtimeNsec: String,
+        ctime: String,
+        ctimeNsec: String,
+        blocks: String,
+        blksize: String
+    ): Boolean {
+        val command = "add_sus_kstat_statically '$path' '$ino' '$dev' '$nlink' '$size' '$atime' '$atimeNsec' '$mtime' '$mtimeNsec' '$ctime' '$ctimeNsec' '$blocks' '$blksize'"
+        val success = executeSusfsCommand(context, command)
+        if (success) {
+            val currentConfigs = getKstatConfigs(context).toMutableSet()
+            val configEntry = "$path|$ino|$dev|$nlink|$size|$atime|$atimeNsec|$mtime|$mtimeNsec|$ctime|$ctimeNsec|$blocks|$blksize"
+            currentConfigs.add(configEntry)
+            saveKstatConfigs(context, currentConfigs)
+
+            // 如果开启了开机自启动，更新模块
+            if (isAutoStartEnabled(context)) {
+                createMagiskModule(context)
+            }
+
+            withContext(Dispatchers.Main) {
+                Toast.makeText(context, context.getString(R.string.kstat_static_config_added, path), Toast.LENGTH_SHORT).show()
+            }
+        }
+        return success
+    }
+
+    /**
+     * 移除Kstat配置
+     */
+    suspend fun removeKstatConfig(context: Context, config: String): Boolean {
+        val currentConfigs = getKstatConfigs(context).toMutableSet()
+        currentConfigs.remove(config)
+        saveKstatConfigs(context, currentConfigs)
+
+        // 如果开启了开机自启动，更新模块
+        if (isAutoStartEnabled(context)) {
+            createMagiskModule(context)
+        }
+
+        val parts = config.split("|")
+        val path = if (parts.isNotEmpty()) parts[0] else config
+        withContext(Dispatchers.Main) {
+            Toast.makeText(context, context.getString(R.string.kstat_config_removed, path), Toast.LENGTH_SHORT).show()
+        }
+        return true
+    }
+
+    /**
+     * 添加Kstat路径
+     */
+    suspend fun addKstat(context: Context, path: String): Boolean {
+        val success = executeSusfsCommand(context, "add_sus_kstat '$path'")
+        if (success) {
+            val currentPaths = getAddKstatPaths(context).toMutableSet()
+            currentPaths.add(path)
+            saveAddKstatPaths(context, currentPaths)
+
+            // 如果开启了开机自启动，更新模块
+            if (isAutoStartEnabled(context)) {
+                createMagiskModule(context)
+            }
+
+            withContext(Dispatchers.Main) {
+                Toast.makeText(context, context.getString(R.string.kstat_path_added, path), Toast.LENGTH_SHORT).show()
+            }
+        }
+        return success
+    }
+
+    /**
+     * 移除Add Kstat路径
+     */
+    suspend fun removeAddKstat(context: Context, path: String): Boolean {
+        val currentPaths = getAddKstatPaths(context).toMutableSet()
+        currentPaths.remove(path)
+        saveAddKstatPaths(context, currentPaths)
+
+        // 如果开启了开机自启动，更新模块
+        if (isAutoStartEnabled(context)) {
+            createMagiskModule(context)
+        }
+
+        withContext(Dispatchers.Main) {
+            Toast.makeText(context, context.getString(R.string.kstat_path_removed, path), Toast.LENGTH_SHORT).show()
+        }
+        return true
+    }
+
+    /**
+     * 更新Kstat
+     */
+    suspend fun updateKstat(context: Context, path: String): Boolean {
+        val success = executeSusfsCommand(context, "update_sus_kstat '$path'")
+        if (success) {
+            withContext(Dispatchers.Main) {
+                Toast.makeText(context, context.getString(R.string.kstat_updated, path), Toast.LENGTH_SHORT).show()
+            }
+        }
+        return success
+    }
+
+    /**
+     * 完整克隆更新Kstat
+     */
+    suspend fun updateKstatFullClone(context: Context, path: String): Boolean {
+        val success = executeSusfsCommand(context, "update_sus_kstat_full_clone '$path'")
+        if (success) {
+            withContext(Dispatchers.Main) {
+                Toast.makeText(context, context.getString(R.string.kstat_full_clone_updated, path), Toast.LENGTH_SHORT).show()
+            }
+        }
+        return success
+    }
+
+    /**
      * 设置Android Data路径
      */
     suspend fun setAndroidDataPath(context: Context, path: String): Boolean {
@@ -905,6 +1116,8 @@ object SuSFSManager {
         val susPaths = getSusPaths(context)
         val susMounts = getSusMounts(context)
         val tryUmounts = getTryUmounts(context)
+        val kstatConfigs = getKstatConfigs(context)
+        val addKstatPaths = getAddKstatPaths(context)
         val enabledFeatures = runBlocking {
             getEnabledFeatures(context)
         }
@@ -914,6 +1127,8 @@ object SuSFSManager {
                 susPaths.isNotEmpty() ||
                 susMounts.isNotEmpty() ||
                 tryUmounts.isNotEmpty() ||
+                kstatConfigs.isNotEmpty() ||
+                addKstatPaths.isNotEmpty() ||
                 enabledFeatures.any { it.isEnabled }
     }
 

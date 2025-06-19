@@ -20,7 +20,9 @@ object ScriptGenerator {
         androidDataPath: String,
         sdcardPath: String,
         enableLog: Boolean,
-        executeInPostFsData: Boolean = false
+        executeInPostFsData: Boolean = false,
+        kstatConfigs: Set<String> = emptySet(),
+        addKstatPaths: Set<String> = emptySet()
     ): String {
         return buildString {
             appendLine("#!/system/bin/sh")
@@ -42,7 +44,7 @@ object ScriptGenerator {
             appendLine("# 检查SuSFS二进制文件")
             appendLine("SUSFS_BIN=\"$targetPath\"")
             appendLine("if [ ! -f \"\$SUSFS_BIN\" ]; then")
-            appendLine("    echo \"\$(get_current_time): SuSFS二进制文件未找到: \$SUSFS_BIN\" >> \"\$LOG_FILE\"")
+            appendLine("    echo \"$(get_current_time): SuSFS二进制文件未找到: \$SUSFS_BIN\" >> \"\$LOG_FILE\"")
             appendLine("    exit 1")
             appendLine("fi")
             appendLine()
@@ -51,14 +53,14 @@ object ScriptGenerator {
             appendLine("# 设置日志启用状态")
             val logValue = if (enableLog) 1 else 0
             appendLine("\"\$SUSFS_BIN\" enable_log $logValue")
-            appendLine("echo \"\$(get_current_time): 日志功能设置为: ${if (enableLog) "启用" else "禁用"}\" >> \"\$LOG_FILE\"")
+            appendLine("echo \"$(get_current_time): 日志功能设置为: ${if (enableLog) "启用" else "禁用"}\" >> \"\$LOG_FILE\"")
             appendLine()
 
             // 设置Android Data路径
             if (androidDataPath != "/sdcard/Android/data") {
                 appendLine("# 设置Android Data路径")
                 appendLine("\"\$SUSFS_BIN\" set_android_data_root_path '$androidDataPath'")
-                appendLine("echo \"\$(get_current_time): Android Data路径设置为: $androidDataPath\" >> \"\$LOG_FILE\"")
+                appendLine("echo \"$(get_current_time): Android Data路径设置为: $androidDataPath\" >> \"\$LOG_FILE\"")
                 appendLine()
             }
 
@@ -66,7 +68,7 @@ object ScriptGenerator {
             if (sdcardPath != "/sdcard") {
                 appendLine("# 设置SD卡路径")
                 appendLine("\"\$SUSFS_BIN\" set_sdcard_root_path '$sdcardPath'")
-                appendLine("echo \"\$(get_current_time): SD卡路径设置为: $sdcardPath\" >> \"\$LOG_FILE\"")
+                appendLine("echo \"$(get_current_time): SD卡路径设置为: $sdcardPath\" >> \"\$LOG_FILE\"")
                 appendLine()
             }
 
@@ -75,7 +77,32 @@ object ScriptGenerator {
                 appendLine("# 添加SUS路径")
                 susPaths.forEach { path ->
                     appendLine("\"\$SUSFS_BIN\" add_sus_path '$path'")
-                    appendLine("echo \"\$(get_current_time): 添加SUS路径: $path\" >> \"\$LOG_FILE\"")
+                    appendLine("echo \"$(get_current_time): 添加SUS路径: $path\" >> \"\$LOG_FILE\"")
+                }
+                appendLine()
+            }
+
+            // 添加Kstat静态配置
+            if (kstatConfigs.isNotEmpty()) {
+                appendLine("# 添加Kstat静态配置")
+                kstatConfigs.forEach { config ->
+                    val parts = config.split("|")
+                    if (parts.size >= 13) {
+                        val path = parts[0]
+                        val params = parts.drop(1).joinToString("' '", "'", "'")
+                        appendLine("\"\$SUSFS_BIN\" add_sus_kstat_statically $params")
+                        appendLine("echo \"$(get_current_time): 添加Kstat静态配置: $path\" >> \"\$LOG_FILE\"")
+                    }
+                }
+                appendLine()
+            }
+
+            // 添加Kstat路径
+            if (addKstatPaths.isNotEmpty()) {
+                appendLine("# 添加Kstat路径")
+                addKstatPaths.forEach { path ->
+                    appendLine("\"\$SUSFS_BIN\" add_sus_kstat '$path'")
+                    appendLine("echo \"$(get_current_time): 添加Kstat路径: $path\" >> \"\$LOG_FILE\"")
                 }
                 appendLine()
             }
@@ -84,38 +111,38 @@ object ScriptGenerator {
             if (!executeInPostFsData && (unameValue != "default" || buildTimeValue != "default")) {
                 appendLine("# 设置uname和构建时间")
                 appendLine("\"\$SUSFS_BIN\" set_uname '$unameValue' '$buildTimeValue'")
-                appendLine("echo \"\$(get_current_time): 设置uname为: $unameValue, 构建时间为: $buildTimeValue\" >> \"\$LOG_FILE\"")
+                appendLine("echo \"$(get_current_time): 设置uname为: $unameValue, 构建时间为: $buildTimeValue\" >> \"\$LOG_FILE\"")
                 appendLine()
             }
 
             appendLine("# 隐弱BL 来自 Shamiko 脚本")
             appendLine("check_reset_prop() {")
-            appendLine("local NAME=\$1")
-            appendLine("local EXPECTED=\$2")
-            appendLine("local VALUE=\$(resetprop \$NAME)")
+            appendLine("local NAME=$1")
+            appendLine("local EXPECTED=$2")
+            appendLine("local VALUE=$(resetprop \$NAME)")
             appendLine("[ -z \$VALUE ] || [ \$VALUE = \$EXPECTED ] || resetprop \$NAME \$EXPECTED")
             appendLine("}")
             appendLine()
             appendLine("check_missing_prop() {")
-            appendLine("  local NAME=\$1")
-            appendLine("  local EXPECTED=\$2")
-            appendLine("  local VALUE=\$(resetprop \$NAME)")
+            appendLine("  local NAME=$1")
+            appendLine("  local EXPECTED=$2")
+            appendLine("  local VALUE=$(resetprop \$NAME)")
             appendLine("  [ -z \$VALUE ] && resetprop \$NAME \$EXPECTED")
             appendLine("}")
             appendLine()
             appendLine("check_missing_match_prop() {")
-            appendLine("  local NAME=\$1")
-            appendLine("  local EXPECTED=\$2")
-            appendLine("  local VALUE=\$(resetprop \$NAME)")
+            appendLine("  local NAME=$1")
+            appendLine("  local EXPECTED=$2")
+            appendLine("  local VALUE=$(resetprop \$NAME)")
             appendLine("  [ -z \$VALUE ] || [ \$VALUE = \$EXPECTED ] || resetprop \$NAME \$EXPECTED")
             appendLine("  [ -z \$VALUE ] && resetprop \$NAME \$EXPECTED")
             appendLine("}")
             appendLine()
             appendLine("contains_reset_prop() {")
-            appendLine("local NAME=\$1")
-            appendLine("local CONTAINS=\$2")
-            appendLine("local NEWVAL=\$3")
-            appendLine("[[ \"\$(resetprop \$NAME)\" = *\"\$CONTAINS\"* ]] && resetprop \$NAME \$NEWVAL")
+            appendLine("local NAME=$1")
+            appendLine("local CONTAINS=$2")
+            appendLine("local NEWVAL=$3")
+            appendLine("[[ \"$(resetprop \$NAME)\" = *\"\$CONTAINS\"* ]] && resetprop \$NAME \$NEWVAL")
             appendLine("}")
             appendLine()
             appendLine("resetprop -w sys.boot_completed 0")
@@ -163,13 +190,13 @@ object ScriptGenerator {
             appendLine("contains_reset_prop \"vendor.boot.bootmode\" \"recovery\" \"unknown\"")
             appendLine()
             appendLine("# Hide cloudphone detection")
-            appendLine("[ -n \"\$(resetprop ro.kernel.qemu)\" ] && resetprop ro.kernel.qemu \"\"")
+            appendLine("[ -n \"$(resetprop ro.kernel.qemu)\" ] && resetprop ro.kernel.qemu \"\"")
             appendLine()
             appendLine("# fake encryption status")
             appendLine("check_reset_prop \"ro.crypto.state\" \"encrypted\"")
             appendLine()
 
-            appendLine("echo \"\$(get_current_time): Service脚本执行完成\" >> \"\$LOG_FILE\"")
+            appendLine("echo \"$(get_current_time): Service脚本执行完成\" >> \"\$LOG_FILE\"")
         }
     }
 
@@ -202,22 +229,22 @@ object ScriptGenerator {
             appendLine("# 检查SuSFS二进制文件")
             appendLine("SUSFS_BIN=\"$targetPath\"")
             appendLine("if [ ! -f \"\$SUSFS_BIN\" ]; then")
-            appendLine("    echo \"\$(get_current_time): SuSFS二进制文件未找到: \$SUSFS_BIN\" >> \"\$LOG_FILE\"")
+            appendLine("    echo \"$(get_current_time): SuSFS二进制文件未找到: \$SUSFS_BIN\" >> \"\$LOG_FILE\"")
             appendLine("    exit 1")
             appendLine("fi")
             appendLine()
-            appendLine("echo \"\$(get_current_time): Post-FS-Data脚本开始执行\" >> \"\$LOG_FILE\"")
+            appendLine("echo \"$(get_current_time): Post-FS-Data脚本开始执行\" >> \"\$LOG_FILE\"")
             appendLine()
 
             // 设置uname和构建时间 - 只有在选择在post-fs-data中执行时才执行
             if (executeInPostFsData && (unameValue != "default" || buildTimeValue != "default")) {
                 appendLine("# 设置uname和构建时间")
                 appendLine("\"\$SUSFS_BIN\" set_uname '$unameValue' '$buildTimeValue'")
-                appendLine("echo \"\$(get_current_time): 设置uname为: $unameValue, 构建时间为: $buildTimeValue\" >> \"\$LOG_FILE\"")
+                appendLine("echo \"$(get_current_time): 设置uname为: $unameValue, 构建时间为: $buildTimeValue\" >> \"\$LOG_FILE\"")
                 appendLine()
             }
 
-            appendLine("echo \"\$(get_current_time): Post-FS-Data脚本执行完成\" >> \"\$LOG_FILE\"")
+            appendLine("echo \"$(get_current_time): Post-FS-Data脚本执行完成\" >> \"\$LOG_FILE\"")
         }
     }
 
@@ -246,12 +273,12 @@ object ScriptGenerator {
             appendLine("    date '+%Y-%m-%d %H:%M:%S'")
             appendLine("}")
             appendLine()
-            appendLine("echo \"\$(get_current_time): Post-Mount脚本开始执行\" >> \"\$LOG_FILE\"")
+            appendLine("echo \"$(get_current_time): Post-Mount脚本开始执行\" >> \"\$LOG_FILE\"")
             appendLine()
             appendLine("# 检查SuSFS二进制文件")
             appendLine("SUSFS_BIN=\"$targetPath\"")
             appendLine("if [ ! -f \"\$SUSFS_BIN\" ]; then")
-            appendLine("    echo \"\$(get_current_time): SuSFS二进制文件未找到: \$SUSFS_BIN\" >> \"\$LOG_FILE\"")
+            appendLine("    echo \"$(get_current_time): SuSFS二进制文件未找到: \$SUSFS_BIN\" >> \"\$LOG_FILE\"")
             appendLine("    exit 1")
             appendLine("fi")
             appendLine()
@@ -261,7 +288,7 @@ object ScriptGenerator {
                 appendLine("# 添加SUS挂载")
                 susMounts.forEach { mount ->
                     appendLine("\"\$SUSFS_BIN\" add_sus_mount '$mount'")
-                    appendLine("echo \"\$(get_current_time): 添加SUS挂载: $mount\" >> \"\$LOG_FILE\"")
+                    appendLine("echo \"$(get_current_time): 添加SUS挂载: $mount\" >> \"\$LOG_FILE\"")
                 }
                 appendLine()
             }
@@ -275,13 +302,13 @@ object ScriptGenerator {
                         val path = parts[0]
                         val mode = parts[1]
                         appendLine("\"\$SUSFS_BIN\" add_try_umount '$path' $mode")
-                        appendLine("echo \"\$(get_current_time): 添加尝试卸载: $path (模式: $mode)\" >> \"\$LOG_FILE\"")
+                        appendLine("echo \"$(get_current_time): 添加尝试卸载: $path (模式: $mode)\" >> \"\$LOG_FILE\"")
                     }
                 }
                 appendLine()
             }
 
-            appendLine("echo \"\$(get_current_time): Post-Mount脚本执行完成\" >> \"\$LOG_FILE\"")
+            appendLine("echo \"$(get_current_time): Post-Mount脚本执行完成\" >> \"\$LOG_FILE\"")
         }
     }
 
@@ -306,16 +333,16 @@ object ScriptGenerator {
             appendLine("    date '+%Y-%m-%d %H:%M:%S'")
             appendLine("}")
             appendLine()
-            appendLine("echo \"\$(get_current_time): Boot-Completed脚本开始执行\" >> \"\$LOG_FILE\"")
+            appendLine("echo \"$(get_current_time): Boot-Completed脚本开始执行\" >> \"\$LOG_FILE\"")
             appendLine()
             appendLine("# 检查SuSFS二进制文件")
             appendLine("SUSFS_BIN=\"$targetPath\"")
             appendLine("if [ ! -f \"\$SUSFS_BIN\" ]; then")
-            appendLine("    echo \"\$(get_current_time): SuSFS二进制文件未找到: \$SUSFS_BIN\" >> \"\$LOG_FILE\"")
+            appendLine("    echo \"$(get_current_time): SuSFS二进制文件未找到: \$SUSFS_BIN\" >> \"\$LOG_FILE\"")
             appendLine("    exit 1")
             appendLine("fi")
             appendLine()
-            appendLine("echo \"\$(get_current_time): Boot-Completed脚本执行完成\" >> \"\$LOG_FILE\"")
+            appendLine("echo \"$(get_current_time): Boot-Completed脚本执行完成\" >> \"\$LOG_FILE\"")
         }
     }
 

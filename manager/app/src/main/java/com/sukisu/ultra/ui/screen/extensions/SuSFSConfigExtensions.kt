@@ -20,6 +20,8 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Storage
+import androidx.compose.material.icons.filled.Update
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -170,6 +172,166 @@ fun PathItemCard(
                     tint = MaterialTheme.colorScheme.error,
                     modifier = Modifier.size(16.dp)
                 )
+            }
+        }
+    }
+}
+
+/**
+ * Kstat配置项目卡片组件
+ */
+@Composable
+fun KstatConfigItemCard(
+    config: String,
+    onDelete: () -> Unit,
+    isLoading: Boolean = false
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 1.dp),
+        shape = RoundedCornerShape(8.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.weight(1f)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Settings,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+                Column {
+                    val parts = config.split("|")
+                    if (parts.isNotEmpty()) {
+                        Text(
+                            text = parts[0], // 路径
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.Medium
+                        )
+                        if (parts.size > 1) {
+                            Text(
+                                text = "参数: ${parts.drop(1).joinToString(" ")}",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    } else {
+                        Text(
+                            text = config,
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
+            }
+            IconButton(
+                onClick = onDelete,
+                enabled = !isLoading,
+                modifier = Modifier.size(32.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.size(16.dp)
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Add Kstat路径项目卡片组件
+ */
+@Composable
+fun AddKstatPathItemCard(
+    path: String,
+    onDelete: () -> Unit,
+    onUpdate: () -> Unit,
+    onUpdateFullClone: () -> Unit,
+    isLoading: Boolean = false
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 1.dp),
+        shape = RoundedCornerShape(8.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.weight(1f)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Folder,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+                Text(
+                    text = path,
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Medium
+                )
+            }
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                IconButton(
+                    onClick = onUpdate,
+                    enabled = !isLoading,
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Update,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.secondary,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+                IconButton(
+                    onClick = onUpdateFullClone,
+                    enabled = !isLoading,
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.PlayArrow,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.tertiary,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+                IconButton(
+                    onClick = onDelete,
+                    enabled = !isLoading,
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
             }
         }
     }
@@ -534,6 +696,160 @@ fun TryUmountContent(
                     )
                 }
             }
+        }
+    }
+}
+
+/**
+ * Kstat配置内容组件
+ */
+@Composable
+fun KstatConfigContent(
+    kstatConfigs: Set<String>,
+    addKstatPaths: Set<String>,
+    isLoading: Boolean,
+    onAddKstatStatically: () -> Unit,
+    onAddKstat: () -> Unit,
+    onRemoveKstatConfig: (String) -> Unit,
+    onRemoveAddKstat: (String) -> Unit,
+    onUpdateKstat: (String) -> Unit,
+    onUpdateKstatFullClone: (String) -> Unit
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        // 标题和添加按钮
+        UnifiedButtonRow(
+            primaryButton = {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    FloatingActionButton(
+                        onClick = onAddKstatStatically,
+                        modifier = Modifier.size(48.dp),
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Settings,
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                    FloatingActionButton(
+                        onClick = onAddKstat,
+                        modifier = Modifier.size(48.dp),
+                        containerColor = MaterialTheme.colorScheme.secondary,
+                        contentColor = MaterialTheme.colorScheme.onSecondary
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
+            },
+            secondaryButtons = {
+                Text(
+                    text = stringResource(R.string.kstat_config_management),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        )
+
+        // 说明卡片
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+            ),
+            shape = RoundedCornerShape(12.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(12.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    text = stringResource(R.string.kstat_config_description_title),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Text(
+                    text = stringResource(R.string.kstat_config_description_add_statically),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text = stringResource(R.string.kstat_config_description_add),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text = stringResource(R.string.kstat_config_description_update),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text = stringResource(R.string.kstat_config_description_update_full_clone),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+
+// 静态Kstat配置列表
+        if (kstatConfigs.isNotEmpty()) {
+            Text(
+                text = stringResource(R.string.static_kstat_config),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+            LazyColumn(
+                modifier = Modifier.weight(0.5f),
+                verticalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                items(kstatConfigs.toList()) { config ->
+                    KstatConfigItemCard(
+                        config = config,
+                        onDelete = { onRemoveKstatConfig(config) },
+                        isLoading = isLoading
+                    )
+                }
+            }
+        }
+
+// Add Kstat路径列表
+        if (addKstatPaths.isNotEmpty()) {
+            Text(
+                text = stringResource(R.string.kstat_path_management),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+            LazyColumn(
+                modifier = Modifier.weight(0.5f),
+                verticalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                items(addKstatPaths.toList()) { path ->
+                    AddKstatPathItemCard(
+                        path = path,
+                        onDelete = { onRemoveAddKstat(path) },
+                        onUpdate = { onUpdateKstat(path) },
+                        onUpdateFullClone = { onUpdateKstatFullClone(path) },
+                        isLoading = isLoading
+                    )
+                }
+            }
+        }
+
+// 空状态显示
+        if (kstatConfigs.isEmpty() && addKstatPaths.isEmpty()) {
+            EmptyStateCard(
+                message = stringResource(R.string.no_kstat_config_message)
+            )
         }
     }
 }

@@ -82,6 +82,7 @@ import com.sukisu.ultra.ui.screen.extensions.FeatureStatusCard
 import com.sukisu.ultra.ui.screen.extensions.SusPathsContent
 import com.sukisu.ultra.ui.screen.extensions.SusMountsContent
 import com.sukisu.ultra.ui.screen.extensions.TryUmountContent
+import com.sukisu.ultra.ui.screen.extensions.KstatConfigContent
 import kotlinx.coroutines.launch
 
 /**
@@ -92,6 +93,7 @@ enum class SuSFSTab(val displayNameRes: Int) {
     SUS_PATHS(R.string.susfs_tab_sus_paths),
     SUS_MOUNTS(R.string.susfs_tab_sus_mounts),
     TRY_UMOUNT(R.string.susfs_tab_try_umount),
+    KSTAT_CONFIG(R.string.susfs_tab_kstat_config),
     PATH_SETTINGS(R.string.susfs_tab_path_settings),
     ENABLED_FEATURES(R.string.susfs_tab_enabled_features);
 
@@ -136,6 +138,10 @@ fun SuSFSConfigScreen(
     var androidDataPath by remember { mutableStateOf("") }
     var sdcardPath by remember { mutableStateOf("") }
 
+    // Kstat配置相关状态
+    var kstatConfigs by remember { mutableStateOf(emptySet<String>()) }
+    var addKstatPaths by remember { mutableStateOf(emptySet<String>()) }
+
     // 启用功能状态相关
     var enabledFeatures by remember { mutableStateOf(emptyList<SuSFSManager.EnabledFeature>()) }
     var isLoadingFeatures by remember { mutableStateOf(false) }
@@ -151,14 +157,32 @@ fun SuSFSConfigScreen(
     var newUmountMode by remember { mutableIntStateOf(0) }
     var umountModeExpanded by remember { mutableStateOf(false) }
 
+    // Kstat配置对话框状态
+    var showAddKstatStaticallyDialog by remember { mutableStateOf(false) }
+    var showAddKstatDialog by remember { mutableStateOf(false) }
+    var newKstatPath by remember { mutableStateOf("") }
+    var newKstatIno by remember { mutableStateOf("") }
+    var newKstatDev by remember { mutableStateOf("") }
+    var newKstatNlink by remember { mutableStateOf("") }
+    var newKstatSize by remember { mutableStateOf("") }
+    var newKstatAtime by remember { mutableStateOf("") }
+    var newKstatAtimeNsec by remember { mutableStateOf("") }
+    var newKstatMtime by remember { mutableStateOf("") }
+    var newKstatMtimeNsec by remember { mutableStateOf("") }
+    var newKstatCtime by remember { mutableStateOf("") }
+    var newKstatCtimeNsec by remember { mutableStateOf("") }
+    var newKstatBlocks by remember { mutableStateOf("") }
+    var newKstatBlksize by remember { mutableStateOf("") }
+
     // 重置确认对话框状态
     var showResetPathsDialog by remember { mutableStateOf(false) }
     var showResetMountsDialog by remember { mutableStateOf(false) }
     var showResetUmountsDialog by remember { mutableStateOf(false) }
+    var showResetKstatDialog by remember { mutableStateOf(false) }
 
     val allTabs = SuSFSTab.getAllTabs()
 
-    // 实时判断是否可以启用开机自启动 - 修改逻辑
+    // 实时判断是否可以启用开机自启动
     val canEnableAutoStart by remember {
         derivedStateOf {
             SuSFSManager.hasConfigurationForAutoStart(context)
@@ -197,6 +221,8 @@ fun SuSFSConfigScreen(
         tryUmounts = SuSFSManager.getTryUmounts(context)
         androidDataPath = SuSFSManager.getAndroidDataPath(context)
         sdcardPath = SuSFSManager.getSdcardPath(context)
+        kstatConfigs = SuSFSManager.getKstatConfigs(context)
+        addKstatPaths = SuSFSManager.getAddKstatPaths(context)
 
         // 加载槽位信息
         loadSlotInfo()
@@ -581,6 +607,313 @@ fun SuSFSConfigScreen(
         )
     }
 
+    // 添加Kstat静态配置对话框
+    if (showAddKstatStaticallyDialog) {
+        AlertDialog(
+            onDismissRequest = { showAddKstatStaticallyDialog = false },
+            title = {
+                Text(
+                    stringResource(R.string.add_kstat_statically_title),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Column(
+                    modifier = Modifier.verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedTextField(
+                        value = newKstatPath,
+                        onValueChange = { newKstatPath = it },
+                        label = { Text(stringResource(R.string.file_or_directory_path_label)) },
+                        placeholder = { Text("/path/to/file_or_directory") },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(8.dp)
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        OutlinedTextField(
+                            value = newKstatIno,
+                            onValueChange = { newKstatIno = it },
+                            label = { Text("ino") },
+                            placeholder = { Text("1234") },
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(8.dp)
+                        )
+                        OutlinedTextField(
+                            value = newKstatDev,
+                            onValueChange = { newKstatDev = it },
+                            label = { Text("dev") },
+                            placeholder = { Text("1234") },
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(8.dp)
+                        )
+                    }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        OutlinedTextField(
+                            value = newKstatNlink,
+                            onValueChange = { newKstatNlink = it },
+                            label = { Text("nlink") },
+                            placeholder = { Text("2") },
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(8.dp)
+                        )
+                        OutlinedTextField(
+                            value = newKstatSize,
+                            onValueChange = { newKstatSize = it },
+                            label = { Text("size") },
+                            placeholder = { Text("223344") },
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(8.dp)
+                        )
+                    }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        OutlinedTextField(
+                            value = newKstatAtime,
+                            onValueChange = { newKstatAtime = it },
+                            label = { Text("atime") },
+                            placeholder = { Text("1712592355") },
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(8.dp)
+                        )
+                        OutlinedTextField(
+                            value = newKstatAtimeNsec,
+                            onValueChange = { newKstatAtimeNsec = it },
+                            label = { Text("atime_nsec") },
+                            placeholder = { Text("0") },
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(8.dp)
+                        )
+                    }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        OutlinedTextField(
+                            value = newKstatMtime,
+                            onValueChange = { newKstatMtime = it },
+                            label = { Text("mtime") },
+                            placeholder = { Text("1712592355") },
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(8.dp)
+                        )
+                        OutlinedTextField(
+                            value = newKstatMtimeNsec,
+                            onValueChange = { newKstatMtimeNsec = it },
+                            label = { Text("mtime_nsec") },
+                            placeholder = { Text("0") },
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(8.dp)
+                        )
+                    }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        OutlinedTextField(
+                            value = newKstatCtime,
+                            onValueChange = { newKstatCtime = it },
+                            label = { Text("ctime") },
+                            placeholder = { Text("1712592355") },
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(8.dp)
+                        )
+                        OutlinedTextField(
+                            value = newKstatCtimeNsec,
+                            onValueChange = { newKstatCtimeNsec = it },
+                            label = { Text("ctime_nsec") },
+                            placeholder = { Text("0") },
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(8.dp)
+                        )
+                    }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        OutlinedTextField(
+                            value = newKstatBlocks,
+                            onValueChange = { newKstatBlocks = it },
+                            label = { Text("blocks") },
+                            placeholder = { Text("16") },
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(8.dp)
+                        )
+                        OutlinedTextField(
+                            value = newKstatBlksize,
+                            onValueChange = { newKstatBlksize = it },
+                            label = { Text("blksize") },
+                            placeholder = { Text("512") },
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(8.dp)
+                        )
+                    }
+
+                    Text(
+                        text = stringResource(R.string.hint_use_default_value),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        if (newKstatPath.isNotBlank()) {
+                            coroutineScope.launch {
+                                isLoading = true
+                                if (SuSFSManager.addKstatStatically(
+                                        context, newKstatPath.trim(),
+                                        newKstatIno.trim().ifBlank { "default" },
+                                        newKstatDev.trim().ifBlank { "default" },
+                                        newKstatNlink.trim().ifBlank { "default" },
+                                        newKstatSize.trim().ifBlank { "default" },
+                                        newKstatAtime.trim().ifBlank { "default" },
+                                        newKstatAtimeNsec.trim().ifBlank { "default" },
+                                        newKstatMtime.trim().ifBlank { "default" },
+                                        newKstatMtimeNsec.trim().ifBlank { "default" },
+                                        newKstatCtime.trim().ifBlank { "default" },
+                                        newKstatCtimeNsec.trim().ifBlank { "default" },
+                                        newKstatBlocks.trim().ifBlank { "default" },
+                                        newKstatBlksize.trim().ifBlank { "default" }
+                                    )) {
+                                    kstatConfigs = SuSFSManager.getKstatConfigs(context)
+                                }
+                                isLoading = false
+                                // 清空所有字段
+                                newKstatPath = ""
+                                newKstatIno = ""
+                                newKstatDev = ""
+                                newKstatNlink = ""
+                                newKstatSize = ""
+                                newKstatAtime = ""
+                                newKstatAtimeNsec = ""
+                                newKstatMtime = ""
+                                newKstatMtimeNsec = ""
+                                newKstatCtime = ""
+                                newKstatCtimeNsec = ""
+                                newKstatBlocks = ""
+                                newKstatBlksize = ""
+                                showAddKstatStaticallyDialog = false
+                            }
+                        }
+                    },
+                    enabled = newKstatPath.isNotBlank() && !isLoading,
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text("添加")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        showAddKstatStaticallyDialog = false
+                        // 清空所有字段
+                        newKstatPath = ""
+                        newKstatIno = ""
+                        newKstatDev = ""
+                        newKstatNlink = ""
+                        newKstatSize = ""
+                        newKstatAtime = ""
+                        newKstatAtimeNsec = ""
+                        newKstatMtime = ""
+                        newKstatMtimeNsec = ""
+                        newKstatCtime = ""
+                        newKstatCtimeNsec = ""
+                        newKstatBlocks = ""
+                        newKstatBlksize = ""
+                    },
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text(stringResource(R.string.cancel))
+                }
+            },
+            shape = RoundedCornerShape(12.dp)
+        )
+    }
+
+    // 添加Kstat路径对话框
+    if (showAddKstatDialog) {
+        AlertDialog(
+            onDismissRequest = { showAddKstatDialog = false },
+            title = {
+                Text(
+                    stringResource(R.string.add_kstat_path_title),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    OutlinedTextField(
+                        value = newKstatPath,
+                        onValueChange = { newKstatPath = it },
+                        label = { Text(stringResource(R.string.file_or_directory_path_label)) },
+                        placeholder = { Text("/path/to/file_or_directory") },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(8.dp)
+                    )
+
+                    Text(
+                        text = stringResource(R.string.kstat_command_description),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        if (newKstatPath.isNotBlank()) {
+                            coroutineScope.launch {
+                                isLoading = true
+                                if (SuSFSManager.addKstat(context, newKstatPath.trim())) {
+                                    addKstatPaths = SuSFSManager.getAddKstatPaths(context)
+                                }
+                                isLoading = false
+                                newKstatPath = ""
+                                showAddKstatDialog = false
+                            }
+                        }
+                    },
+                    enabled = newKstatPath.isNotBlank() && !isLoading,
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text(stringResource(R.string.add))
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        showAddKstatDialog = false
+                        newKstatPath = ""
+                    },
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text(stringResource(R.string.cancel))
+                }
+            },
+            shape = RoundedCornerShape(12.dp)
+        )
+    }
+
     // 运行尝试卸载确认对话框
     if (showRunUmountDialog) {
         AlertDialog(
@@ -753,6 +1086,55 @@ fun SuSFSConfigScreen(
             dismissButton = {
                 TextButton(
                     onClick = { showResetUmountsDialog = false },
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text(stringResource(R.string.cancel))
+                }
+            },
+            shape = RoundedCornerShape(12.dp)
+        )
+    }
+
+    // 重置Kstat配置确认对话框
+    if (showResetKstatDialog) {
+        AlertDialog(
+            onDismissRequest = { showResetKstatDialog = false },
+            title = {
+                Text(
+                    stringResource(R.string.reset_kstat_config_title),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = { Text(stringResource(R.string.reset_kstat_config_message)) },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        coroutineScope.launch {
+                            isLoading = true
+                            SuSFSManager.saveKstatConfigs(context, emptySet())
+                            SuSFSManager.saveAddKstatPaths(context, emptySet())
+                            kstatConfigs = emptySet()
+                            addKstatPaths = emptySet()
+                            if (SuSFSManager.isAutoStartEnabled(context)) {
+                                SuSFSManager.configureAutoStart(context, true)
+                            }
+                            isLoading = false
+                            showResetKstatDialog = false
+                        }
+                    },
+                    enabled = !isLoading,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error
+                    ),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text(stringResource(R.string.confirm_reset))
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showResetKstatDialog = false },
                     shape = RoundedCornerShape(8.dp)
                 ) {
                     Text(stringResource(R.string.cancel))
@@ -985,6 +1367,29 @@ fun SuSFSConfigScreen(
                             }
                         }
 
+                        SuSFSTab.KSTAT_CONFIG -> {
+                            // 重置按钮
+                            OutlinedButton(
+                                onClick = { showResetKstatDialog = true },
+                                enabled = !isLoading && (kstatConfigs.isNotEmpty() || addKstatPaths.isNotEmpty()),
+                                shape = RoundedCornerShape(8.dp),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(40.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.RestoreFromTrash,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    stringResource(R.string.reset_kstat_config_title),
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
+                        }
+
                         SuSFSTab.PATH_SETTINGS -> {
                             // 重置按钮
                             OutlinedButton(
@@ -1155,6 +1560,47 @@ fun SuSFSConfigScreen(
                                     if (SuSFSManager.removeTryUmount(context, umountEntry)) {
                                         tryUmounts = SuSFSManager.getTryUmounts(context)
                                     }
+                                    isLoading = false
+                                }
+                            }
+                        )
+                    }
+                    SuSFSTab.KSTAT_CONFIG -> {
+                        KstatConfigContent(
+                            kstatConfigs = kstatConfigs,
+                            addKstatPaths = addKstatPaths,
+                            isLoading = isLoading,
+                            onAddKstatStatically = { showAddKstatStaticallyDialog = true },
+                            onAddKstat = { showAddKstatDialog = true },
+                            onRemoveKstatConfig = { config ->
+                                coroutineScope.launch {
+                                    isLoading = true
+                                    if (SuSFSManager.removeKstatConfig(context, config)) {
+                                        kstatConfigs = SuSFSManager.getKstatConfigs(context)
+                                    }
+                                    isLoading = false
+                                }
+                            },
+                            onRemoveAddKstat = { path ->
+                                coroutineScope.launch {
+                                    isLoading = true
+                                    if (SuSFSManager.removeAddKstat(context, path)) {
+                                        addKstatPaths = SuSFSManager.getAddKstatPaths(context)
+                                    }
+                                    isLoading = false
+                                }
+                            },
+                            onUpdateKstat = { path ->
+                                coroutineScope.launch {
+                                    isLoading = true
+                                    SuSFSManager.updateKstat(context, path)
+                                    isLoading = false
+                                }
+                            },
+                            onUpdateKstatFullClone = { path ->
+                                coroutineScope.launch {
+                                    isLoading = true
+                                    SuSFSManager.updateKstatFullClone(context, path)
                                     isLoading = false
                                 }
                             }
