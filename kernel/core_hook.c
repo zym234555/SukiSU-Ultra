@@ -557,115 +557,26 @@ int ksu_handle_prctl(int option, unsigned long arg2, unsigned long arg3,
 
 	// Get SUSFS function status
 	if (arg2 == CMD_GET_SUSFS_FEATURE_STATUS) {
-		struct susfs_feature_status status;
-		
-		memset(&status, 0, sizeof(status));
-		
-		if (!ksu_access_ok((void __user*)arg3, sizeof(status))) {
-			pr_err("susfs_feature_status: arg3 is not accessible\n");
-			return 0;
-		}
-#ifdef CONFIG_KSU_SUSFS_SUS_PATH
-		status.status_sus_path = true;
-#else
-		status.status_sus_path = false;
-#endif
-
-#ifdef CONFIG_KSU_SUSFS_SUS_MOUNT
-		status.status_sus_mount = true;
-#else
-		status.status_sus_mount = false;
-#endif
-
-#ifdef CONFIG_KSU_SUSFS_AUTO_ADD_SUS_KSU_DEFAULT_MOUNT
-		status.status_auto_default_mount = true;
-#else
-		status.status_auto_default_mount = false;
-#endif
-
-#ifdef CONFIG_KSU_SUSFS_AUTO_ADD_SUS_BIND_MOUNT
-		status.status_auto_bind_mount = true;
-#else
-		status.status_auto_bind_mount = false;
-#endif
-
-#ifdef CONFIG_KSU_SUSFS_SUS_KSTAT
-		status.status_sus_kstat = true;
-#else
-		status.status_sus_kstat = false;
-#endif
-
-#ifdef CONFIG_KSU_SUSFS_TRY_UMOUNT
-		status.status_try_umount = true;
-#else
-		status.status_try_umount = false;
-#endif
-
-#ifdef CONFIG_KSU_SUSFS_AUTO_ADD_TRY_UMOUNT_FOR_BIND_MOUNT
-		status.status_auto_try_umount_bind = true;
-#else
-		status.status_auto_try_umount_bind = false;
-#endif
-
-#ifdef CONFIG_KSU_SUSFS_SPOOF_UNAME
-		status.status_spoof_uname = true;
-#else
-		status.status_spoof_uname = false;
-#endif
-
-#ifdef CONFIG_KSU_SUSFS_ENABLE_LOG
-		status.status_enable_log = true;
-#else
-		status.status_enable_log = false;
-#endif
-
-#ifdef CONFIG_KSU_SUSFS_HIDE_KSU_SUSFS_SYMBOLS
-		status.status_hide_symbols = true;
-#else
-		status.status_hide_symbols = false;
-#endif
-
-#ifdef CONFIG_KSU_SUSFS_SPOOF_CMDLINE_OR_BOOTCONFIG
-		status.status_spoof_cmdline = true;
-#else
-		status.status_spoof_cmdline = false;
-#endif
-
-#ifdef CONFIG_KSU_SUSFS_OPEN_REDIRECT
-		status.status_open_redirect = true;
-#else
-		status.status_open_redirect = false;
-#endif
-
-#ifdef CONFIG_KSU_SUSFS_HAS_MAGIC_MOUNT
-		status.status_magic_mount = true;
-#else
-		status.status_magic_mount = false;
-#endif
-
-#ifdef CONFIG_KSU_SUSFS_SUS_OVERLAYFS
-		status.status_overlayfs_auto_kstat = true;
-#else
-		status.status_overlayfs_auto_kstat = false;
-#endif
-
-#ifdef CONFIG_KSU_SUSFS_SUS_SU
-		status.status_sus_su = true;
-#else
-		status.status_sus_su = false;
-#endif
-
-		if (copy_to_user((void __user*)arg3, &status, sizeof(status))) {
-			pr_err("susfs_feature_status: copy_to_user failed\n");
-			return 0;
-		}
-		
-		if (copy_to_user(result, &reply_ok, sizeof(reply_ok))) {
-			pr_err("susfs_feature_status: prctl reply error\n");
-		}
-		
-		pr_info("susfs_feature_status: successfully returned feature status\n");
-		return 0;
+    	struct susfs_feature_status status;
+    
+    	if (!ksu_access_ok((void __user*)arg3, sizeof(status))) {
+        	pr_err("susfs_feature_status: arg3 is not accessible\n");
+        	return 0;
+    	}
+    
+    	init_susfs_feature_status(&status);
+    
+    	if (copy_to_user((void __user*)arg3, &status, sizeof(status))) {
+        	pr_err("susfs_feature_status: copy_to_user failed\n");
+        	return 0;
+    	}
+    
+    	if (copy_to_user(result, &reply_ok, sizeof(reply_ok))) {
+        	pr_err("susfs_feature_status: prctl reply error\n");
+    	}
+    
+    	pr_info("susfs_feature_status: successfully returned feature status\n");
+    	return 0;
 	}
 
 #ifdef CONFIG_KSU_SUSFS
