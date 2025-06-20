@@ -450,6 +450,9 @@
     <string name="susfs_add_sus_path">添加SUS路径</string>
     <string name="susfs_add_sus_mount">添加SUS挂载</string>
     <string name="susfs_add_try_umount">添加尝试卸载</string>
+    <string name="susfs_sus_path_added_success">SUS 路径添加成功</string>
+    <string name="susfs_path_not_found_error">路径未找到错误</string>
+    <string name="susfs_unknown_error">未知错误</string>
     <string name="susfs_path_label">路径</string>
     <string name="susfs_mount_path_label">挂载路径</string>
     <string name="susfs_path_placeholder">例如: /system/addon.d</string>

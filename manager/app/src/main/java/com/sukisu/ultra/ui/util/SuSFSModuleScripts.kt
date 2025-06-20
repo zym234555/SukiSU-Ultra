@@ -8,6 +8,40 @@ import android.annotation.SuppressLint
  */
 object ScriptGenerator {
 
+    // 常量定义
+    @SuppressLint("SdCardPath")
+    private const val DEFAULT_ANDROID_DATA_PATH = "/sdcard/Android/data"
+    @SuppressLint("SdCardPath")
+    private const val DEFAULT_SDCARD_PATH = "/sdcard"
+    private const val DEFAULT_UNAME = "default"
+    private const val DEFAULT_BUILD_TIME = "default"
+    private const val LOG_DIR = "/data/adb/ksu/log"
+
+    // 日志相关的通用脚本片段
+    private fun generateLogSetup(logFileName: String): String = """
+        # 日志目录
+        LOG_DIR="$LOG_DIR"
+        LOG_FILE="${'$'}LOG_DIR/$logFileName"
+        
+        # 创建日志目录
+        mkdir -p "${'$'}LOG_DIR"
+        
+        # 获取当前时间
+        get_current_time() {
+            date '+%Y-%m-%d %H:%M:%S'
+        }
+    """.trimIndent()
+
+    // 二进制文件检查的通用脚本片段
+    private fun generateBinaryCheck(targetPath: String): String = """
+        # 检查SuSFS二进制文件
+        SUSFS_BIN="$targetPath"
+        if [ ! -f "${'$'}SUSFS_BIN" ]; then
+            echo "$(get_current_time): SuSFS二进制文件未找到: ${'$'}SUSFS_BIN" >> "${'$'}LOG_FILE"
+            exit 1
+        fi
+    """.trimIndent()
+
     /**
      * 生成service.sh脚本内容
      */
@@ -29,175 +63,207 @@ object ScriptGenerator {
             appendLine("# SuSFS Service Script")
             appendLine("# 在系统服务启动后执行")
             appendLine()
-            appendLine("# 日志目录")
-            appendLine("LOG_DIR=\"/data/adb/ksu/log\"")
-            appendLine("LOG_FILE=\"\$LOG_DIR/susfs_service.log\"")
+            appendLine(generateLogSetup("susfs_service.log"))
             appendLine()
-            appendLine("# 创建日志目录")
-            appendLine("mkdir -p \"\$LOG_DIR\"")
-            appendLine()
-            appendLine("# 获取当前时间")
-            appendLine("get_current_time() {")
-            appendLine("    date '+%Y-%m-%d %H:%M:%S'")
-            appendLine("}")
-            appendLine()
-            appendLine("# 检查SuSFS二进制文件")
-            appendLine("SUSFS_BIN=\"$targetPath\"")
-            appendLine("if [ ! -f \"\$SUSFS_BIN\" ]; then")
-            appendLine("    echo \"$(get_current_time): SuSFS二进制文件未找到: \$SUSFS_BIN\" >> \"\$LOG_FILE\"")
-            appendLine("    exit 1")
-            appendLine("fi")
+            appendLine(generateBinaryCheck(targetPath))
             appendLine()
 
             // 设置日志启用状态
-            appendLine("# 设置日志启用状态")
-            val logValue = if (enableLog) 1 else 0
-            appendLine("\"\$SUSFS_BIN\" enable_log $logValue")
-            appendLine("echo \"$(get_current_time): 日志功能设置为: ${if (enableLog) "启用" else "禁用"}\" >> \"\$LOG_FILE\"")
-            appendLine()
+            generateLogSettingSection(enableLog)
 
-            // 设置Android Data路径
-            if (androidDataPath != "/sdcard/Android/data") {
-                appendLine("# 设置Android Data路径")
-                appendLine("\"\$SUSFS_BIN\" set_android_data_root_path '$androidDataPath'")
-                appendLine("echo \"$(get_current_time): Android Data路径设置为: $androidDataPath\" >> \"\$LOG_FILE\"")
-                appendLine()
-            }
-
-            // 设置SD卡路径
-            if (sdcardPath != "/sdcard") {
-                appendLine("# 设置SD卡路径")
-                appendLine("\"\$SUSFS_BIN\" set_sdcard_root_path '$sdcardPath'")
-                appendLine("echo \"$(get_current_time): SD卡路径设置为: $sdcardPath\" >> \"\$LOG_FILE\"")
-                appendLine()
-            }
+            // 设置路径
+            generatePathSettingSection(androidDataPath, sdcardPath)
 
             // 添加SUS路径
-            if (susPaths.isNotEmpty()) {
-                appendLine("# 添加SUS路径")
-                susPaths.forEach { path ->
-                    appendLine("\"\$SUSFS_BIN\" add_sus_path '$path'")
-                    appendLine("echo \"$(get_current_time): 添加SUS路径: $path\" >> \"\$LOG_FILE\"")
-                }
-                appendLine()
-            }
+            generateSusPathsSection(susPaths)
 
-            // 添加Kstat静态配置
-            if (kstatConfigs.isNotEmpty()) {
-                appendLine("# 添加Kstat静态配置")
-                kstatConfigs.forEach { config ->
-                    val parts = config.split("|")
-                    if (parts.size >= 13) {
-                        val path = parts[0]
-                        val params = parts.drop(1).joinToString("' '", "'", "'")
-                        appendLine("\"\$SUSFS_BIN\" add_sus_kstat_statically $params")
-                        appendLine("echo \"$(get_current_time): 添加Kstat静态配置: $path\" >> \"\$LOG_FILE\"")
-                    }
-                }
-                appendLine()
-            }
+            // 添加Kstat配置
+            generateKstatSection(kstatConfigs, addKstatPaths)
 
-            // 添加Kstat路径
-            if (addKstatPaths.isNotEmpty()) {
-                appendLine("# 添加Kstat路径")
-                addKstatPaths.forEach { path ->
-                    appendLine("\"\$SUSFS_BIN\" add_sus_kstat '$path'")
-                    appendLine("echo \"$(get_current_time): 添加Kstat路径: $path\" >> \"\$LOG_FILE\"")
-                }
-                appendLine()
-            }
+            // 设置uname和构建时间
+            generateUnameSection(unameValue, buildTimeValue, executeInPostFsData)
 
-            // 设置uname和构建时间 - 只有不在service中执行
-            if (!executeInPostFsData && (unameValue != "default" || buildTimeValue != "default")) {
-                appendLine("# 设置uname和构建时间")
-                appendLine("\"\$SUSFS_BIN\" set_uname '$unameValue' '$buildTimeValue'")
-                appendLine("echo \"$(get_current_time): 设置uname为: $unameValue, 构建时间为: $buildTimeValue\" >> \"\$LOG_FILE\"")
-                appendLine()
-            }
+            // 隐藏BL相关配置
+            generateHideBlSection()
 
-            appendLine("# 隐弱BL 来自 Shamiko 脚本")
-            appendLine("check_reset_prop() {")
-            appendLine("local NAME=$1")
-            appendLine("local EXPECTED=$2")
-            appendLine("local VALUE=$(resetprop \$NAME)")
-            appendLine("[ -z \$VALUE ] || [ \$VALUE = \$EXPECTED ] || resetprop \$NAME \$EXPECTED")
-            appendLine("}")
-            appendLine()
-            appendLine("check_missing_prop() {")
-            appendLine("  local NAME=$1")
-            appendLine("  local EXPECTED=$2")
-            appendLine("  local VALUE=$(resetprop \$NAME)")
-            appendLine("  [ -z \$VALUE ] && resetprop \$NAME \$EXPECTED")
-            appendLine("}")
-            appendLine()
-            appendLine("check_missing_match_prop() {")
-            appendLine("  local NAME=$1")
-            appendLine("  local EXPECTED=$2")
-            appendLine("  local VALUE=$(resetprop \$NAME)")
-            appendLine("  [ -z \$VALUE ] || [ \$VALUE = \$EXPECTED ] || resetprop \$NAME \$EXPECTED")
-            appendLine("  [ -z \$VALUE ] && resetprop \$NAME \$EXPECTED")
-            appendLine("}")
-            appendLine()
-            appendLine("contains_reset_prop() {")
-            appendLine("local NAME=$1")
-            appendLine("local CONTAINS=$2")
-            appendLine("local NEWVAL=$3")
-            appendLine("[[ \"$(resetprop \$NAME)\" = *\"\$CONTAINS\"* ]] && resetprop \$NAME \$NEWVAL")
-            appendLine("}")
-            appendLine()
-            appendLine("resetprop -w sys.boot_completed 0")
-            appendLine()
-            appendLine("check_missing_prop \"ro.boot.vbmeta.invalidate_on_error\" \"yes\"")
-            appendLine("check_missing_prop \"ro.boot.vbmeta.avb_version\" \"1.2\"")
-            appendLine("check_missing_prop \"ro.boot.vbmeta.hash_alg\" \"sha256\"")
-            appendLine()
-            appendLine("check_missing_match_prop \"ro.boot.vbmeta.device_state\" \"locked\"")
-            appendLine("check_missing_match_prop \"ro.boot.verifiedbootstate\" \"green\"")
-            appendLine("check_missing_match_prop \"ro.boot.flash.locked\" \"1\"")
-            appendLine("check_missing_match_prop \"ro.boot.veritymode\" \"enforcing\"")
-            appendLine("check_missing_match_prop \"ro.boot.warranty_bit\" \"0\"")
-            appendLine("check_reset_prop \"ro.boot.vbmeta.device_state\" \"locked\"")
-            appendLine("check_reset_prop \"ro.boot.verifiedbootstate\" \"green\"")
-            appendLine("check_reset_prop \"ro.boot.flash.locked\" \"1\"")
-            appendLine("check_reset_prop \"ro.boot.veritymode\" \"enforcing\"")
-            appendLine("check_reset_prop \"ro.boot.warranty_bit\" \"0\"")
-            appendLine("check_reset_prop \"ro.warranty_bit\" \"0\"")
-            appendLine("check_reset_prop \"ro.debuggable\" \"0\"")
-            appendLine("check_reset_prop \"ro.force.debuggable\" \"0\"")
-            appendLine("check_reset_prop \"ro.secure\" \"1\"")
-            appendLine("check_reset_prop \"ro.adb.secure\" \"1\"")
-            appendLine("check_reset_prop \"ro.build.type\" \"user\"")
-            appendLine("check_reset_prop \"ro.build.tags\" \"release-keys\"")
-            appendLine("check_reset_prop \"ro.vendor.boot.warranty_bit\" \"0\"")
-            appendLine("check_reset_prop \"ro.vendor.warranty_bit\" \"0\"")
-            appendLine("check_reset_prop \"vendor.boot.vbmeta.device_state\" \"locked\"")
-            appendLine("check_reset_prop \"vendor.boot.verifiedbootstate\" \"green\"")
-            appendLine("check_reset_prop \"sys.oem_unlock_allowed\" \"0\"")
-            appendLine()
-            appendLine("#Hide adb debugging traces")
-            appendLine("resetprop \"sys.usb.adb.disabled\" \" \"")
-            appendLine()
-            appendLine("# MIUI specific")
-            appendLine("check_reset_prop \"ro.secureboot.lockstate\" \"locked\"")
-            appendLine()
-            appendLine("# Realme specific")
-            appendLine("check_reset_prop \"ro.boot.realmebootstate\" \"green\"")
-            appendLine("check_reset_prop \"ro.boot.realme.lockstate\" \"1\"")
-            appendLine()
-            appendLine("# Hide that we booted from recovery when magisk is in recovery mode")
-            appendLine("contains_reset_prop \"ro.bootmode\" \"recovery\" \"unknown\"")
-            appendLine("contains_reset_prop \"ro.boot.bootmode\" \"recovery\" \"unknown\"")
-            appendLine("contains_reset_prop \"vendor.boot.bootmode\" \"recovery\" \"unknown\"")
-            appendLine()
-            appendLine("# Hide cloudphone detection")
-            appendLine("[ -n \"$(resetprop ro.kernel.qemu)\" ] && resetprop ro.kernel.qemu \"\"")
-            appendLine()
-            appendLine("# fake encryption status")
-            appendLine("check_reset_prop \"ro.crypto.state\" \"encrypted\"")
-            appendLine()
-
-            appendLine("echo \"$(get_current_time): Service脚本执行完成\" >> \"\$LOG_FILE\"")
+            appendLine("echo \"$(get_current_time): Service脚本执行完成\" >> \"${'$'}LOG_FILE\"")
         }
+    }
+
+    private fun StringBuilder.generateLogSettingSection(enableLog: Boolean) {
+        appendLine("# 设置日志启用状态")
+        val logValue = if (enableLog) 1 else 0
+        appendLine("\"${'$'}SUSFS_BIN\" enable_log $logValue")
+        appendLine("echo \"$(get_current_time): 日志功能设置为: ${if (enableLog) "启用" else "禁用"}\" >> \"${'$'}LOG_FILE\"")
+        appendLine()
+    }
+
+    private fun StringBuilder.generatePathSettingSection(
+        androidDataPath: String,
+        sdcardPath: String
+    ) {
+        // 设置Android Data路径
+        if (androidDataPath != DEFAULT_ANDROID_DATA_PATH) {
+            appendLine("# 设置Android Data路径")
+            appendLine("\"${'$'}SUSFS_BIN\" set_android_data_root_path '$androidDataPath'")
+            appendLine("echo \"$(get_current_time): Android Data路径设置为: $androidDataPath\" >> \"${'$'}LOG_FILE\"")
+            appendLine()
+        }
+
+        // 设置SD卡路径
+        if (sdcardPath != DEFAULT_SDCARD_PATH) {
+            appendLine("# 设置SD卡路径")
+            appendLine("\"${'$'}SUSFS_BIN\" set_sdcard_root_path '$sdcardPath'")
+            appendLine("echo \"$(get_current_time): SD卡路径设置为: $sdcardPath\" >> \"${'$'}LOG_FILE\"")
+            appendLine()
+        }
+    }
+
+    private fun StringBuilder.generateSusPathsSection(susPaths: Set<String>) {
+        if (susPaths.isNotEmpty()) {
+            appendLine("# 添加SUS路径")
+            susPaths.forEach { path ->
+                appendLine("\"${'$'}SUSFS_BIN\" add_sus_path '$path'")
+                appendLine("echo \"$(get_current_time): 添加SUS路径: $path\" >> \"${'$'}LOG_FILE\"")
+            }
+            appendLine()
+        }
+    }
+
+    private fun StringBuilder.generateKstatSection(
+        kstatConfigs: Set<String>,
+        addKstatPaths: Set<String>
+    ) {
+        // 添加Kstat静态配置
+        if (kstatConfigs.isNotEmpty()) {
+            appendLine("# 添加Kstat静态配置")
+            kstatConfigs.forEach { config ->
+                val parts = config.split("|")
+                if (parts.size >= 13) {
+                    val path = parts[0]
+                    val params = parts.drop(1).joinToString("' '", "'", "'")
+                    appendLine("\"${'$'}SUSFS_BIN\" add_sus_kstat_statically $params")
+                    appendLine("echo \"$(get_current_time): 添加Kstat静态配置: $path\" >> \"${'$'}LOG_FILE\"")
+                }
+            }
+            appendLine()
+        }
+
+        // 添加Kstat路径
+        if (addKstatPaths.isNotEmpty()) {
+            appendLine("# 添加Kstat路径")
+            addKstatPaths.forEach { path ->
+                appendLine("\"${'$'}SUSFS_BIN\" add_sus_kstat '$path'")
+                appendLine("echo \"$(get_current_time): 添加Kstat路径: $path\" >> \"${'$'}LOG_FILE\"")
+            }
+            appendLine()
+        }
+    }
+
+    private fun StringBuilder.generateUnameSection(
+        unameValue: String,
+        buildTimeValue: String,
+        executeInPostFsData: Boolean
+    ) {
+        if (!executeInPostFsData && (unameValue != DEFAULT_UNAME || buildTimeValue != DEFAULT_BUILD_TIME)) {
+            appendLine("# 设置uname和构建时间")
+            appendLine("\"${'$'}SUSFS_BIN\" set_uname '$unameValue' '$buildTimeValue'")
+            appendLine("echo \"$(get_current_time): 设置uname为: $unameValue, 构建时间为: $buildTimeValue\" >> \"${'$'}LOG_FILE\"")
+            appendLine()
+        }
+    }
+
+    private fun StringBuilder.generateHideBlSection() {
+        appendLine("# 隐藏BL 来自 Shamiko 脚本")
+        appendLine(
+            """
+            check_reset_prop() {
+                local NAME=$1
+                local EXPECTED=$2
+                local VALUE=$(resetprop ${'$'}NAME)
+                [ -z ${'$'}VALUE ] || [ ${'$'}VALUE = ${'$'}EXPECTED ] || resetprop ${'$'}NAME ${'$'}EXPECTED
+            }
+            
+            check_missing_prop() {
+                local NAME=$1
+                local EXPECTED=$2
+                local VALUE=$(resetprop ${'$'}NAME)
+                [ -z ${'$'}VALUE ] && resetprop ${'$'}NAME ${'$'}EXPECTED
+            }
+            
+            check_missing_match_prop() {
+                local NAME=$1
+                local EXPECTED=$2
+                local VALUE=$(resetprop ${'$'}NAME)
+                [ -z ${'$'}VALUE ] || [ ${'$'}VALUE = ${'$'}EXPECTED ] || resetprop ${'$'}NAME ${'$'}EXPECTED
+                [ -z ${'$'}VALUE ] && resetprop ${'$'}NAME ${'$'}EXPECTED
+            }
+            
+            contains_reset_prop() {
+                local NAME=$1
+                local CONTAINS=$2
+                local NEWVAL=$3
+                [[ "$(resetprop ${'$'}NAME)" = *"${'$'}CONTAINS"* ]] && resetprop ${'$'}NAME ${'$'}NEWVAL
+            }
+        """.trimIndent())
+        appendLine()
+
+        appendLine("resetprop -w sys.boot_completed 0")
+        appendLine()
+
+        // 添加所有系统属性重置
+        val systemProps = listOf(
+            "ro.boot.vbmeta.invalidate_on_error" to "yes",
+            "ro.boot.vbmeta.avb_version" to "1.2",
+            "ro.boot.vbmeta.hash_alg" to "sha256",
+            "ro.boot.vbmeta.device_state" to "locked",
+            "ro.boot.verifiedbootstate" to "green",
+            "ro.boot.flash.locked" to "1",
+            "ro.boot.veritymode" to "enforcing",
+            "ro.boot.warranty_bit" to "0",
+            "ro.warranty_bit" to "0",
+            "ro.debuggable" to "0",
+            "ro.force.debuggable" to "0",
+            "ro.secure" to "1",
+            "ro.adb.secure" to "1",
+            "ro.build.type" to "user",
+            "ro.build.tags" to "release-keys",
+            "ro.vendor.boot.warranty_bit" to "0",
+            "ro.vendor.warranty_bit" to "0",
+            "vendor.boot.vbmeta.device_state" to "locked",
+            "vendor.boot.verifiedbootstate" to "green",
+            "sys.oem_unlock_allowed" to "0",
+            "ro.secureboot.lockstate" to "locked",
+            "ro.boot.realmebootstate" to "green",
+            "ro.boot.realme.lockstate" to "1",
+            "ro.crypto.state" to "encrypted"
+        )
+
+        systemProps.forEach { (prop, value) ->
+            when {
+                prop.startsWith("ro.boot.vbmeta") && prop.endsWith("_on_error") ->
+                    appendLine("check_missing_prop \"$prop\" \"$value\"")
+                prop.contains("device_state") || prop.contains("verifiedbootstate") ->
+                    appendLine("check_missing_match_prop \"$prop\" \"$value\"")
+                else ->
+                    appendLine("check_reset_prop \"$prop\" \"$value\"")
+            }
+        }
+
+        appendLine()
+        appendLine("# Hide adb debugging traces")
+        appendLine("resetprop \"sys.usb.adb.disabled\" \" \"")
+        appendLine()
+
+        appendLine("# Hide recovery boot mode")
+        appendLine("contains_reset_prop \"ro.bootmode\" \"recovery\" \"unknown\"")
+        appendLine("contains_reset_prop \"ro.boot.bootmode\" \"recovery\" \"unknown\"")
+        appendLine("contains_reset_prop \"vendor.boot.bootmode\" \"recovery\" \"unknown\"")
+        appendLine()
+
+        appendLine("# Hide cloudphone detection")
+        appendLine("[ -n \"$(resetprop ro.kernel.qemu)\" ] && resetprop ro.kernel.qemu \"\"")
+        appendLine()
     }
 
     /**
@@ -214,37 +280,22 @@ object ScriptGenerator {
             appendLine("# SuSFS Post-FS-Data Script")
             appendLine("# 在文件系统挂载后但在系统完全启动前执行")
             appendLine()
-            appendLine("# 日志目录")
-            appendLine("LOG_DIR=\"/data/adb/ksu/log\"")
-            appendLine("LOG_FILE=\"\$LOG_DIR/susfs_post_fs_data.log\"")
+            appendLine(generateLogSetup("susfs_post_fs_data.log"))
             appendLine()
-            appendLine("# 创建日志目录")
-            appendLine("mkdir -p \"\$LOG_DIR\"")
+            appendLine(generateBinaryCheck(targetPath))
             appendLine()
-            appendLine("# 获取当前时间")
-            appendLine("get_current_time() {")
-            appendLine("    date '+%Y-%m-%d %H:%M:%S'")
-            appendLine("}")
-            appendLine()
-            appendLine("# 检查SuSFS二进制文件")
-            appendLine("SUSFS_BIN=\"$targetPath\"")
-            appendLine("if [ ! -f \"\$SUSFS_BIN\" ]; then")
-            appendLine("    echo \"$(get_current_time): SuSFS二进制文件未找到: \$SUSFS_BIN\" >> \"\$LOG_FILE\"")
-            appendLine("    exit 1")
-            appendLine("fi")
-            appendLine()
-            appendLine("echo \"$(get_current_time): Post-FS-Data脚本开始执行\" >> \"\$LOG_FILE\"")
+            appendLine("echo \"$(get_current_time): Post-FS-Data脚本开始执行\" >> \"${'$'}LOG_FILE\"")
             appendLine()
 
             // 设置uname和构建时间 - 只有在选择在post-fs-data中执行时才执行
-            if (executeInPostFsData && (unameValue != "default" || buildTimeValue != "default")) {
+            if (executeInPostFsData && (unameValue != DEFAULT_UNAME || buildTimeValue != DEFAULT_BUILD_TIME)) {
                 appendLine("# 设置uname和构建时间")
-                appendLine("\"\$SUSFS_BIN\" set_uname '$unameValue' '$buildTimeValue'")
-                appendLine("echo \"$(get_current_time): 设置uname为: $unameValue, 构建时间为: $buildTimeValue\" >> \"\$LOG_FILE\"")
+                appendLine("\"${'$'}SUSFS_BIN\" set_uname '$unameValue' '$buildTimeValue'")
+                appendLine("echo \"$(get_current_time): 设置uname为: $unameValue, 构建时间为: $buildTimeValue\" >> \"${'$'}LOG_FILE\"")
                 appendLine()
             }
 
-            appendLine("echo \"$(get_current_time): Post-FS-Data脚本执行完成\" >> \"\$LOG_FILE\"")
+            appendLine("echo \"$(get_current_time): Post-FS-Data脚本执行完成\" >> \"${'$'}LOG_FILE\"")
         }
     }
 
@@ -261,34 +312,19 @@ object ScriptGenerator {
             appendLine("# SuSFS Post-Mount Script")
             appendLine("# 在所有分区挂载完成后执行")
             appendLine()
-            appendLine("# 日志目录")
-            appendLine("LOG_DIR=\"/data/adb/ksu/log\"")
-            appendLine("LOG_FILE=\"\$LOG_DIR/susfs_post_mount.log\"")
+            appendLine(generateLogSetup("susfs_post_mount.log"))
             appendLine()
-            appendLine("# 创建日志目录")
-            appendLine("mkdir -p \"\$LOG_DIR\"")
+            appendLine("echo \"$(get_current_time): Post-Mount脚本开始执行\" >> \"${'$'}LOG_FILE\"")
             appendLine()
-            appendLine("# 获取当前时间")
-            appendLine("get_current_time() {")
-            appendLine("    date '+%Y-%m-%d %H:%M:%S'")
-            appendLine("}")
-            appendLine()
-            appendLine("echo \"$(get_current_time): Post-Mount脚本开始执行\" >> \"\$LOG_FILE\"")
-            appendLine()
-            appendLine("# 检查SuSFS二进制文件")
-            appendLine("SUSFS_BIN=\"$targetPath\"")
-            appendLine("if [ ! -f \"\$SUSFS_BIN\" ]; then")
-            appendLine("    echo \"$(get_current_time): SuSFS二进制文件未找到: \$SUSFS_BIN\" >> \"\$LOG_FILE\"")
-            appendLine("    exit 1")
-            appendLine("fi")
+            appendLine(generateBinaryCheck(targetPath))
             appendLine()
 
             // 添加SUS挂载
             if (susMounts.isNotEmpty()) {
                 appendLine("# 添加SUS挂载")
                 susMounts.forEach { mount ->
-                    appendLine("\"\$SUSFS_BIN\" add_sus_mount '$mount'")
-                    appendLine("echo \"$(get_current_time): 添加SUS挂载: $mount\" >> \"\$LOG_FILE\"")
+                    appendLine("\"${'$'}SUSFS_BIN\" add_sus_mount '$mount'")
+                    appendLine("echo \"$(get_current_time): 添加SUS挂载: $mount\" >> \"${'$'}LOG_FILE\"")
                 }
                 appendLine()
             }
@@ -301,14 +337,14 @@ object ScriptGenerator {
                     if (parts.size == 2) {
                         val path = parts[0]
                         val mode = parts[1]
-                        appendLine("\"\$SUSFS_BIN\" add_try_umount '$path' $mode")
-                        appendLine("echo \"$(get_current_time): 添加尝试卸载: $path (模式: $mode)\" >> \"\$LOG_FILE\"")
+                        appendLine("\"${'$'}SUSFS_BIN\" add_try_umount '$path' $mode")
+                        appendLine("echo \"$(get_current_time): 添加尝试卸载: $path (模式: $mode)\" >> \"${'$'}LOG_FILE\"")
                     }
                 }
                 appendLine()
             }
 
-            appendLine("echo \"$(get_current_time): Post-Mount脚本执行完成\" >> \"\$LOG_FILE\"")
+            appendLine("echo \"$(get_current_time): Post-Mount脚本执行完成\" >> \"${'$'}LOG_FILE\"")
         }
     }
 
@@ -321,28 +357,13 @@ object ScriptGenerator {
             appendLine("# SuSFS Boot-Completed Script")
             appendLine("# 在系统完全启动后执行")
             appendLine()
-            appendLine("# 日志目录")
-            appendLine("LOG_DIR=\"/data/adb/ksu/log\"")
-            appendLine("LOG_FILE=\"\$LOG_DIR/susfs_boot_completed.log\"")
+            appendLine(generateLogSetup("susfs_boot_completed.log"))
             appendLine()
-            appendLine("# 创建日志目录")
-            appendLine("mkdir -p \"\$LOG_DIR\"")
+            appendLine("echo \"$(get_current_time): Boot-Completed脚本开始执行\" >> \"${'$'}LOG_FILE\"")
             appendLine()
-            appendLine("# 获取当前时间")
-            appendLine("get_current_time() {")
-            appendLine("    date '+%Y-%m-%d %H:%M:%S'")
-            appendLine("}")
+            appendLine(generateBinaryCheck(targetPath))
             appendLine()
-            appendLine("echo \"$(get_current_time): Boot-Completed脚本开始执行\" >> \"\$LOG_FILE\"")
-            appendLine()
-            appendLine("# 检查SuSFS二进制文件")
-            appendLine("SUSFS_BIN=\"$targetPath\"")
-            appendLine("if [ ! -f \"\$SUSFS_BIN\" ]; then")
-            appendLine("    echo \"$(get_current_time): SuSFS二进制文件未找到: \$SUSFS_BIN\" >> \"\$LOG_FILE\"")
-            appendLine("    exit 1")
-            appendLine("fi")
-            appendLine()
-            appendLine("echo \"$(get_current_time): Boot-Completed脚本执行完成\" >> \"\$LOG_FILE\"")
+            appendLine("echo \"$(get_current_time): Boot-Completed脚本执行完成\" >> \"${'$'}LOG_FILE\"")
         }
     }
 
