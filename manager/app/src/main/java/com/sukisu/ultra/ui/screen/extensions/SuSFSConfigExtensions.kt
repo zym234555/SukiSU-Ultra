@@ -22,6 +22,8 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Storage
 import androidx.compose.material.icons.filled.Update
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -49,6 +51,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.sukisu.ultra.R
 import com.sukisu.ultra.ui.util.SuSFSManager
 import kotlinx.coroutines.launch
@@ -552,14 +555,133 @@ fun SusPathsContent(
 }
 
 /**
+ * SUS挂载隐藏控制卡片组件
+ */
+@Composable
+fun SusMountHidingControlCard(
+    hideSusMountsForAllProcs: Boolean,
+    isLoading: Boolean,
+    onToggleHiding: (Boolean) -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            // 标题行
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = if (hideSusMountsForAllProcs) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = stringResource(R.string.susfs_hide_mounts_control_title),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
+
+            // 描述文本
+            Text(
+                text = stringResource(R.string.susfs_hide_mounts_control_description),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                lineHeight = 16.sp
+            )
+
+            // 控制开关行
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(
+                        text = stringResource(R.string.susfs_hide_mounts_for_all_procs_label),
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = if (hideSusMountsForAllProcs) {
+                            stringResource(R.string.susfs_hide_mounts_for_all_procs_enabled_description)
+                        } else {
+                            stringResource(R.string.susfs_hide_mounts_for_all_procs_disabled_description)
+                        },
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        lineHeight = 14.sp
+                    )
+                }
+                Switch(
+                    checked = hideSusMountsForAllProcs,
+                    onCheckedChange = onToggleHiding,
+                    enabled = !isLoading
+                )
+            }
+
+            // 当前设置显示
+            Text(
+                text = stringResource(
+                    R.string.susfs_hide_mounts_current_setting,
+                    if (hideSusMountsForAllProcs) {
+                        stringResource(R.string.susfs_hide_mounts_setting_all)
+                    } else {
+                        stringResource(R.string.susfs_hide_mounts_setting_non_ksu)
+                    }
+                ),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.Medium
+            )
+
+            // 建议文本
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                ),
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                Text(
+                    text = stringResource(R.string.susfs_hide_mounts_recommendation),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    lineHeight = 14.sp,
+                    modifier = Modifier.padding(12.dp)
+                )
+            }
+        }
+    }
+}
+
+/**
  * SUS挂载内容组件
  */
 @Composable
 fun SusMountsContent(
     susMounts: Set<String>,
+    hideSusMountsForAllProcs: Boolean,
+    isSusMountHidingSupported: Boolean,
     isLoading: Boolean,
     onAddMount: () -> Unit,
-    onRemoveMount: (String) -> Unit
+    onRemoveMount: (String) -> Unit,
+    onToggleHideSusMountsForAllProcs: (Boolean) -> Unit
 ) {
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -589,6 +711,14 @@ fun SusMountsContent(
             }
         )
 
+        // SUS挂载隐藏控制卡片 - 仅在支持的版本显示
+        if (isSusMountHidingSupported) {
+            SusMountHidingControlCard(
+                hideSusMountsForAllProcs = hideSusMountsForAllProcs,
+                isLoading = isLoading,
+                onToggleHiding = onToggleHideSusMountsForAllProcs
+            )
+        }
         if (susMounts.isEmpty()) {
             EmptyStateCard(
                 message = stringResource(R.string.susfs_no_mounts_configured)
@@ -610,6 +740,7 @@ fun SusMountsContent(
         }
     }
 }
+
 
 /**
  * 尝试卸载内容组件
@@ -801,7 +932,7 @@ fun KstatConfigContent(
             }
         }
 
-// 静态Kstat配置列表
+        // 静态Kstat配置列表
         if (kstatConfigs.isNotEmpty()) {
             Text(
                 text = stringResource(R.string.static_kstat_config),
@@ -822,7 +953,7 @@ fun KstatConfigContent(
             }
         }
 
-// Add Kstat路径列表
+        // Add Kstat路径列表
         if (addKstatPaths.isNotEmpty()) {
             Text(
                 text = stringResource(R.string.kstat_path_management),
@@ -845,7 +976,7 @@ fun KstatConfigContent(
             }
         }
 
-// 空状态显示
+        // 空状态显示
         if (kstatConfigs.isEmpty() && addKstatPaths.isEmpty()) {
             EmptyStateCard(
                 message = stringResource(R.string.no_kstat_config_message)

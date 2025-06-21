@@ -138,6 +138,9 @@ fun SuSFSConfigScreen(
     var androidDataPath by remember { mutableStateOf("") }
     var sdcardPath by remember { mutableStateOf("") }
 
+    // SUS挂载隐藏控制状态
+    var hideSusMountsForAllProcs by remember { mutableStateOf(true) }
+
     // Kstat配置相关状态
     var kstatConfigs by remember { mutableStateOf(emptySet<String>()) }
     var addKstatPaths by remember { mutableStateOf(emptySet<String>()) }
@@ -223,6 +226,7 @@ fun SuSFSConfigScreen(
         sdcardPath = SuSFSManager.getSdcardPath(context)
         kstatConfigs = SuSFSManager.getKstatConfigs(context)
         addKstatPaths = SuSFSManager.getAddKstatPaths(context)
+        hideSusMountsForAllProcs = SuSFSManager.getHideSusMountsForAllProcs(context)
 
         // 加载槽位信息
         loadSlotInfo()
@@ -1533,8 +1537,13 @@ fun SuSFSConfigScreen(
                         )
                     }
                     SuSFSTab.SUS_MOUNTS -> {
+                        // 检查版本支持
+                        val isSusMountHidingSupported = remember { SuSFSManager.isSusMountHidingSupported() }
+
                         SusMountsContent(
                             susMounts = susMounts,
+                            hideSusMountsForAllProcs = hideSusMountsForAllProcs,
+                            isSusMountHidingSupported = isSusMountHidingSupported,
                             isLoading = isLoading,
                             onAddMount = { showAddMountDialog = true },
                             onRemoveMount = { mount ->
@@ -1545,9 +1554,19 @@ fun SuSFSConfigScreen(
                                     }
                                     isLoading = false
                                 }
+                            },
+                            onToggleHideSusMountsForAllProcs = { hideForAll ->
+                                coroutineScope.launch {
+                                    isLoading = true
+                                    if (SuSFSManager.setHideSusMountsForAllProcs(context, hideForAll)) {
+                                        hideSusMountsForAllProcs = hideForAll
+                                    }
+                                    isLoading = false
+                                }
                             }
                         )
                     }
+
                     SuSFSTab.TRY_UMOUNT -> {
                         TryUmountContent(
                             tryUmounts = tryUmounts,
