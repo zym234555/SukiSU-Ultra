@@ -374,7 +374,6 @@ object SuSFSManager {
             Triple("status_hide_symbols", context.getString(R.string.hide_symbols_feature_label), status.statusHideSymbols),
             Triple("status_sus_kstat", context.getString(R.string.sus_kstat_feature_label), status.statusSusKstat),
             Triple("status_magic_mount", context.getString(R.string.magic_mount_feature_label), status.statusMagicMount),
-            Triple("status_overlayfs_auto_kstat", context.getString(R.string.overlayfs_auto_kstat_feature_label), status.statusOverlayfsAutoKstat),
             Triple("status_sus_su", context.getString(R.string.sus_su_feature_label), status.statusSusSu)
         )
 
