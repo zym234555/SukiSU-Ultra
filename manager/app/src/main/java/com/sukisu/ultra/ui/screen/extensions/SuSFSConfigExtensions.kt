@@ -194,7 +194,7 @@ fun KstatConfigItemCard(
                         )
                         if (parts.size > 1) {
                             Text(
-                                text = "参数: ${parts.drop(1).joinToString(" ")}",
+                                text = "${parts.drop(1).joinToString(" ")}",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
