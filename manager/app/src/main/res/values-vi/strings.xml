@@ -400,9 +400,6 @@
     <string name="susfs_path_label">Đường dẫn</string>
     <string name="susfs_mount_path_label">Đường dẫn Mount</string>
     <string name="susfs_path_placeholder">Ví dụ: /system/addon.d</string>
-    <string name="susfs_sus_paths_management">Quản lý Đường dẫn SuS</string>
-    <string name="susfs_sus_mounts_management">Quản lý SuS Mounts</string>
-    <string name="susfs_try_umount_management">Quản lý SuS Umount</string>
     <string name="susfs_no_paths_configured">Không có Đường dẫn SuS nào được cấu hình</string>
     <string name="susfs_no_mounts_configured">Không có SuS Mounts nào được cấu hình</string>
     <string name="susfs_no_umounts_configured">Không có SuS Umount nào được cấu hình</string>
@@ -427,13 +424,11 @@
     <string name="susfs_reset_umounts_message">Thao tác này sẽ xóa tất cả các cấu hình SuS Umount. Bạn có chắc chắn muốn tiếp tục không?</string>
     <string name="susfs_reset_path_title">Reset Cài đặt Đường dẫn</string>
     <!-- SuSFS Path Settings -->
-    <string name="susfs_path_settings">Cài đặt Đường dẫn</string>
     <string name="susfs_android_data_path_label">Đường dẫn Dữ liệu Android</string>
     <string name="susfs_sdcard_path_label">Đường dẫn Thẻ SD</string>
     <string name="susfs_set_android_data_path">Đặt Đường dẫn Dữ liệu Android</string>
     <string name="susfs_set_sdcard_path">Đặt Đường dẫn Thẻ SD</string>
     <!-- SuSFS Enabled Features -->
-    <string name="susfs_enabled_features_title">Trạng thái tính năng</string>
     <string name="susfs_enabled_features_description">Hiển thị trạng thái tính năng hiện tại của SuSFS</string>
     <string name="susfs_no_features_found">Không tìm thấy thông tin trạng thái tính năng</string>
     <string name="susfs_feature_enabled">Đã bật</string>
@@ -500,7 +495,6 @@
     <string name="reset_kstat_config_title">Khôi phục Cấu hình Kstat</string>
     <string name="reset_kstat_config_message">Bạn có chắc chắn muốn xóa tất cả cấu hình Kstat không? Không thể hoàn tác hành động này</string>
     <string name="confirm_reset">Xác nhận khôi phục</string>
-    <string name="kstat_config_management">Quản lý cấu hình Kstat</string>
     <string name="kstat_config_description_title">Mô tả cấu hình Kstat</string>
     <string name="kstat_config_description_add_statically">• add_sus_kstat_statically: Thông tin thống kê cấu hình tĩnh của các File/Folder</string>
     <string name="kstat_config_description_add">• add_sus_kstat: Thêm đường dẫn trước khi mount để lưu trữ thông tin trạng thái ban đầu</string>

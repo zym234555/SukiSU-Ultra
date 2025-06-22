@@ -402,9 +402,6 @@
     <string name="susfs_path_label">Path</string>
     <string name="susfs_mount_path_label">Mount Path</string>
     <string name="susfs_path_placeholder">e.g.: /system/addon.d</string>
-    <string name="susfs_sus_paths_management">SUS Paths Management</string>
-    <string name="susfs_sus_mounts_management">SUS Mounts Management</string>
-    <string name="susfs_try_umount_management">Try Umount Management</string>
     <string name="susfs_no_paths_configured">No SUS paths configured</string>
     <string name="susfs_no_mounts_configured">No SUS mounts configured</string>
     <string name="susfs_no_umounts_configured">No try umount configured</string>
@@ -429,13 +426,11 @@
     <string name="susfs_reset_umounts_message">This will clear all try umount configurations. Are you sure you want to continue?</string>
     <string name="susfs_reset_path_title">Reset Path Settings</string>
     <!-- SuSFS Path Settings -->
-    <string name="susfs_path_settings">Path Settings</string>
     <string name="susfs_android_data_path_label">Android Data Path</string>
     <string name="susfs_sdcard_path_label">SD Card Path</string>
     <string name="susfs_set_android_data_path">Set Android Data Path</string>
     <string name="susfs_set_sdcard_path">Set SD Card Path</string>
     <!-- SuSFS Enabled Features -->
-    <string name="susfs_enabled_features_title">Enabled Features Status</string>
     <string name="susfs_enabled_features_description">Display current SuSFS enabled features status</string>
     <string name="susfs_no_features_found">No feature status information found</string>
     <string name="susfs_feature_enabled">Enabled</string>
@@ -502,7 +497,6 @@
     <string name="reset_kstat_config_title">Reset Kstat Configuration</string>
     <string name="reset_kstat_config_message">Are you sure you want to clear all Kstat configurations? This action cannot be undone.</string>
     <string name="confirm_reset">Confirm Reset</string>
-    <string name="kstat_config_management">Kstat Configuration Management</string>
     <string name="kstat_config_description_title">Kstat Configuration Description</string>
     <string name="kstat_config_description_add_statically">• add_sus_kstat_statically: Static stat info of files/directories</string>
     <string name="kstat_config_description_add">• add_sus_kstat: Add path before bind mount, storing original stat info</string>
@@ -523,4 +517,5 @@
     <string name="susfs_hide_mounts_current_setting">Current setting: %s</string>
     <string name="susfs_hide_mounts_setting_all">Hide for all processes</string>
     <string name="susfs_hide_mounts_setting_non_ksu">Hide only for non-KSU processes</string>
+    <string name="susfs_run">Run</string>
 </resources>

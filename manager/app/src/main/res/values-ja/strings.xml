@@ -394,9 +394,6 @@
     <string name="susfs_path_label">パス</string>
     <string name="susfs_mount_path_label">マウントのパス</string>
     <string name="susfs_path_placeholder">例 : /system/addon.d</string>
-    <string name="susfs_sus_paths_management">SUS パスの管理</string>
-    <string name="susfs_sus_mounts_management">SUS マウントの管理</string>
-    <string name="susfs_try_umount_management">アンマウントの管理を試す</string>
     <string name="susfs_no_paths_configured">SUS パスが未構成です</string>
     <string name="susfs_no_mounts_configured">SUS マウントが未構成です</string>
     <string name="susfs_no_umounts_configured">アンマウントを試すが未構成です</string>
@@ -420,13 +417,11 @@
     <string name="susfs_reset_umounts_title">リセットしてアンマウントを試す</string>
     <string name="susfs_reset_umounts_message">すべてのアンマウント構成がリセットされます。続行してもよろしいですか？</string>
     <!-- SuSFS Path Settings -->
-    <string name="susfs_path_settings">パスの設定</string>
     <string name="susfs_android_data_path_label">Android データパス</string>
     <string name="susfs_sdcard_path_label">SD カードのパス</string>
     <string name="susfs_set_android_data_path">Android データパスを設定</string>
     <string name="susfs_set_sdcard_path">SD カードのパスを設定</string>
     <!-- SuSFS Enabled Features -->
-    <string name="susfs_enabled_features_title">有効な機能のステータス</string>
     <string name="susfs_enabled_features_description">SuSFS で有効な機能のステータスを表示します。</string>
     <string name="susfs_no_features_found">機能のステータス情報が見つかりません</string>
     <string name="susfs_feature_enabled">有効</string>
@@ -444,7 +439,6 @@
     <string name="auto_try_umount_bind_feature_label">自動でバインドマウントのアンマウントを試す</string>
     <string name="hide_symbols_feature_label">KSU SUSFS シンボルを非表示</string>
     <string name="magic_mount_feature_label">Magic Mount の対応</string>
-    <string name="overlayfs_auto_kstat_feature_label">OverlayFS 自動カーネル状態の対応</string>
     <string name="sus_kstat_feature_label">SUS Kstat の対応</string>
     <string name="sus_su_feature_label">SUS SU モード切り替え機能</string>
     <!-- 可切换状态 -->

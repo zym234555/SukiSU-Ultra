@@ -400,9 +400,6 @@
     <string name="susfs_path_label">路径</string>
     <string name="susfs_mount_path_label">挂载路径</string>
     <string name="susfs_path_placeholder">例如: /system/addon.d</string>
-    <string name="susfs_sus_paths_management">SUS 路径管理</string>
-    <string name="susfs_sus_mounts_management">SUS 挂载管理</string>
-    <string name="susfs_try_umount_management">尝试卸载管理</string>
     <string name="susfs_no_paths_configured">暂无 SUS 路径配置</string>
     <string name="susfs_no_mounts_configured">暂无 SUS 挂载配置</string>
     <string name="susfs_no_umounts_configured">暂无尝试卸载配置</string>
@@ -427,13 +424,11 @@
     <string name="susfs_reset_umounts_message">这将清除所有尝试卸载配置，确定要继续吗？</string>
     <string name="susfs_reset_path_title">重置路径设置</string>
     <!-- SuSFS Path Settings -->
-    <string name="susfs_path_settings">路径设置</string>
     <string name="susfs_android_data_path_label">Android Data 路径</string>
     <string name="susfs_sdcard_path_label">SD 卡路径</string>
     <string name="susfs_set_android_data_path">设置 Android Data 路径</string>
     <string name="susfs_set_sdcard_path">设置 SD 卡路径</string>
     <!-- SuSFS Enabled Features -->
-    <string name="susfs_enabled_features_title">启用功能状态</string>
     <string name="susfs_enabled_features_description">显示当前 SuSFS 启用的功能状态</string>
     <string name="susfs_no_features_found">未找到功能状态信息</string>
     <string name="susfs_feature_enabled">已启用</string>
@@ -500,7 +495,6 @@
     <string name="reset_kstat_config_title">重置 Kstat 配置</string>
     <string name="reset_kstat_config_message">确定要清除所有 Kstat 配置吗？此操作不可撤销</string>
     <string name="confirm_reset">确认重置</string>
-    <string name="kstat_config_management">Kstat 配置管理</string>
     <string name="kstat_config_description_title">Kstat 配置说明</string>
     <string name="kstat_config_description_add_statically">• add_sus_kstat_statically: 静态配置文件/目录的 stat 信息</string>
     <string name="kstat_config_description_add">• add_sus_kstat: 在绑定挂载前添加路径，存储原始 stat 信息</string>
@@ -508,7 +502,7 @@
     <string name="kstat_config_description_update_full_clone">• update_sus_kstat_full_clone: 仅更新 ino，其他保持原始值</string>
     <string name="static_kstat_config">静态 Kstat 配置</string>
     <string name="kstat_path_management">Kstat 路径管理</string>
-    <string name="no_kstat_config_message">暂无 Kstat 配置，点击上方按钮添加配置</string>
+    <string name="no_kstat_config_message">暂无 Kstat 配置，点击下方按钮添加配置</string>
     <!-- SuSFS 挂载隐藏控制相关字符串 -->
     <string name="susfs_hide_mounts_control_title">SUS挂载隐藏控制</string>
     <string name="susfs_hide_mounts_control_description">控制SUS挂载对进程的隐藏行为</string>
@@ -521,4 +515,5 @@
     <string name="susfs_hide_mounts_current_setting">当前设置: %s</string>
     <string name="susfs_hide_mounts_setting_all">对所有进程隐藏</string>
     <string name="susfs_hide_mounts_setting_non_ksu">仅对非KSU进程隐藏</string>
+    <string name="susfs_run">运行</string>
 </resources>

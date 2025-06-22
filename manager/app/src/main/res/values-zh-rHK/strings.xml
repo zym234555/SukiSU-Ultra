@@ -400,9 +400,6 @@
     <string name="susfs_path_label">路徑</string>
     <string name="susfs_mount_path_label">掛載路徑</string>
     <string name="susfs_path_placeholder">例如: /system/addon.d</string>
-    <string name="susfs_sus_paths_management">SUS 路徑管理</string>
-    <string name="susfs_sus_mounts_management">SUS 掛載管理</string>
-    <string name="susfs_try_umount_management">嘗試卸載管理</string>
     <string name="susfs_no_paths_configured">暫冇 SUS 路徑配置</string>
     <string name="susfs_no_mounts_configured">暫冇 SUS 掛載配置</string>
     <string name="susfs_no_umounts_configured">暫冇嘗試卸載配置</string>
@@ -427,13 +424,11 @@
     <string name="susfs_reset_umounts_message">這將清除所有嘗試卸載配置，確定要繼續嗎？</string>
     <string name="susfs_reset_path_title">重置路徑設定</string>
     <!-- SuSFS Path Settings -->
-    <string name="susfs_path_settings">路徑設定</string>
     <string name="susfs_android_data_path_label">Android Data 路徑</string>
     <string name="susfs_sdcard_path_label">SD 卡路徑</string>
     <string name="susfs_set_android_data_path">設置 Android Data 路徑</string>
     <string name="susfs_set_sdcard_path">設置 SD 卡路徑</string>
     <!-- SuSFS Enabled Features -->
-    <string name="susfs_enabled_features_title">啟用功能狀態</string>
     <string name="susfs_enabled_features_description">顯示當前 SuSFS 啟用嘅功能狀態</string>
     <string name="susfs_no_features_found">未找到功能狀態信息</string>
     <string name="susfs_feature_enabled">已啟用</string>
@@ -500,7 +495,6 @@
     <string name="reset_kstat_config_title">重置 Kstat 配置</string>
     <string name="reset_kstat_config_message">確定要清除所有 Kstat 配置嗎？此操作不可撤銷</string>
     <string name="confirm_reset">確認重置</string>
-    <string name="kstat_config_management">Kstat 配置管理</string>
     <string name="kstat_config_description_title">Kstat 配置說明</string>
     <string name="kstat_config_description_add_statically">• add_sus_kstat_statically: 靜態配置文件/目錄嘅 stat 信息</string>
     <string name="kstat_config_description_add">• add_sus_kstat: 在綁定掛載前添加路徑，存儲原始 stat 信息</string>
