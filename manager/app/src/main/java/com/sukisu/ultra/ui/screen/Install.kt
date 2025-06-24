@@ -373,7 +373,7 @@ private fun SelectInstallMethod(
     val horizonKernelSummary = stringResource(R.string.horizon_kernel_summary)
     val selectFileTip = stringResource(
         id = R.string.select_file_tip,
-        if (isInitBoot()) "init_boot" else "boot"
+        if (isInitBoot()) "init_boot / vendor_boot" else "boot"
     )
 
     val radioOptions = mutableListOf<InstallMethod>(
