@@ -4,7 +4,7 @@
     <string name="home_not_installed">غير مثبت</string>
     <string name="home_click_to_install">إضغط للتثبيت</string>
     <string name="home_working">يعمل</string>
-    <string name="home_working_version">الإصدار: %d</string>
+    <string name="home_working_version">الإصدار: %s</string>
     <string name="home_unsupported">غير مدعوم</string>
     <string name="home_unsupported_reason">KernelSU يدعم GKI kernels فقط</string>
     <string name="home_kernel">إصدار النواة</string>
@@ -60,7 +60,7 @@
     <string name="profile_selinux_context">سياق SELinux</string>
     <string name="profile_umount_modules">الغاء تحميل الإضافات</string>
     <string name="failed_to_update_app_profile">فشل تحديث ملف تعريف التطبيق لـ %s</string>
-    <string name="require_kernel_version" formatted="false">إصدار KernelSU الحالي %d منخفض جدًا بحيث لا يعمل المدير بشكل صحيح. الرجاء الترقية إلى الإصدار %d أو أعلى!</string>
+    <string name="require_kernel_version" formatted="false">إصدار KernelSU الحالي %s منخفض جدًا بحيث لا يعمل المدير بشكل صحيح. الرجاء الترقية إلى الإصدار %s أو أعلى!</string>
     <string name="settings_umount_modules_default">الغاء تحميل الإضافات بشكل افتراضي</string>
     <string name="settings_umount_modules_default_summary">القيمة الافتراضية العامة لـ\"إلغاء تحميل الإضافات\" في ملفات تعريف التطبيقات. إذا تم تمكينه، إزالة جميع تعديلات الإضافات على النظام للتطبيقات التي لا تحتوي على مجموعة ملف تعريف.</string>
     <string name="settings_susfs_toggle">تعطيل روابط kprobe</string>

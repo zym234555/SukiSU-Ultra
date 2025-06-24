@@ -295,7 +295,7 @@ pub fn restore(
                 std::fs::remove_file(vendor_ramdisk)?;
             }
         } else {
-            // remove kernelsu.koAdd commentMore actions
+            // remove kernelsu.ko
             do_cpio_cmd(&magiskboot, workdir, "rm kernelsu.ko")?;
             // if init.real exists, restore it
             let status = do_cpio_cmd(&magiskboot, workdir, "exists init.real").is_ok();

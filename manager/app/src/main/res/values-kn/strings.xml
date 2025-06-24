@@ -4,7 +4,7 @@
     <string name="home_not_installed">Not installed</string>
     <string name="home_click_to_install">Click to install</string>
     <string name="home_working">ಕೆಲಸ ಮಾಡುತ್ತಿದೆ</string>
-    <string name="home_working_version">ವರ್ಷನ್: %d</string>
+    <string name="home_working_version">ವರ್ಷನ್: %s</string>
     <string name="home_unsupported">ಬೆಂಬಲಿತವಾಗಿಲ್ಲ</string>
     <string name="home_unsupported_reason">KernelSU ಈಗ GKI ಕರ್ನಲ್‌ಗಳನ್ನು ಮಾತ್ರ ಬೆಂಬಲಿಸುತ್ತದೆ</string>
     <string name="home_kernel">ಕರ್ನಲ್</string>
@@ -60,7 +60,7 @@
     <string name="profile_selinux_context">SELinux ಸಂದರ್ಭ</string>
     <string name="profile_umount_modules">Umount ಮಾಡ್ಯೂಲ್‌ಗಳು</string>
     <string name="failed_to_update_app_profile">%s ಗಾಗಿ ಅಪ್ಲಿಕೇಶನ್ ಪ್ರೊಫೈಲ್ ಅನ್ನು ನವೀಕರಿಸಲು ವಿಫಲವಾಗಿದೆ</string>
-    <string name="require_kernel_version" formatted="false">The current KernelSU version %d is too low for the manager to work properly. Please upgrade to version %d or higher!</string>
+    <string name="require_kernel_version" formatted="false">The current KernelSU version %s is too low for the manager to work properly. Please upgrade to version %s or higher!</string>
     <string name="settings_umount_modules_default">ಡೀಫಾಲ್ಟ್ ಆಗಿ Umount ಮಾಡ್ಯೂಲ್</string>
     <string name="settings_umount_modules_default_summary">ಅಪ್ಲಿಕೇಶನ್ ಪ್ರೊಫೈಲ್‌ಗಳಲ್ಲಿ \"Umount ಮಾಡ್ಯೂಲ್\" ಗಾಗಿ ಜಾಗತಿಕ ಡೀಫಾಲ್ಟ್ ಮೌಲ್ಯ. ಸಕ್ರಿಯಗೊಳಿಸಿದರೆ, ಪ್ರೊಫೈಲ್ ಸೆಟ್ ಅನ್ನು ಹೊಂದಿರದ ಅಪ್ಲಿಕೇಶನ್‌ಗಳಿಗಾಗಿ ಸಿಸ್ಟಮ್‌ಗೆ ಎಲ್ಲಾ ಮಾಡ್ಯೂಲ್ ಮಾರ್ಪಾಡುಗಳನ್ನು ಇದು ತೆಗೆದುಹಾಕುತ್ತದೆ.</string>
     <string name="settings_susfs_toggle">Disable kprobe hooks</string>

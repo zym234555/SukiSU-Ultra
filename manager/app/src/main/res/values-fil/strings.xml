@@ -4,7 +4,7 @@
     <string name="home_not_installed">Hindi naka-install</string>
     <string name="home_click_to_install">Pindutin para mag-install</string>
     <string name="home_working">Gumagana</string>
-    <string name="home_working_version">Bersyon: %d</string>
+    <string name="home_working_version">Bersyon: %s</string>
     <string name="home_unsupported">Hindi Suportado</string>
     <string name="home_unsupported_reason">Sinusuportahan lang ng KernelSU ang mga kernel ng GKI ngayon</string>
     <string name="home_kernel">Kernel version</string>
@@ -60,7 +60,7 @@
     <string name="profile_selinux_context">Konteksto ng SELinux</string>
     <string name="profile_umount_modules">I-unmount ang mga modyul</string>
     <string name="failed_to_update_app_profile">Nabigong i-update ang App Profile para sa %s</string>
-    <string name="require_kernel_version" formatted="false">The current KernelSU version %d is too low for the manager to work properly. Please upgrade to version %d or higher!</string>
+    <string name="require_kernel_version" formatted="false">The current KernelSU version %s is too low for the manager to work properly. Please upgrade to version %s or higher!</string>
     <string name="settings_umount_modules_default">Umount modules by default</string>
     <string name="settings_umount_modules_default_summary">Ang pangkalahatang default na halaga para sa \"Umount modules\" sa Mga Profile ng App. Kung pinagana, aalisin nito ang lahat ng mga pagbabago sa modyul sa system para sa mga aplikasyon na walang hanay ng Profile.</string>
     <string name="settings_susfs_toggle">Disable kprobe hooks</string>

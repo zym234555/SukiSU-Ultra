@@ -5,7 +5,7 @@
     <string name="home_not_installed">Not installed</string>
     <string name="home_click_to_install">Click to install</string>
     <string name="home_working">Working</string>
-    <string name="home_working_version">Version: %d</string>
+    <string name="home_working_version">Version: %s</string>
     <string name="home_unsupported">Unsupported</string>
     <string name="home_unsupported_reason">No KernelSU driver detected on your kernel, wrong kernel?.</string>
     <string name="home_kernel">Kernel version</string>
@@ -62,7 +62,7 @@
     <string name="profile_selinux_context">SELinux context</string>
     <string name="profile_umount_modules">Umount modules</string>
     <string name="failed_to_update_app_profile">Failed to update App Profile for %s</string>
-    <string name="require_kernel_version" formatted="false">The current KernelSU version %d is too low for the manager to work properly. Please upgrade to version %d or higher!</string>
+    <string name="require_kernel_version" formatted="false">The current KernelSU version %s is too low for the manager to work properly. Please upgrade to version %s or higher!</string>
     <string name="settings_umount_modules_default">Umount modules by default</string>
     <string name="settings_umount_modules_default_summary">The global default value for \"Umount modules\" in App Profile. If enabled, it will remove all module modifications to the system for apps that don\'t have a profile set.</string>
     <string name="settings_susfs_toggle">Disable kprobe hooks</string>
@@ -519,4 +519,6 @@
     <string name="susfs_hide_mounts_setting_all">Hide for all processes</string>
     <string name="susfs_hide_mounts_setting_non_ksu">Hide only for non-KSU processes</string>
     <string name="susfs_run">Run</string>
+    <string name="kernel_simple_kernel">Kernel Version Concise Mode</string>
+    <string name="kernel_simple_kernel_summary">Enable or disable the clean mode displayed by the SukiSU kernel version</string>
 </resources>

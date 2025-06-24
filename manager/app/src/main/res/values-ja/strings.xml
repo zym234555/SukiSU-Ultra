@@ -4,7 +4,7 @@
     <string name="home_not_installed">未インストール</string>
     <string name="home_click_to_install">タップでインストール</string>
     <string name="home_working">動作中</string>
-    <string name="home_working_version">バージョン: %d</string>
+    <string name="home_working_version">バージョン: %s</string>
     <string name="home_unsupported">非対応</string>
     <string name="home_unsupported_reason">カーネルの KernelSU ドライバが未検出です。カーネルが間違ってませんか？</string>
     <string name="home_kernel">カーネルのバージョン</string>
@@ -60,7 +60,7 @@
     <string name="profile_selinux_context">SELinux コンテキスト</string>
     <string name="profile_umount_modules">モジュールのアンマウント</string>
     <string name="failed_to_update_app_profile">%s のアプリのプロファイルの更新をできませでした</string>
-    <string name="require_kernel_version" formatted="false">現在の KernelSU のバージョン %d は低すぎるため、マネージャーは正常に動作しません。バージョン %d 以上に更新してください！</string>
+    <string name="require_kernel_version" formatted="false">現在の KernelSU のバージョン %s は低すぎるため、マネージャーは正常に動作しません。バージョン %s 以上に更新してください！</string>
     <string name="settings_umount_modules_default">デフォルトでモジュールのマウントを解除する</string>
     <string name="settings_umount_modules_default_summary">アプリプロファイルの「モジュールのアンマウント」の共通となるデフォルト値です。 有効にすると、プロファイルセットを持たないアプリのシステムに対するすべてのモジュールの変更が削除されます。</string>
     <string name="settings_susfs_toggle">kprobe フックを無効化</string>

@@ -4,7 +4,7 @@
     <string name="home_not_installed">Yüklənmədi</string>
     <string name="home_click_to_install">Yükləmək üçün toxunun</string>
     <string name="home_working">İşləyir</string>
-    <string name="home_working_version">Versiya: %d</string>
+    <string name="home_working_version">Versiya: %s</string>
     <string name="home_unsupported">Dəstəklənmir</string>
     <string name="home_unsupported_reason">Hal-hazırda KernelSU yalnız GKI nüvələrini dəstəkləyir</string>
     <string name="home_kernel">Nüvə</string>
@@ -60,7 +60,7 @@
     <string name="profile_selinux_context">SELinux konteksi</string>
     <string name="profile_umount_modules">Modulları umount et</string>
     <string name="failed_to_update_app_profile">%s görə tətbiq profillərini güncəlləmək mümkün olmadı</string>
-    <string name="require_kernel_version" formatted="false">The current KernelSU version %d is too low for the manager to work properly. Please upgrade to version %d or higher!</string>
+    <string name="require_kernel_version" formatted="false">The current KernelSU version %s is too low for the manager to work properly. Please upgrade to version %s or higher!</string>
     <string name="settings_umount_modules_default">Defolt olaraq modulları umount et</string>
     <string name="settings_umount_modules_default_summary">Tətbiq Profillərində \"Umount modulları\" üçün qlobal standart dəyər. Aktivləşdirilərsə, o, Profil dəsti olmayan proqramlar üçün sistemdəki bütün modul dəyişikliklərini siləcək.</string>
     <string name="settings_susfs_toggle">Disable kprobe hooks</string>

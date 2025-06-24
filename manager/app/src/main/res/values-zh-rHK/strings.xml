@@ -4,7 +4,7 @@
     <string name="home_not_installed">未安裝</string>
     <string name="home_click_to_install">點擊安裝</string>
     <string name="home_working">工作中</string>
-    <string name="home_working_version">版本：%d</string>
+    <string name="home_working_version">版本：%s</string>
     <string name="home_unsupported">唔支援</string>
     <string name="home_unsupported_reason">核心上未檢測到 KernelSU 驅動程式，核心錯誤？</string>
     <string name="home_kernel">核心版本</string>
@@ -60,7 +60,7 @@
     <string name="profile_selinux_context">SELinux</string>
     <string name="profile_umount_modules">卸載模組</string>
     <string name="failed_to_update_app_profile">為 %s 更新 App Profile 失敗</string>
-    <string name="require_kernel_version" formatted="false">當前 KernelSU 版本 %d 過低，管理器無法正常工作，請將核心 KernelSU 版本升級至 %d 或以上！</string>
+    <string name="require_kernel_version" formatted="false">當前 KernelSU 版本 %s 過低，管理器無法正常工作，請將核心 KernelSU 版本升級至 %s 或以上！</string>
     <string name="settings_umount_modules_default">默認卸載模組</string>
     <string name="settings_umount_modules_default_summary">App Profile 中\"卸載模組\"嘅全局默認值，如果啟用，將會為冇設置 Profile 嘅應用移除所有模組針對系統嘅修改。</string>
     <string name="settings_susfs_toggle">禁用 Kprobe Hook</string>

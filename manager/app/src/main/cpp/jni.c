@@ -346,3 +346,9 @@ NativeBridgeNP(getSusfsFeatureStatus, jobject) {
 
     return obj;
 }
+
+NativeBridgeNP(getFullVersion, jstring) {
+    char buff[255] = { 0 };
+    get_full_version((char *) &buff);
+    return GetEnvironment()->NewStringUTF(env, buff);
+}

@@ -4,7 +4,7 @@
     <string name="home_not_installed">未安装</string>
     <string name="home_click_to_install">点击安装</string>
     <string name="home_working">工作中</string>
-    <string name="home_working_version">版本：%d</string>
+    <string name="home_working_version">版本：%s</string>
     <string name="home_unsupported">不支持</string>
     <string name="home_unsupported_reason">内核上未检测到 KernelSU 驱动程序，内核错误？</string>
     <string name="home_kernel">内核版本</string>
@@ -60,7 +60,7 @@
     <string name="profile_selinux_context">SELinux</string>
     <string name="profile_umount_modules">卸载模块</string>
     <string name="failed_to_update_app_profile">为 %s 更新 App Profile 失败</string>
-    <string name="require_kernel_version" formatted="false">当前 KernelSU 版本 %d 过低，管理器无法正常工作，请将内核 KernelSU 版本升级至 %d 或以上！</string>
+    <string name="require_kernel_version" formatted="false">当前 KernelSU 版本 %s 过低，管理器无法正常工作，请将内核 KernelSU 版本升级至 %s 或以上！</string>
     <string name="settings_umount_modules_default">默认卸载模块</string>
     <string name="settings_umount_modules_default_summary">App Profile 中\"卸载模块\"的全局默认值，如果启用，将会为没有设置 Profile 的应用移除所有模块针对系统的修改。</string>
     <string name="settings_susfs_toggle">禁用 kprobe 钩子</string>
@@ -517,4 +517,6 @@
     <string name="susfs_hide_mounts_setting_all">对所有进程隐藏</string>
     <string name="susfs_hide_mounts_setting_non_ksu">仅对非KSU进程隐藏</string>
     <string name="susfs_run">运行</string>
+    <string name="kernel_simple_kernel">内核版本简洁模式</string>
+    <string name="kernel_simple_kernel_summary">启用或禁用SukiSU内核版本显示的简洁模式</string>
 </resources>

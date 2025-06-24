@@ -4,7 +4,7 @@
     <string name="home_not_installed">Yüklü değil</string>
     <string name="home_click_to_install">Yüklemek için tıklayın</string>
     <string name="home_working">Çalışıyor</string>
-    <string name="home_working_version">Sürüm: %d</string>
+    <string name="home_working_version">Sürüm: %s</string>
     <string name="home_unsupported">Desteklenmiyor</string>
     <string name="home_unsupported_reason">Kernel\'inizde KernelSU sürücüsü algılanmadı, yanlış çekirdek mi?</string>
     <string name="home_kernel">Kernel sürümü</string>
@@ -60,7 +60,7 @@
     <string name="profile_selinux_context">SELinux bağlamı</string>
     <string name="profile_umount_modules">Modülleri bağlamayı kaldır</string>
     <string name="failed_to_update_app_profile">%s için Uygulama Profili güncellenemedi</string>
-    <string name="require_kernel_version" formatted="false">Mevcut KernelSU sürümü %d, yöneticinin düzgün çalışması için çok düşük. Lütfen sürüm %d veya daha yüksek bir sürüme yükseltin!</string>
+    <string name="require_kernel_version" formatted="false">Mevcut KernelSU sürümü %s, yöneticinin düzgün çalışması için çok düşük. Lütfen sürüm %s veya daha yüksek bir sürüme yükseltin!</string>
     <string name="settings_umount_modules_default">Modülleri varsayılan olarak bağlamayı kaldır</string>
     <string name="settings_umount_modules_default_summary">Uygulama Profilindeki \"Modülleri bağlamayı kaldır\" için küresel varsayılan değer. Etkinleştirilirse, profil ayarlanmamış uygulamalar için sistemdeki tüm modül değişikliklerini kaldırır.</string>
     <string name="settings_susfs_toggle">Kprobe kancalarını devre dışı bırak</string>
