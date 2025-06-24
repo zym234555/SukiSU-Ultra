@@ -20,30 +20,45 @@ obj-$(CONFIG_KPM) += kpm/
 
 REPO_OWNER := SukiSU-Ultra
 REPO_NAME := SukiSU-Ultra
-REPO_BRANCH := main
+KSU_API_VERSION_LOCAL := 3.1.6
 
 GIT_BIN := /usr/bin/env PATH="$$PATH":/usr/bin:/usr/local/bin git
 CURL_BIN := /usr/bin/env PATH="$$PATH":/usr/bin:/usr/local/bin curl
 
-KSU_GITHUB_VERSION := $(shell $(CURL_BIN) -sI "https://api.github.com/repos/$(REPO_OWNER)/$(REPO_NAME)/commits?sha=$(REPO_BRANCH)&per_page=1" | grep -i "link:" | sed -n 's/.*page=\([0-9]*\)>; rel="last".*/\1/p')
+KSU_GITHUB_VERSION := $(shell $(CURL_BIN) -s "https://api.github.com/repos/$(REPO_OWNER)/$(REPO_NAME)/releases/latest" | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
+
+LOCAL_GIT_EXISTS := $(shell test -e $(srctree)/$(src)/../.git && echo 1 || echo 0)
+
+define get_ksu_api_version
+$(shell echo $1 | awk -F'[-.]' '{printf "%d%02d%02d", $$1, $$2, $$3}')
+endef
+
+define get_ksu_kernel_version
+v$1-$(shell cd $(srctree)/$(src); $(GIT_BIN) rev-parse --short=8 HEAD)@$(shell cd $(srctree)/$(src); $(GIT_BIN) rev-parse --abbrev-ref HEAD)
+endef
 
 ifeq ($(KSU_GITHUB_VERSION),)
-  ifeq ($(shell test -e $(srctree)/$(src)/../.git; echo $$?),0)
-    $(shell cd $(srctree)/$(src); [ -f ../.git/shallow ] && $(GIT_BIN) fetch --unshallow)
-    KSU_LOCAL_VERSION := $(shell cd $(srctree)/$(src); $(GIT_BIN) rev-list --count $(REPO_BRANCH))
-    $(eval KSU_VERSION := $(shell expr 10000 + $(KSU_LOCAL_VERSION) + 700))
-    $(info -- SukiSU-Ultra version (local .git): $(KSU_VERSION))
-  else
-    $(eval KSU_VERSION := 13000)
-    $(warning -- Could not fetch version online or via local .git! Using fallback version: $(KSU_VERSION))
-  endif
+    ifeq ($(LOCAL_GIT_EXISTS),1)
+        $(shell cd $(srctree)/$(src); [ -f ../.git/shallow ] && $(GIT_BIN) fetch --unshallow)
+        KSU_API_VERSION := $(call get_ksu_api_version,$(KSU_API_VERSION_LOCAL))
+        KSU_KERNEL_VERSION := $(call get_ksu_kernel_version,$(KSU_API_VERSION_LOCAL))
+        $(info -- $(REPO_NAME) version (local .git): $(KSU_KERNEL_VERSION))
+        $(info -- $(REPO_NAME) Formatted version (local .git): $(KSU_API_VERSION))
+    else
+        KSU_KERNEL_VERSION := v$(KSU_API_VERSION_LOCAL)-$(REPO_NAME)-unknown@unknown
+        KSU_API_VERSION := $(call get_ksu_api_version,$(KSU_API_VERSION_LOCAL))
+        $(warning -- $(REPO_NAME) version: $(KSU_KERNEL_VERSION))
+    endif
 else
-  $(eval KSU_VERSION := $(shell expr 10000 + $(KSU_GITHUB_VERSION) + 700))
-  $(info -- SukiSU-Ultra version (GitHub): $(KSU_VERSION))
+    $(shell cd $(srctree)/$(src); [ -f ../.git/shallow ] && $(GIT_BIN) fetch --unshallow)
+    KSU_API_VERSION := $(call get_ksu_api_version,$(KSU_GITHUB_VERSION))
+    KSU_KERNEL_VERSION := $(call get_ksu_kernel_version,$(KSU_GITHUB_VERSION))
+    $(info -- $(REPO_NAME) version (Github): $(KSU_KERNEL_VERSION))
+    $(info -- $(REPO_NAME) Formatted version (Github): $(KSU_API_VERSION))
 endif
 
-$(info -- SukiSU-Ultra version: $(KSU_VERSION))
-ccflags-y += -DKSU_VERSION=$(KSU_VERSION)
+ccflags-y += -DKSU_VERSION=\"$(KSU_KERNEL_VERSION)\"
+ccflags-y += -DKSU_API_VERSION=$(KSU_API_VERSION)
 
 # Checks hooks state
 ifeq ($(strip $(CONFIG_KSU_MANUAL_HOOK)),y)

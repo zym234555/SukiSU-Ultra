@@ -50,6 +50,8 @@
 #include "kernel_compat.h"
 #include "kpm/kpm.h"
 
+char ksu_version_id[KSU_MAX_VERSION_NAME] = KSU_VERSION;
+
 static bool ksu_module_mounted = false;
 
 extern int handle_sepolicy(unsigned long arg3, void __user *arg4);
@@ -316,7 +318,7 @@ int ksu_handle_prctl(int option, unsigned long arg2, unsigned long arg3,
 		if (copy_to_user(arg3, &version, sizeof(version))) {
 			pr_err("prctl reply error, cmd: %lu\n", arg2);
 		}
-		u32 version_flags = 0;
+		u32 version_flags = 2;
 #ifdef MODULE
 		version_flags |= 0x1;
 #endif
@@ -423,6 +425,14 @@ int ksu_handle_prctl(int option, unsigned long arg2, unsigned long arg3,
 		} else {
 			pr_err("prctl copy err, cmd: %lu\n", arg2);
 		}
+		return 0;
+	}
+
+	if (arg2 == CMD_GET_FULL_VERSION) {
+		if (copy_to_user(arg3, &ksu_version_id, KSU_MAX_VERSION_NAME)) {Add commentMore actions
+			pr_err("prctl reply error, cmd: %lu\n", arg2);
+		}
+
 		return 0;
 	}
 

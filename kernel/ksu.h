@@ -4,7 +4,7 @@
 #include <linux/types.h>
 #include <linux/workqueue.h>
 
-#define KERNEL_SU_VERSION KSU_VERSION
+#define KERNEL_SU_VERSION KSU_API_VERSION
 #define KERNEL_SU_OPTION 0xDEADBEEF
 
 #define CMD_GRANT_ROOT 0
@@ -23,6 +23,9 @@
 #define CMD_UID_SHOULD_UMOUNT 13
 #define CMD_IS_SU_ENABLED 14
 #define CMD_ENABLE_SU 15
+
+#define CMD_GET_FULL_VERSION 30
+
 #define CMD_ENABLE_KPM 100
 
 #define EVENT_POST_FS_DATA 1
@@ -34,6 +37,12 @@
 // NGROUPS_MAX for Linux is 65535 generally, but we only supports 32 groups.
 #define KSU_MAX_GROUPS 32
 #define KSU_SELINUX_DOMAIN 64
+
+#define KSU_MAX_VERSION_NAME 255
+
+#ifndef KSU_VERSION 
+#define KSU_VERSION "v0-unknown-00000000@unkown"
+#endif
 
 struct root_profile {
 	int32_t uid;
