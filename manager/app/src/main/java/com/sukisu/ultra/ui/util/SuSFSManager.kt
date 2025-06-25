@@ -390,14 +390,46 @@ object SuSFSManager {
     // 功能状态获取
     suspend fun getEnabledFeatures(context: Context): List<EnabledFeature> = withContext(Dispatchers.IO) {
         try {
-            Natives.getSusfsFeatureStatus()?.let { status ->
+            val status = Natives.getSusfsFeatureStatus()
+            if (status != null) {
                 parseEnabledFeaturesFromStatus(context, status)
-            } ?: emptyList()
+            } else {
+                getDefaultDisabledFeatures(context)
+            }
         } catch (e: Exception) {
             e.printStackTrace()
-            emptyList()
+            getDefaultDisabledFeatures(context)
         }
     }
+
+    private fun getDefaultDisabledFeatures(context: Context): List<EnabledFeature> {
+        val defaultFeatures = listOf(
+            "sus_path_feature_label" to context.getString(R.string.sus_path_feature_label),
+            "sus_mount_feature_label" to context.getString(R.string.sus_mount_feature_label),
+            "try_umount_feature_label" to context.getString(R.string.try_umount_feature_label),
+            "spoof_uname_feature_label" to context.getString(R.string.spoof_uname_feature_label),
+            "spoof_cmdline_feature_label" to context.getString(R.string.spoof_cmdline_feature_label),
+            "open_redirect_feature_label" to context.getString(R.string.open_redirect_feature_label),
+            "enable_log_feature_label" to context.getString(R.string.enable_log_feature_label),
+            "auto_default_mount_feature_label" to context.getString(R.string.auto_default_mount_feature_label),
+            "auto_bind_mount_feature_label" to context.getString(R.string.auto_bind_mount_feature_label),
+            "auto_try_umount_bind_feature_label" to context.getString(R.string.auto_try_umount_bind_feature_label),
+            "hide_symbols_feature_label" to context.getString(R.string.hide_symbols_feature_label),
+            "sus_kstat_feature_label" to context.getString(R.string.sus_kstat_feature_label),
+            "magic_mount_feature_label" to context.getString(R.string.magic_mount_feature_label),
+            "sus_su_feature_label" to context.getString(R.string.sus_su_feature_label)
+        )
+
+        return defaultFeatures.map { (_, displayName) ->
+            EnabledFeature(
+                name = displayName,
+                isEnabled = false,
+                statusText = context.getString(R.string.susfs_feature_disabled),
+                canConfigure = displayName == context.getString(R.string.enable_log_feature_label)
+            )
+        }.sortedBy { it.name }
+    }
+
 
     private fun parseEnabledFeaturesFromStatus(context: Context, status: Natives.SusfsFeatureStatus): List<EnabledFeature> {
         val featureList = listOf(
