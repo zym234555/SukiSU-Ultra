@@ -429,7 +429,7 @@ int ksu_handle_prctl(int option, unsigned long arg2, unsigned long arg3,
 	}
 
 	if (arg2 == CMD_GET_FULL_VERSION) {
-		if (copy_to_user(arg3, &ksu_version_id, KSU_MAX_VERSION_NAME)) {Add commentMore actions
+		if (copy_to_user(arg3, &ksu_version_id, KSU_MAX_VERSION_NAME)) {
 			pr_err("prctl reply error, cmd: %lu\n", arg2);
 		}
 
