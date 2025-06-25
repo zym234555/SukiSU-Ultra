@@ -349,14 +349,14 @@ object SuSFSManager {
             val scripts = mapOf(
                 "service.sh" to ScriptGenerator.generateServiceScript(
                     targetPath, config["unameValue"] as String, config["buildTimeValue"] as String,
-                    config.getSetSafe<String>("susPaths"), config["androidDataPath"] as String,
-                    config["sdcardPath"] as String, config["enableLog"] as Boolean,
+                    config.getSetSafe<String>("susPaths"), config["enableLog"] as Boolean,
                     config["executeInPostFsData"] as Boolean, config.getSetSafe<String>("kstatConfigs"),
                     config.getSetSafe<String>("addKstatPaths")
                 ),
                 "post-fs-data.sh" to ScriptGenerator.generatePostFsDataScript(
                     targetPath, config["unameValue"] as String, config["buildTimeValue"] as String,
-                    config["executeInPostFsData"] as Boolean
+                    config["executeInPostFsData"] as Boolean, config["androidDataPath"] as String,
+                    config["sdcardPath"] as String
                 ),
                 "post-mount.sh" to ScriptGenerator.generatePostMountScript(
                     targetPath, config.getSetSafe<String>("susMounts"), config.getSetSafe<String>("tryUmounts")
@@ -596,7 +596,13 @@ object SuSFSManager {
         val success = executeSusfsCommand(context, "set_android_data_root_path '$path'")
         if (success) {
             saveAndroidDataPath(context, path)
-            if (isAutoStartEnabled(context)) createMagiskModule(context)
+            // 如果开机自启动已启用，立即更新模块脚本
+            if (isAutoStartEnabled(context)) {
+                kotlinx.coroutines.CoroutineScope(Dispatchers.Default).launch {
+                    removeMagiskModule()
+                    createMagiskModule(context)
+                }
+            }
         }
         return success
     }
@@ -606,7 +612,13 @@ object SuSFSManager {
         val success = executeSusfsCommand(context, "set_sdcard_root_path '$path'")
         if (success) {
             saveSdcardPath(context, path)
-            if (isAutoStartEnabled(context)) createMagiskModule(context)
+            // 如果开机自启动已启用，立即更新模块脚本
+            if (isAutoStartEnabled(context)) {
+                kotlinx.coroutines.CoroutineScope(Dispatchers.Default).launch {
+                    removeMagiskModule()
+                    createMagiskModule(context)
+                }
+            }
         }
         return success
     }

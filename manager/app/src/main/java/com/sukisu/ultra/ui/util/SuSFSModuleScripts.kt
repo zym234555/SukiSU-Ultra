@@ -51,8 +51,6 @@ object ScriptGenerator {
         unameValue: String,
         buildTimeValue: String,
         susPaths: Set<String>,
-        androidDataPath: String,
-        sdcardPath: String,
         enableLog: Boolean,
         executeInPostFsData: Boolean = false,
         kstatConfigs: Set<String> = emptySet(),
@@ -70,9 +68,6 @@ object ScriptGenerator {
 
             // 设置日志启用状态
             generateLogSettingSection(enableLog)
-
-            // 设置路径
-            generatePathSettingSection(androidDataPath, sdcardPath)
 
             // 添加SUS路径
             generateSusPathsSection(susPaths)
@@ -96,27 +91,6 @@ object ScriptGenerator {
         appendLine("\"${'$'}SUSFS_BIN\" enable_log $logValue")
         appendLine("echo \"$(get_current_time): 日志功能设置为: ${if (enableLog) "启用" else "禁用"}\" >> \"${'$'}LOG_FILE\"")
         appendLine()
-    }
-
-    private fun StringBuilder.generatePathSettingSection(
-        androidDataPath: String,
-        sdcardPath: String
-    ) {
-        // 设置Android Data路径
-        if (androidDataPath != DEFAULT_ANDROID_DATA_PATH) {
-            appendLine("# 设置Android Data路径")
-            appendLine("\"${'$'}SUSFS_BIN\" set_android_data_root_path '$androidDataPath'")
-            appendLine("echo \"$(get_current_time): Android Data路径设置为: $androidDataPath\" >> \"${'$'}LOG_FILE\"")
-            appendLine()
-        }
-
-        // 设置SD卡路径
-        if (sdcardPath != DEFAULT_SDCARD_PATH) {
-            appendLine("# 设置SD卡路径")
-            appendLine("\"${'$'}SUSFS_BIN\" set_sdcard_root_path '$sdcardPath'")
-            appendLine("echo \"$(get_current_time): SD卡路径设置为: $sdcardPath\" >> \"${'$'}LOG_FILE\"")
-            appendLine()
-        }
     }
 
     private fun StringBuilder.generateSusPathsSection(susPaths: Set<String>) {
@@ -276,18 +250,33 @@ object ScriptGenerator {
         targetPath: String,
         unameValue: String,
         buildTimeValue: String,
-        executeInPostFsData: Boolean = false
+        executeInPostFsData: Boolean = false,
+        androidDataPath: String = DEFAULT_ANDROID_DATA_PATH,
+        sdcardPath: String = DEFAULT_SDCARD_PATH
     ): String {
         return buildString {
             appendLine("#!/system/bin/sh")
             appendLine("# SuSFS Post-FS-Data Script")
             appendLine("# 在文件系统挂载后但在系统完全启动前执行")
+            appendLine("# 优先级最高的配置项")
             appendLine()
             appendLine(generateLogSetup("susfs_post_fs_data.log"))
             appendLine()
             appendLine(generateBinaryCheck(targetPath))
             appendLine()
             appendLine("echo \"$(get_current_time): Post-FS-Data脚本开始执行\" >> \"${'$'}LOG_FILE\"")
+            appendLine()
+
+            // 路径设置
+            appendLine("# 设置路径配置（优先级最高）")
+            appendLine("# 设置Android Data路径")
+            appendLine("\"${'$'}SUSFS_BIN\" set_android_data_root_path '$androidDataPath'")
+            appendLine("echo \"$(get_current_time): Android Data路径设置为: $androidDataPath\" >> \"${'$'}LOG_FILE\"")
+            appendLine()
+
+            appendLine("# 设置SD卡路径")
+            appendLine("\"${'$'}SUSFS_BIN\" set_sdcard_root_path '$sdcardPath'")
+            appendLine("echo \"$(get_current_time): SD卡路径设置为: $sdcardPath\" >> \"${'$'}LOG_FILE\"")
             appendLine()
 
             // 设置uname和构建时间 - 只有在选择在post-fs-data中执行时才执行
