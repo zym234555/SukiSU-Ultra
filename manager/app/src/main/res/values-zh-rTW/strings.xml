@@ -391,7 +391,6 @@
     <string name="susfs_tab_path_settings">路徑設定</string>
     <string name="susfs_tab_enabled_features">啟用功能狀態</string>
     <!-- SuSFS Dialog Actions -->
-    <string name="susfs_add">新增</string>
     <!-- SuSFS Path Management -->
     <string name="susfs_add_sus_path">新增 SUS 路徑</string>
     <string name="susfs_add_sus_mount">新增 SUS 掛載</string>

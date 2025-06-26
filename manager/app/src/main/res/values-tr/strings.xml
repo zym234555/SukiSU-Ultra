@@ -391,7 +391,6 @@
     <string name="susfs_tab_path_settings">Yol Ayarları</string>
     <string name="susfs_tab_enabled_features">Etkinleştirilen Özellikler Durumu</string>
     <!-- SuSFS Dialog Actions -->
-    <string name="susfs_add">Ekle</string>
     <!-- SuSFS Path Management -->
     <string name="susfs_add_sus_path">SUS Yolu Ekle</string>
     <string name="susfs_add_sus_mount">SUS Bağlama Noktası Ekle</string>

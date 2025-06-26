@@ -36,13 +36,14 @@ object SuSFSManager {
     private const val KEY_KSTAT_CONFIGS = "kstat_configs"
     private const val KEY_ADD_KSTAT_PATHS = "add_kstat_paths"
     private const val KEY_HIDE_SUS_MOUNTS_FOR_ALL_PROCS = "hide_sus_mounts_for_all_procs"
+
     // 常量
     private const val SUSFS_BINARY_BASE_NAME = "ksu_susfs"
     private const val DEFAULT_UNAME = "default"
     private const val DEFAULT_BUILD_TIME = "default"
     private const val MODULE_ID = "susfs_manager"
     private const val MODULE_PATH = "/data/adb/modules/$MODULE_ID"
-
+    private const val MIN_VERSION_FOR_HIDE_MOUNT = "1.5.8"
 
     data class SlotInfo(val slotName: String, val uname: String, val buildTime: String)
     data class CommandResult(val isSuccess: Boolean, val output: String, val errorOutput: String = "")
@@ -53,13 +54,46 @@ object SuSFSManager {
         val canConfigure: Boolean = false
     )
 
-    // 命令执行
+    /**
+     * 模块配置数据类
+     */
+    data class ModuleConfig(
+        val targetPath: String,
+        val unameValue: String,
+        val buildTimeValue: String,
+        val executeInPostFsData: Boolean,
+        val susPaths: Set<String>,
+        val susMounts: Set<String>,
+        val tryUmounts: Set<String>,
+        val androidDataPath: String,
+        val sdcardPath: String,
+        val enableLog: Boolean,
+        val kstatConfigs: Set<String>,
+        val addKstatPaths: Set<String>,
+        val hideSusMountsForAllProcs: Boolean,
+        val support158: Boolean
+    ) {
+        /**
+         * 检查是否有需要自启动的配置
+         */
+        fun hasAutoStartConfig(): Boolean {
+            return unameValue != DEFAULT_UNAME ||
+                    buildTimeValue != DEFAULT_BUILD_TIME ||
+                    susPaths.isNotEmpty() ||
+                    susMounts.isNotEmpty() ||
+                    tryUmounts.isNotEmpty() ||
+                    kstatConfigs.isNotEmpty() ||
+                    addKstatPaths.isNotEmpty()
+        }
+    }
+
+    // 基础工具方法
     private fun getPrefs(context: Context): SharedPreferences =
         context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
     private fun getSuSFSVersionUse(): String = try {
         getSuSFSVersion()
-    } catch (_: Exception) { "1.5.8" }
+    } catch (_: Exception) { MIN_VERSION_FOR_HIDE_MOUNT }
 
     private fun getSuSFSBinaryName(): String = "${SUSFS_BINARY_BASE_NAME}_${getSuSFSVersionUse().removePrefix("v")}"
 
@@ -78,7 +112,9 @@ object SuSFSManager {
         return CommandResult(result.isSuccess, result.out.joinToString("\n"), result.err.joinToString("\n"))
     }
 
-    // 版本比较
+    /**
+     * 版本比较方法
+     */
     private fun compareVersions(version1: String, version2: String): Int {
         val v1Parts = version1.removePrefix("v").split(".").map { it.toIntOrNull() ?: 0 }
         val v2Parts = version2.removePrefix("v").split(".").map { it.toIntOrNull() ?: 0 }
@@ -97,16 +133,39 @@ object SuSFSManager {
         return 0
     }
 
-    // 检查当前SuSFS版本是否支持SUS挂载隐藏控制功能
+    /**
+     * 版本检查方法
+     */
     fun isSusVersion_1_5_8(): Boolean {
         return try {
             val currentVersion = getSuSFSVersion()
-            compareVersions(currentVersion, "1.5.8") >= 0
+            compareVersions(currentVersion, MIN_VERSION_FOR_HIDE_MOUNT) >= 0
         } catch (_: Exception) {
-            true
+            true // 默认支持新功能
         }
     }
 
+    /**
+     * 获取当前模块配置
+     */
+    private fun getCurrentModuleConfig(context: Context): ModuleConfig {
+        return ModuleConfig(
+            targetPath = getSuSFSTargetPath(),
+            unameValue = getUnameValue(context),
+            buildTimeValue = getBuildTimeValue(context),
+            executeInPostFsData = getExecuteInPostFsData(context),
+            susPaths = getSusPaths(context),
+            susMounts = getSusMounts(context),
+            tryUmounts = getTryUmounts(context),
+            androidDataPath = getAndroidDataPath(context),
+            sdcardPath = getSdcardPath(context),
+            enableLog = getEnableLogState(context),
+            kstatConfigs = getKstatConfigs(context),
+            addKstatPaths = getAddKstatPaths(context),
+            hideSusMountsForAllProcs = getHideSusMountsForAllProcs(context),
+            support158 = isSusVersion_1_5_8()
+        )
+    }
 
     // 配置存取方法
     fun saveUnameValue(context: Context, value: String) =
@@ -143,8 +202,7 @@ object SuSFSManager {
         getPrefs(context).edit { putBoolean(KEY_EXECUTE_IN_POST_FS_DATA, executeInPostFsData) }
         if (isAutoStartEnabled(context)) {
             kotlinx.coroutines.CoroutineScope(Dispatchers.Default).launch {
-                removeMagiskModule()
-                createMagiskModule(context)
+                updateMagiskModule(context)
             }
         }
     }
@@ -202,8 +260,6 @@ object SuSFSManager {
     @SuppressLint("SdCardPath")
     fun getSdcardPath(context: Context): String =
         getPrefs(context).getString(KEY_SDCARD_PATH, "/sdcard") ?: "/sdcard"
-
-
 
     // 槽位信息获取
     suspend fun getCurrentSlotInfo(): List<SlotInfo> = withContext(Dispatchers.IO) {
@@ -310,17 +366,19 @@ object SuSFSManager {
         Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
     }
 
-    private inline fun <reified T> Map<String, Any?>.getSetSafe(key: String): Set<T> {
-        return when (val value = this[key]) {
-            is Set<*> -> value.filterIsInstance<T>().toSet()
-            else -> emptySet()
-        }
+    /**
+     * 模块管理 
+     */
+    private suspend fun updateMagiskModule(context: Context): Boolean {
+        return removeMagiskModule() && createMagiskModule(context)
     }
 
-    // 模块管理
+    /**
+     * 模块创建方法
+     */
     private suspend fun createMagiskModule(context: Context): Boolean = withContext(Dispatchers.IO) {
         try {
-            val targetPath = getSuSFSTargetPath()
+            val config = getCurrentModuleConfig(context)
 
             // 创建模块目录
             if (!runCmdWithResult("mkdir -p $MODULE_PATH").isSuccess) return@withContext false
@@ -329,44 +387,9 @@ object SuSFSManager {
             val moduleProp = ScriptGenerator.generateModuleProp(MODULE_ID)
             if (!runCmdWithResult("cat > $MODULE_PATH/module.prop << 'EOF'\n$moduleProp\nEOF").isSuccess) return@withContext false
 
-            // 获取配置
-            val config = mapOf(
-                "unameValue" to getUnameValue(context),
-                "buildTimeValue" to getBuildTimeValue(context),
-                "executeInPostFsData" to getExecuteInPostFsData(context),
-                "susPaths" to getSusPaths(context),
-                "susMounts" to getSusMounts(context),
-                "tryUmounts" to getTryUmounts(context),
-                "androidDataPath" to getAndroidDataPath(context),
-                "sdcardPath" to getSdcardPath(context),
-                "enableLog" to getEnableLogState(context),
-                "kstatConfigs" to getKstatConfigs(context),
-                "addKstatPaths" to getAddKstatPaths(context),
-                "hideSusMountsForAllProcs" to getHideSusMountsForAllProcs(context)
-            )
+            // 生成并创建所有脚本文件
+            val scripts = ScriptGenerator.generateAllScripts(config)
 
-            // 生成脚本
-            val scripts = mapOf(
-                "service.sh" to ScriptGenerator.generateServiceScript(
-                    targetPath, config["unameValue"] as String, config["buildTimeValue"] as String,
-                    config.getSetSafe<String>("susPaths"), config["enableLog"] as Boolean,
-                    config["executeInPostFsData"] as Boolean, config.getSetSafe<String>("kstatConfigs"),
-                    config.getSetSafe<String>("addKstatPaths")
-                ),
-                "post-fs-data.sh" to ScriptGenerator.generatePostFsDataScript(
-                    targetPath, config["unameValue"] as String, config["buildTimeValue"] as String,
-                    config["executeInPostFsData"] as Boolean, config["androidDataPath"] as String,
-                    config["sdcardPath"] as String
-                ),
-                "post-mount.sh" to ScriptGenerator.generatePostMountScript(
-                    targetPath, config.getSetSafe<String>("susMounts"), config.getSetSafe<String>("tryUmounts")
-                ),
-                "boot-completed.sh" to ScriptGenerator.generateBootCompletedScript(
-                    targetPath, config["hideSusMountsForAllProcs"] as Boolean
-                )
-            )
-
-            // 创建脚本文件
             scripts.all { (filename, content) ->
                 runCmdWithResult("cat > $MODULE_PATH/$filename << 'EOF'\n$content\nEOF").isSuccess &&
                         runCmdWithResult("chmod 755 $MODULE_PATH/$filename").isSuccess
@@ -385,7 +408,6 @@ object SuSFSManager {
             false
         }
     }
-
 
     // 功能状态获取
     suspend fun getEnabledFeatures(context: Context): List<EnabledFeature> = withContext(Dispatchers.IO) {
@@ -430,7 +452,6 @@ object SuSFSManager {
         }.sortedBy { it.name }
     }
 
-
     private fun parseEnabledFeaturesFromStatus(context: Context, status: Natives.SusfsFeatureStatus): List<EnabledFeature> {
         val featureList = listOf(
             Triple("status_sus_path", context.getString(R.string.sus_path_feature_label), status.statusSusPath),
@@ -461,7 +482,7 @@ object SuSFSManager {
         val success = executeSusfsCommand(context, "enable_log ${if (enabled) 1 else 0}")
         if (success) {
             saveEnableLogState(context, enabled)
-            if (isAutoStartEnabled(context)) createMagiskModule(context)
+            if (isAutoStartEnabled(context)) updateMagiskModule(context)
             showToast(context, if (enabled) context.getString(R.string.susfs_log_enabled) else context.getString(R.string.susfs_log_disabled))
         }
         return success
@@ -476,7 +497,7 @@ object SuSFSManager {
         val success = executeSusfsCommand(context, "hide_sus_mnts_for_all_procs ${if (hideForAll) 1 else 0}")
         if (success) {
             saveHideSusMountsForAllProcs(context, hideForAll)
-            if (isAutoStartEnabled(context)) createMagiskModule(context)
+            if (isAutoStartEnabled(context)) updateMagiskModule(context)
             showToast(context, if (hideForAll)
                 context.getString(R.string.susfs_hide_mounts_all_enabled)
             else
@@ -493,7 +514,7 @@ object SuSFSManager {
         if (success) {
             saveUnameValue(context, unameValue)
             saveBuildTimeValue(context, buildTimeValue)
-            if (isAutoStartEnabled(context)) createMagiskModule(context)
+            if (isAutoStartEnabled(context)) updateMagiskModule(context)
             showToast(context, context.getString(R.string.susfs_uname_set_success, unameValue, buildTimeValue))
         }
         return success
@@ -502,12 +523,37 @@ object SuSFSManager {
     // 添加SUS路径
     @SuppressLint("StringFormatInvalid")
     suspend fun addSusPath(context: Context, path: String): Boolean {
+        // 如果是1.5.8版本，先设置路径配置
+        if (isSusVersion_1_5_8()) {
+            // 获取当前配置的路径，如果没有配置则使用默认值
+            val androidDataPath = getAndroidDataPath(context)
+            val sdcardPath = getSdcardPath(context)
+
+            // 先设置Android Data路径
+            val androidDataSuccess = executeSusfsCommand(context, "set_android_data_root_path '$androidDataPath'")
+            if (androidDataSuccess) {
+                showToast(context, context.getString(R.string.susfs_android_data_path_set, androidDataPath))
+            }
+
+            // 再设置SD卡路径
+            val sdcardSuccess = executeSusfsCommand(context, "set_sdcard_root_path '$sdcardPath'")
+            if (sdcardSuccess) {
+                showToast(context, context.getString(R.string.susfs_sdcard_path_set, sdcardPath))
+            }
+
+            // 如果路径设置失败，记录但不阻止继续执行
+            if (!androidDataSuccess || !sdcardSuccess) {
+                showToast(context, context.getString(R.string.susfs_path_setup_warning))
+            }
+        }
+
+        // 执行添加SUS路径命令
         val result = executeSusfsCommandWithOutput(context, "add_sus_path '$path'")
         val isActuallySuccessful = result.isSuccess && !result.output.contains("not found, skip adding")
 
         if (isActuallySuccessful) {
             saveSusPaths(context, getSusPaths(context) + path)
-            if (isAutoStartEnabled(context)) createMagiskModule(context)
+            if (isAutoStartEnabled(context)) updateMagiskModule(context)
             showToast(context, context.getString(R.string.susfs_sus_path_added_success, path))
         } else {
             val errorMessage = if (result.output.contains("not found, skip adding")) {
@@ -522,7 +568,7 @@ object SuSFSManager {
 
     suspend fun removeSusPath(context: Context, path: String): Boolean {
         saveSusPaths(context, getSusPaths(context) - path)
-        if (isAutoStartEnabled(context)) createMagiskModule(context)
+        if (isAutoStartEnabled(context)) updateMagiskModule(context)
         showToast(context, "SUS path removed: $path")
         return true
     }
@@ -532,14 +578,14 @@ object SuSFSManager {
         val success = executeSusfsCommand(context, "add_sus_mount '$mount'")
         if (success) {
             saveSusMounts(context, getSusMounts(context) + mount)
-            if (isAutoStartEnabled(context)) createMagiskModule(context)
+            if (isAutoStartEnabled(context)) updateMagiskModule(context)
         }
         return success
     }
 
     suspend fun removeSusMount(context: Context, mount: String): Boolean {
         saveSusMounts(context, getSusMounts(context) - mount)
-        if (isAutoStartEnabled(context)) createMagiskModule(context)
+        if (isAutoStartEnabled(context)) updateMagiskModule(context)
         showToast(context, "Removed SUS mount: $mount")
         return true
     }
@@ -548,7 +594,7 @@ object SuSFSManager {
     suspend fun addTryUmount(context: Context, path: String, mode: Int): Boolean {
         val commandSuccess = executeSusfsCommand(context, "add_try_umount '$path' $mode")
         saveTryUmounts(context, getTryUmounts(context) + "$path|$mode")
-        if (isAutoStartEnabled(context)) createMagiskModule(context)
+        if (isAutoStartEnabled(context)) updateMagiskModule(context)
 
         showToast(context, if (commandSuccess) {
             context.getString(R.string.susfs_try_umount_added_success, path)
@@ -560,7 +606,7 @@ object SuSFSManager {
 
     suspend fun removeTryUmount(context: Context, umountEntry: String): Boolean {
         saveTryUmounts(context, getTryUmounts(context) - umountEntry)
-        if (isAutoStartEnabled(context)) createMagiskModule(context)
+        if (isAutoStartEnabled(context)) updateMagiskModule(context)
         val path = umountEntry.split("|").firstOrNull() ?: umountEntry
         showToast(context, "Removed Try to uninstall: $path")
         return true
@@ -577,7 +623,7 @@ object SuSFSManager {
         if (success) {
             val configEntry = "$path|$ino|$dev|$nlink|$size|$atime|$atimeNsec|$mtime|$mtimeNsec|$ctime|$ctimeNsec|$blocks|$blksize"
             saveKstatConfigs(context, getKstatConfigs(context) + configEntry)
-            if (isAutoStartEnabled(context)) createMagiskModule(context)
+            if (isAutoStartEnabled(context)) updateMagiskModule(context)
             showToast(context, context.getString(R.string.kstat_static_config_added, path))
         }
         return success
@@ -585,7 +631,7 @@ object SuSFSManager {
 
     suspend fun removeKstatConfig(context: Context, config: String): Boolean {
         saveKstatConfigs(context, getKstatConfigs(context) - config)
-        if (isAutoStartEnabled(context)) createMagiskModule(context)
+        if (isAutoStartEnabled(context)) updateMagiskModule(context)
         val path = config.split("|").firstOrNull() ?: config
         showToast(context, context.getString(R.string.kstat_config_removed, path))
         return true
@@ -596,7 +642,7 @@ object SuSFSManager {
         val success = executeSusfsCommand(context, "add_sus_kstat '$path'")
         if (success) {
             saveAddKstatPaths(context, getAddKstatPaths(context) + path)
-            if (isAutoStartEnabled(context)) createMagiskModule(context)
+            if (isAutoStartEnabled(context)) updateMagiskModule(context)
             showToast(context, context.getString(R.string.kstat_path_added, path))
         }
         return success
@@ -604,7 +650,7 @@ object SuSFSManager {
 
     suspend fun removeAddKstat(context: Context, path: String): Boolean {
         saveAddKstatPaths(context, getAddKstatPaths(context) - path)
-        if (isAutoStartEnabled(context)) createMagiskModule(context)
+        if (isAutoStartEnabled(context)) updateMagiskModule(context)
         showToast(context, context.getString(R.string.kstat_path_removed, path))
         return true
     }
@@ -623,16 +669,14 @@ object SuSFSManager {
         return success
     }
 
-    // 设置Android数据路径和SD卡路径
+    // 设置Android数据路径
     suspend fun setAndroidDataPath(context: Context, path: String): Boolean {
         val success = executeSusfsCommand(context, "set_android_data_root_path '$path'")
         if (success) {
             saveAndroidDataPath(context, path)
-            // 如果开机自启动已启用，立即更新模块脚本
             if (isAutoStartEnabled(context)) {
                 kotlinx.coroutines.CoroutineScope(Dispatchers.Default).launch {
-                    removeMagiskModule()
-                    createMagiskModule(context)
+                    updateMagiskModule(context)
                 }
             }
         }
@@ -644,29 +688,28 @@ object SuSFSManager {
         val success = executeSusfsCommand(context, "set_sdcard_root_path '$path'")
         if (success) {
             saveSdcardPath(context, path)
-            // 如果开机自启动已启用，立即更新模块脚本
             if (isAutoStartEnabled(context)) {
                 kotlinx.coroutines.CoroutineScope(Dispatchers.Default).launch {
-                    removeMagiskModule()
-                    createMagiskModule(context)
+                    updateMagiskModule(context)
                 }
             }
         }
         return success
     }
 
+    /**
+     * 自启动配置检查
+     */
     fun hasConfigurationForAutoStart(context: Context): Boolean {
-        val enabledFeatures = runBlocking { getEnabledFeatures(context) }
-        return getUnameValue(context) != DEFAULT_UNAME ||
-                getBuildTimeValue(context) != DEFAULT_BUILD_TIME ||
-                getSusPaths(context).isNotEmpty() ||
-                getSusMounts(context).isNotEmpty() ||
-                getTryUmounts(context).isNotEmpty() ||
-                getKstatConfigs(context).isNotEmpty() ||
-                getAddKstatPaths(context).isNotEmpty() ||
-                enabledFeatures.any { it.isEnabled }
+        val config = getCurrentModuleConfig(context)
+        return config.hasAutoStartConfig() || runBlocking {
+            getEnabledFeatures(context).any { it.isEnabled }
+        }
     }
 
+    /**
+     * 自启动配置方法
+     */
     suspend fun configureAutoStart(context: Context, enabled: Boolean): Boolean = withContext(Dispatchers.IO) {
         try {
             if (enabled) {

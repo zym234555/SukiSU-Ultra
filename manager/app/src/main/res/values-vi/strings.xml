@@ -391,7 +391,6 @@
     <string name="susfs_tab_path_settings">Cài đặt Đường dẫn</string>
     <string name="susfs_tab_enabled_features">Trạng thái tính năng</string>
     <!-- SuSFS Dialog Actions -->
-    <string name="susfs_add">Thêm</string>
     <!-- SuSFS Path Management -->
     <string name="susfs_add_sus_path">Thêm Đường dẫn SuS</string>
     <string name="susfs_add_sus_mount">Thêm SuS Mount</string>

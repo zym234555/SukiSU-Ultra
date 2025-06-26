@@ -9,13 +9,21 @@ import android.annotation.SuppressLint
 object ScriptGenerator {
 
     // 常量定义
-    @SuppressLint("SdCardPath")
-    private const val DEFAULT_ANDROID_DATA_PATH = "/sdcard/Android/data"
-    @SuppressLint("SdCardPath")
-    private const val DEFAULT_SDCARD_PATH = "/sdcard"
     private const val DEFAULT_UNAME = "default"
     private const val DEFAULT_BUILD_TIME = "default"
     private const val LOG_DIR = "/data/adb/ksu/log"
+
+    /**
+     * 生成所有脚本文件
+     */
+    fun generateAllScripts(config: SuSFSManager.ModuleConfig): Map<String, String> {
+        return mapOf(
+            "service.sh" to generateServiceScript(config),
+            "post-fs-data.sh" to generatePostFsDataScript(config),
+            "post-mount.sh" to generatePostMountScript(config),
+            "boot-completed.sh" to generateBootCompletedScript(config)
+        )
+    }
 
     // 日志相关的通用脚本片段
     private fun generateLogSetup(logFileName: String): String = """
@@ -45,17 +53,7 @@ object ScriptGenerator {
     /**
      * 生成service.sh脚本内容
      */
-    @SuppressLint("SdCardPath")
-    fun generateServiceScript(
-        targetPath: String,
-        unameValue: String,
-        buildTimeValue: String,
-        susPaths: Set<String>,
-        enableLog: Boolean,
-        executeInPostFsData: Boolean = false,
-        kstatConfigs: Set<String> = emptySet(),
-        addKstatPaths: Set<String> = emptySet()
-    ): String {
+    private fun generateServiceScript(config: SuSFSManager.ModuleConfig): String {
         return buildString {
             appendLine("#!/system/bin/sh")
             appendLine("# SuSFS Service Script")
@@ -63,26 +61,40 @@ object ScriptGenerator {
             appendLine()
             appendLine(generateLogSetup("susfs_service.log"))
             appendLine()
-            appendLine(generateBinaryCheck(targetPath))
+            appendLine(generateBinaryCheck(config.targetPath))
             appendLine()
 
-            // 设置日志启用状态
-            generateLogSettingSection(enableLog)
+            if (shouldConfigureInService(config)) {
+                // 添加SUS路径 (仅在不支持隐藏挂载时)
+                if (!config.support158 && config.susPaths.isNotEmpty()) {
+                    generateSusPathsSection(config.susPaths)
+                }
 
-            // 添加SUS路径
-            generateSusPathsSection(susPaths)
+                // 添加Kstat配置
+                generateKstatSection(config.kstatConfigs, config.addKstatPaths)
 
-            // 添加Kstat配置
-            generateKstatSection(kstatConfigs, addKstatPaths)
+                // 设置uname和构建时间
+                generateUnameSection(config)
 
-            // 设置uname和构建时间
-            generateUnameSection(unameValue, buildTimeValue, executeInPostFsData)
+            }
 
+            // 添加日志设置
+            generateLogSettingSection(config.enableLog)
             // 隐藏BL相关配置
             generateHideBlSection()
 
             appendLine("echo \"$(get_current_time): Service脚本执行完成\" >> \"${'$'}LOG_FILE\"")
         }
+    }
+
+    /**
+     * 判断是否需要在service中配置
+     */
+    private fun shouldConfigureInService(config: SuSFSManager.ModuleConfig): Boolean {
+        return config.susPaths.isNotEmpty() ||
+                config.kstatConfigs.isNotEmpty() ||
+                config.addKstatPaths.isNotEmpty() ||
+                (!config.executeInPostFsData && (config.unameValue != DEFAULT_UNAME || config.buildTimeValue != DEFAULT_BUILD_TIME))
     }
 
     private fun StringBuilder.generateLogSettingSection(enableLog: Boolean) {
@@ -137,15 +149,11 @@ object ScriptGenerator {
         }
     }
 
-    private fun StringBuilder.generateUnameSection(
-        unameValue: String,
-        buildTimeValue: String,
-        executeInPostFsData: Boolean
-    ) {
-        if (!executeInPostFsData && (unameValue != DEFAULT_UNAME || buildTimeValue != DEFAULT_BUILD_TIME)) {
+    private fun StringBuilder.generateUnameSection(config: SuSFSManager.ModuleConfig) {
+        if (!config.executeInPostFsData && (config.unameValue != DEFAULT_UNAME || config.buildTimeValue != DEFAULT_BUILD_TIME)) {
             appendLine("# 设置uname和构建时间")
-            appendLine("\"${'$'}SUSFS_BIN\" set_uname '$unameValue' '$buildTimeValue'")
-            appendLine("echo \"$(get_current_time): 设置uname为: $unameValue, 构建时间为: $buildTimeValue\" >> \"${'$'}LOG_FILE\"")
+            appendLine("\"${'$'}SUSFS_BIN\" set_uname '${config.unameValue}' '${config.buildTimeValue}'")
+            appendLine("echo \"$(get_current_time): 设置uname为: ${config.unameValue}, 构建时间为: ${config.buildTimeValue}\" >> \"${'$'}LOG_FILE\"")
             appendLine()
         }
     }
@@ -246,44 +254,24 @@ object ScriptGenerator {
     /**
      * 生成post-fs-data.sh脚本内容
      */
-    fun generatePostFsDataScript(
-        targetPath: String,
-        unameValue: String,
-        buildTimeValue: String,
-        executeInPostFsData: Boolean = false,
-        androidDataPath: String = DEFAULT_ANDROID_DATA_PATH,
-        sdcardPath: String = DEFAULT_SDCARD_PATH
-    ): String {
+    private fun generatePostFsDataScript(config: SuSFSManager.ModuleConfig): String {
         return buildString {
             appendLine("#!/system/bin/sh")
             appendLine("# SuSFS Post-FS-Data Script")
             appendLine("# 在文件系统挂载后但在系统完全启动前执行")
-            appendLine("# 优先级最高的配置项")
             appendLine()
             appendLine(generateLogSetup("susfs_post_fs_data.log"))
             appendLine()
-            appendLine(generateBinaryCheck(targetPath))
+            appendLine(generateBinaryCheck(config.targetPath))
             appendLine()
             appendLine("echo \"$(get_current_time): Post-FS-Data脚本开始执行\" >> \"${'$'}LOG_FILE\"")
             appendLine()
 
-            // 路径设置
-            appendLine("# 设置路径配置（优先级最高）")
-            appendLine("# 设置Android Data路径")
-            appendLine("\"${'$'}SUSFS_BIN\" set_android_data_root_path '$androidDataPath'")
-            appendLine("echo \"$(get_current_time): Android Data路径设置为: $androidDataPath\" >> \"${'$'}LOG_FILE\"")
-            appendLine()
-
-            appendLine("# 设置SD卡路径")
-            appendLine("\"${'$'}SUSFS_BIN\" set_sdcard_root_path '$sdcardPath'")
-            appendLine("echo \"$(get_current_time): SD卡路径设置为: $sdcardPath\" >> \"${'$'}LOG_FILE\"")
-            appendLine()
-
             // 设置uname和构建时间 - 只有在选择在post-fs-data中执行时才执行
-            if (executeInPostFsData && (unameValue != DEFAULT_UNAME || buildTimeValue != DEFAULT_BUILD_TIME)) {
+            if (config.executeInPostFsData && (config.unameValue != DEFAULT_UNAME || config.buildTimeValue != DEFAULT_BUILD_TIME)) {
                 appendLine("# 设置uname和构建时间")
-                appendLine("\"${'$'}SUSFS_BIN\" set_uname '$unameValue' '$buildTimeValue'")
-                appendLine("echo \"$(get_current_time): 设置uname为: $unameValue, 构建时间为: $buildTimeValue\" >> \"${'$'}LOG_FILE\"")
+                appendLine("\"${'$'}SUSFS_BIN\" set_uname '${config.unameValue}' '${config.buildTimeValue}'")
+                appendLine("echo \"$(get_current_time): 设置uname为: ${config.unameValue}, 构建时间为: ${config.buildTimeValue}\" >> \"${'$'}LOG_FILE\"")
                 appendLine()
             }
 
@@ -294,11 +282,7 @@ object ScriptGenerator {
     /**
      * 生成post-mount.sh脚本内容
      */
-    fun generatePostMountScript(
-        targetPath: String,
-        susMounts: Set<String>,
-        tryUmounts: Set<String>
-    ): String {
+    private fun generatePostMountScript(config: SuSFSManager.ModuleConfig): String {
         return buildString {
             appendLine("#!/system/bin/sh")
             appendLine("# SuSFS Post-Mount Script")
@@ -308,13 +292,13 @@ object ScriptGenerator {
             appendLine()
             appendLine("echo \"$(get_current_time): Post-Mount脚本开始执行\" >> \"${'$'}LOG_FILE\"")
             appendLine()
-            appendLine(generateBinaryCheck(targetPath))
+            appendLine(generateBinaryCheck(config.targetPath))
             appendLine()
 
             // 添加SUS挂载
-            if (susMounts.isNotEmpty()) {
+            if (config.susMounts.isNotEmpty()) {
                 appendLine("# 添加SUS挂载")
-                susMounts.forEach { mount ->
+                config.susMounts.forEach { mount ->
                     appendLine("\"${'$'}SUSFS_BIN\" add_sus_mount '$mount'")
                     appendLine("echo \"$(get_current_time): 添加SUS挂载: $mount\" >> \"${'$'}LOG_FILE\"")
                 }
@@ -322,9 +306,9 @@ object ScriptGenerator {
             }
 
             // 添加尝试卸载
-            if (tryUmounts.isNotEmpty()) {
+            if (config.tryUmounts.isNotEmpty()) {
                 appendLine("# 添加尝试卸载")
-                tryUmounts.forEach { umount ->
+                config.tryUmounts.forEach { umount ->
                     val parts = umount.split("|")
                     if (parts.size == 2) {
                         val path = parts[0]
@@ -343,10 +327,7 @@ object ScriptGenerator {
     /**
      * 生成boot-completed.sh脚本内容
      */
-    fun generateBootCompletedScript(
-        targetPath: String,
-        hideSusMountsForAllProcs: Boolean = true
-    ): String {
+    private fun generateBootCompletedScript(config: SuSFSManager.ModuleConfig): String {
         return buildString {
             appendLine("#!/system/bin/sh")
             appendLine("# SuSFS Boot-Completed Script")
@@ -356,36 +337,49 @@ object ScriptGenerator {
             appendLine()
             appendLine("echo \"$(get_current_time): Boot-Completed脚本开始执行\" >> \"${'$'}LOG_FILE\"")
             appendLine()
-            appendLine(generateBinaryCheck(targetPath))
+            appendLine(generateBinaryCheck(config.targetPath))
             appendLine()
 
-            // SUS挂载隐藏控制仅限1.5.8及以上版本
-            appendLine("# 设置SUS挂载隐藏控制（仅限1.5.8及以上版本）")
-            appendLine("SUSFS_VERSION=$(${'$'}SUSFS_BIN show version 2>/dev/null | grep -o 'v[0-9]\\+\\.[0-9]\\+\\.[0-9]\\+' | head -1)")
-            appendLine("if [ -n \"${'$'}SUSFS_VERSION\" ]; then")
-            appendLine("    VERSION_NUM=$(echo \"${'$'}SUSFS_VERSION\" | sed 's/v//' | awk -F. '{printf \"%d%02d%02d\", $1, $2, $3}')")
-            appendLine("    if [ \"${'$'}VERSION_NUM\" -ge 10508 ]; then")
-            val hideValue = if (hideSusMountsForAllProcs) 1 else 0
-            appendLine("        \"${'$'}SUSFS_BIN\" hide_sus_mnts_for_all_procs $hideValue")
-            appendLine("        echo \"$(get_current_time): SUS挂载隐藏控制设置为: ${if (hideSusMountsForAllProcs) "对所有进程隐藏" else "仅对非KSU进程隐藏"}\" >> \"${'$'}LOG_FILE\"")
-            appendLine("    else")
-            appendLine("        echo \"$(get_current_time): 当前版本 ${'$'}SUSFS_VERSION 不支持SUS挂载隐藏控制功能，需要1.5.8及以上版本\" >> \"${'$'}LOG_FILE\"")
-            appendLine("    fi")
-            appendLine("else")
-            appendLine("    echo \"$(get_current_time): 无法获取SuSFS版本信息，跳过SUS挂载隐藏控制设置\" >> \"${'$'}LOG_FILE\"")
-            appendLine("fi")
-            appendLine()
+            // 仅在支持隐藏挂载功能时执行相关配置
+            if (config.support158) {
+                // SUS挂载隐藏控制
+                val hideValue = if (config.hideSusMountsForAllProcs) 1 else 0
+                appendLine("# 设置SUS挂载隐藏控制")
+                appendLine("\"${'$'}SUSFS_BIN\" hide_sus_mnts_for_all_procs $hideValue")
+                appendLine("echo \"$(get_current_time): SUS挂载隐藏控制设置为: ${if (config.hideSusMountsForAllProcs) "对所有进程隐藏" else "仅对非KSU进程隐藏"}\" >> \"${'$'}LOG_FILE\"")
+                appendLine()
+
+                // 路径设置和SUS路径设置
+                if (config.susPaths.isNotEmpty()) {
+                    generatePathSettingSection(config.androidDataPath, config.sdcardPath)
+                    generateSusPathsSection(config.susPaths)
+                }
+            }
 
             appendLine("echo \"$(get_current_time): Boot-Completed脚本执行完成\" >> \"${'$'}LOG_FILE\"")
         }
+    }
+
+    @SuppressLint("SdCardPath")
+    private fun StringBuilder.generatePathSettingSection(androidDataPath: String, sdcardPath: String) {
+        appendLine("# 路径配置")
+        appendLine("# 设置Android Data路径")
+        appendLine("until [ -d \"/sdcard/Android\" ]; do sleep 1; done")
+        appendLine("\"${'$'}SUSFS_BIN\" set_android_data_root_path '$androidDataPath'")
+        appendLine("echo \"$(get_current_time): Android Data路径设置为: $androidDataPath\" >> \"${'$'}LOG_FILE\"")
+        appendLine()
+        appendLine("# 设置SD卡路径")
+        appendLine("\"${'$'}SUSFS_BIN\" set_sdcard_root_path '$sdcardPath'")
+        appendLine("echo \"$(get_current_time): SD卡路径设置为: $sdcardPath\" >> \"${'$'}LOG_FILE\"")
+        appendLine()
     }
 
     /**
      * 生成module.prop文件内容
      */
     fun generateModuleProp(moduleId: String): String {
-        val moduleVersion = "v1.0.0"
-        val moduleVersionCode = "1000"
+        val moduleVersion = "v1.0.1"
+        val moduleVersionCode = "1001"
 
         return """
             id=$moduleId

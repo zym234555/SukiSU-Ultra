@@ -97,7 +97,7 @@ fun SusPathsContent(
                             modifier = Modifier.size(24.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(text = stringResource(R.string.susfs_add))
+                        Text(text = stringResource(R.string.add))
                     }
                 }
             }
@@ -172,7 +172,7 @@ fun SusMountsContent(
                             modifier = Modifier.size(24.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(text = stringResource(R.string.susfs_add))
+                        Text(text = stringResource(R.string.add))
                     }
                 }
             }
@@ -245,7 +245,7 @@ fun TryUmountContent(
                             modifier = Modifier.size(24.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(text = stringResource(R.string.susfs_add))
+                        Text(text = stringResource(R.string.add))
                     }
 
                     if (tryUmounts.isNotEmpty()) {
@@ -403,7 +403,7 @@ fun KstatConfigContent(
                             modifier = Modifier.size(24.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(text = stringResource(R.string.susfs_add))
+                        Text(text = stringResource(R.string.add))
                     }
 
                     Button(
@@ -419,7 +419,7 @@ fun KstatConfigContent(
                             modifier = Modifier.size(24.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(text = stringResource(R.string.susfs_add))
+                        Text(text = stringResource(R.string.add))
                     }
                 }
             }

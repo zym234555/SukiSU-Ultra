@@ -391,7 +391,6 @@
     <string name="susfs_tab_path_settings">路径设置</string>
     <string name="susfs_tab_enabled_features">启用功能状态</string>
     <!-- SuSFS Dialog Actions -->
-    <string name="susfs_add">添加</string>
     <!-- SuSFS Path Management -->
     <string name="susfs_add_sus_path">添加SUS路径</string>
     <string name="susfs_add_sus_mount">添加SUS挂载</string>
@@ -519,4 +518,7 @@
     <string name="susfs_run">运行</string>
     <string name="kernel_simple_kernel">内核版本简洁模式</string>
     <string name="kernel_simple_kernel_summary">启用或禁用SukiSU内核版本显示的简洁模式</string>
+    <string name="susfs_android_data_path_set">Android Data路径已设置为: %s</string>
+    <string name="susfs_sdcard_path_set">SD卡路径已设置为: %s</string>
+    <string name="susfs_path_setup_warning">路径设置可能未完全成功，但将继续添加SUS路径</string>
 </resources>

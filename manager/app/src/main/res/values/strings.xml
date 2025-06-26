@@ -392,8 +392,6 @@
     <string name="susfs_tab_try_umount">Try Umount</string>
     <string name="susfs_tab_path_settings">Path Settings</string>
     <string name="susfs_tab_enabled_features">Enabled Features Status</string>
-    <!-- SuSFS Dialog Actions -->
-    <string name="susfs_add">Add</string>
     <!-- SuSFS Path Management -->
     <string name="susfs_add_sus_path">Add SUS Path</string>
     <string name="susfs_add_sus_mount">Add SUS Mount</string>
@@ -521,4 +519,7 @@
     <string name="susfs_run">Run</string>
     <string name="kernel_simple_kernel">Kernel Version Concise Mode</string>
     <string name="kernel_simple_kernel_summary">Enable or disable the clean mode displayed by the SukiSU kernel version</string>
+    <string name="susfs_android_data_path_set">Android Data path has been set to: %s</string>
+    <string name="susfs_sdcard_path_set">SD card path has been set to: %s</string>
+    <string name="susfs_path_setup_warning">Path setup may not be fully successful, but SUS paths will continue to be added</string>
 </resources>

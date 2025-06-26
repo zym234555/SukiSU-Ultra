@@ -77,7 +77,7 @@ fun AddPathDialog(
                     enabled = newPath.isNotBlank() && !isLoading,
                     shape = RoundedCornerShape(8.dp)
                 ) {
-                    Text(stringResource(R.string.susfs_add))
+                    Text(stringResource(R.string.add))
                 }
             },
             dismissButton = {
@@ -186,7 +186,7 @@ fun AddTryUmountDialog(
                     enabled = newUmountPath.isNotBlank() && !isLoading,
                     shape = RoundedCornerShape(8.dp)
                 ) {
-                    Text(stringResource(R.string.susfs_add))
+                    Text(stringResource(R.string.add))
                 }
             },
             dismissButton = {
@@ -431,7 +431,7 @@ fun AddKstatStaticallyDialog(
                     enabled = newKstatPath.isNotBlank() && !isLoading,
                     shape = RoundedCornerShape(8.dp)
                 ) {
-                    Text("添加")
+                    Text(stringResource(R.string.add))
                 }
             },
             dismissButton = {
