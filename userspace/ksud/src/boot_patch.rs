@@ -519,7 +519,7 @@ fn do_patch(
     let no_vendor_init_boot = !workdir
         .join("vendor_ramdisk")
         .join("init_boot.cpio")
-        .exists();Add commentMore actions
+        .exists();
     if no_ramdisk && no_vendor_init_boot {
         bail!("No compatible ramdisk found.");
     }
