@@ -50,8 +50,6 @@
 #include "kernel_compat.h"
 #include "kpm/kpm.h"
 
-char ksu_version_id[KSU_MAX_VERSION_NAME] = KSU_VERSION;
-
 static bool ksu_module_mounted = false;
 
 extern int handle_sepolicy(unsigned long arg3, void __user *arg4);
@@ -329,6 +327,21 @@ int ksu_handle_prctl(int option, unsigned long arg2, unsigned long arg3,
 		return 0;
 	}
 
+	// Allow root manager to get full version strings
+	if (arg2 == CMD_GET_FULL_VERSION) {
+		char ksu_version_full[KSU_FULL_VERSION_STRING] = {0};
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 13, 0)
+		strscpy(ksu_version_full, KSU_VERSION_FULL, KSU_FULL_VERSION_STRING);
+#else
+		strlcpy(ksu_version_full, KSU_VERSION_FULL, KSU_FULL_VERSION_STRING);
+#endif
+		if (copy_to_user((void __user *)arg3, ksu_version_full, KSU_FULL_VERSION_STRING)) {
+			pr_err("prctl reply error, cmd: %lu\n", arg2);
+			return -EFAULT;
+		}
+		return 0;
+	}
+
 	if (arg2 == CMD_REPORT_EVENT) {
 		if (!from_root) {
 			return 0;
@@ -425,14 +438,6 @@ int ksu_handle_prctl(int option, unsigned long arg2, unsigned long arg3,
 		} else {
 			pr_err("prctl copy err, cmd: %lu\n", arg2);
 		}
-		return 0;
-	}
-
-	if (arg2 == CMD_GET_FULL_VERSION) {
-		if (copy_to_user(arg3, &ksu_version_id, KSU_MAX_VERSION_NAME)) {
-			pr_err("prctl reply error, cmd: %lu\n", arg2);
-		}
-
 		return 0;
 	}
 

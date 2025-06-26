@@ -4,7 +4,7 @@
 #include <linux/types.h>
 #include <linux/workqueue.h>
 
-#define KERNEL_SU_VERSION KSU_API_VERSION
+#define KERNEL_SU_VERSION KSU_VERSION
 #define KERNEL_SU_OPTION 0xDEADBEEF
 
 #define CMD_GRANT_ROOT 0
@@ -38,11 +38,11 @@
 #define KSU_MAX_GROUPS 32
 #define KSU_SELINUX_DOMAIN 64
 
-#define KSU_MAX_VERSION_NAME 255
-
-#ifndef KSU_VERSION 
-#define KSU_VERSION "v0-unknown-00000000@unkown"
+// SukiSU Ultra kernel su version full strings
+#ifndef KSU_VERSION_FULL 
+#define KSU_VERSION_FULL "v3.x-00000000@unknown"
 #endif
+#define KSU_FULL_VERSION_STRING 255
 
 struct root_profile {
 	int32_t uid;
