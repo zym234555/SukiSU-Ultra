@@ -424,9 +424,9 @@
     <string name="susfs_reset_path_title">Reset Cài đặt Đường dẫn</string>
     <!-- SuSFS Path Settings -->
     <string name="susfs_android_data_path_label">Đường dẫn Dữ liệu Android</string>
-    <string name="susfs_sdcard_path_label">Đường dẫn Thẻ SD</string>
+    <string name="susfs_sdcard_path_label">Đường dẫn SD Card</string>
     <string name="susfs_set_android_data_path">Đặt Đường dẫn Dữ liệu Android</string>
-    <string name="susfs_set_sdcard_path">Đặt Đường dẫn Thẻ SD</string>
+    <string name="susfs_set_sdcard_path">Đặt Đường dẫn SD Card</string>
     <!-- SuSFS Enabled Features -->
     <string name="susfs_enabled_features_description">Hiển thị trạng thái tính năng hiện tại của SuSFS</string>
     <string name="susfs_no_features_found">Không tìm thấy thông tin trạng thái tính năng</string>
@@ -501,7 +501,7 @@
     <string name="kstat_config_description_update_full_clone">• update_sus_kstat_full_clone: ​​Chỉ cập nhật ino, giữ nguyên các giá trị gốc khác</string>
     <string name="static_kstat_config">Cấu hình Kstat tĩnh</string>
     <string name="kstat_path_management">Quản lý Đường dẫn Kstat</string>
-    <string name="no_kstat_config_message">Chưa có cấu hình Kstat, hãy nhấp vào nút bên trên để thêm</string>
+    <string name="no_kstat_config_message">Chưa có cấu hình Kstat, hãy nhấp vào nút bên dưới để thêm</string>
     <!-- SuSFS Mount Hiding Control Related Strings -->
     <string name="susfs_hide_mounts_control_title">Điều khiển ẩn SuS Mount</string>
     <string name="susfs_hide_mounts_control_description">Kiểm soát hành vi ẩn của SuS Mount với các tiến trình</string>
