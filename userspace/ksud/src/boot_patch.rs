@@ -168,7 +168,7 @@ fn do_cpio_cmd(magiskboot: &Path, workdir: &Path, cmd: &str) -> Result<()> {
 }
 
 fn do_vendor_init_boot_cpio_cmd(magiskboot: &Path, workdir: &Path, cmd: &str) -> Result<()> {
-    let vendor_init_boot_cpio  = workdir.join("vendor_ramdisk").join("init_boot.cpio");
+    let vendor_init_boot_cpio = workdir.join("vendor_ramdisk").join("init_boot.cpio");
     let status = Command::new(magiskboot)
         .current_dir(workdir)
         .stdout(Stdio::null())
@@ -200,11 +200,7 @@ fn is_magisk_patched_vendor_init_boot(magiskboot: &Path, workdir: &Path) -> Resu
         .current_dir(workdir)
         .stdout(Stdio::null())
         .stderr(Stdio::null())
-        .args([
-            "cpio",
-            vendor_init_boot_cpio.to_str().unwrap(),
-            "test",
-        ])
+        .args(["cpio", vendor_init_boot_cpio.to_str().unwrap(), "test"])
         .status()?;
 
     // 0: stock, 1: magisk
@@ -284,8 +280,12 @@ pub fn restore(
 
     let no_ramdisk = !workdir.join("ramdisk.cpio").exists();
     let is_kernelsu_patched = is_kernelsu_patched(&magiskboot, workdir)?;
-    let is_kernelsu_patched_vendor_init_boot = is_kernelsu_patched_vendor_init_boot(&magiskboot, workdir)?;
-    ensure!(is_kernelsu_patched || is_kernelsu_patched_vendor_init_boot, "boot image is not patched by KernelSU");
+    let is_kernelsu_patched_vendor_init_boot =
+        is_kernelsu_patched_vendor_init_boot(&magiskboot, workdir)?;
+    ensure!(
+        is_kernelsu_patched || is_kernelsu_patched_vendor_init_boot,
+        "boot image is not patched by KernelSU"
+    );
 
     let mut new_boot = None;
     let mut from_backup = false;
@@ -321,12 +321,13 @@ pub fn restore(
             // vendor init_boot  restore
             do_vendor_init_boot_cpio_cmd(&magiskboot, workdir, "rm kernelsu.ko")?;
             // if init.real exists, restore it
-            let status = do_vendor_init_boot_cpio_cmd(&magiskboot, workdir, "exists init.real").is_ok();
+            let status =
+                do_vendor_init_boot_cpio_cmd(&magiskboot, workdir, "exists init.real").is_ok();
             if status {
                 do_vendor_init_boot_cpio_cmd(&magiskboot, workdir, "mv init.real init")?;
             } else {
-                let vendor_init_boot  = workdir.join("vendor_ramdisk").join("init_boot.cpio");
-                std::fs::remove_file(vendor_init_boot )?;
+                let vendor_init_boot = workdir.join("vendor_ramdisk").join("init_boot.cpio");
+                std::fs::remove_file(vendor_init_boot)?;
             }
         } else {
             // remove kernelsu.ko
@@ -524,7 +525,8 @@ fn do_patch(
         bail!("No compatible ramdisk found.");
     }
     let is_magisk_patched = is_magisk_patched(&magiskboot, workdir)?;
-    let is_magisk_patched_vendor_init_boot = is_magisk_patched_vendor_init_boot(&magiskboot, workdir)?;
+    let is_magisk_patched_vendor_init_boot =
+        is_magisk_patched_vendor_init_boot(&magiskboot, workdir)?;
     ensure!(
         !is_magisk_patched || !is_magisk_patched_vendor_init_boot,
         "Cannot work with Magisk patched image"
@@ -532,7 +534,8 @@ fn do_patch(
 
     println!("- Adding KernelSU LKM");
     let is_kernelsu_patched = is_kernelsu_patched(&magiskboot, workdir)?;
-    let is_kernelsu_patched_vendor_init_boot = is_kernelsu_patched_vendor_init_boot(&magiskboot, workdir)?;
+    let is_kernelsu_patched_vendor_init_boot =
+        is_kernelsu_patched_vendor_init_boot(&magiskboot, workdir)?;
 
     let mut need_backup = false;
     if !is_kernelsu_patched || (no_ramdisk && !is_kernelsu_patched_vendor_init_boot) {
@@ -740,7 +743,6 @@ fn find_boot_image(
             Path::new(&format!("/dev/block/by-name/init_boot{slot_suffix}")).exists();
         let vendor_boot_exist =
             Path::new(&format!("/dev/block/by-name/vendor_boot{slot_suffix}")).exists();
-            
         let boot_partition = if !is_replace_kernel && init_boot_exist && !skip_init {
             format!("/dev/block/by-name/init_boot{slot_suffix}")
         } else if !is_replace_kernel && vendor_boot_exist && !skip_init {
