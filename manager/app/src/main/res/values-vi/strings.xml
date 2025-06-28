@@ -367,7 +367,6 @@
     <string name="susfs_apply">Áp dụng</string>
     <!-- SuSFS Reset Confirmation -->
     <string name="susfs_reset_confirm_title">Xác nhận khôi phục</string>
-    <string name="susfs_reset_confirm">Xác nhận khôi phục</string>
     <!-- SuSFS Toast Messages -->
     <string name="susfs_binary_not_found">Không tìm thấy file ksu_susfs</string>
     <string name="susfs_command_failed">Thực hiện lệnh SuSFS thất bại</string>
@@ -489,11 +488,9 @@
     <string name="file_or_directory_path_label">Đường dẫn File/Folder</string>
     <string name="hint_use_default_value">Gợi ý: Bạn có thể sử dụng \"default\" để thiết lập giá trị ban đầu</string>
     <string name="add_kstat_path_title">Thêm Đường dẫn Kstat</string>
-    <string name="kstat_command_description">Lệnh này được sử dụng để thêm trước khi đường dẫn được mount hoặc ghi đè nhằm lưu trữ thông tin trạng thái ban đầu trong bộ nhớ hạt nhân</string>
     <string name="add">Thêm</string>
     <string name="reset_kstat_config_title">Khôi phục Cấu hình Kstat</string>
     <string name="reset_kstat_config_message">Bạn có chắc chắn muốn xóa tất cả cấu hình Kstat không? Không thể hoàn tác hành động này</string>
-    <string name="confirm_reset">Xác nhận khôi phục</string>
     <string name="kstat_config_description_title">Mô tả cấu hình Kstat</string>
     <string name="kstat_config_description_add_statically">• add_sus_kstat_statically: Thông tin thống kê cấu hình tĩnh của các File/Folder</string>
     <string name="kstat_config_description_add">• add_sus_kstat: Thêm đường dẫn trước khi mount để lưu trữ thông tin trạng thái ban đầu</string>

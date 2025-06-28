@@ -369,7 +369,6 @@
     <string name="susfs_apply">Применить</string>
     <!-- SuSFS Reset Confirmation -->
     <string name="susfs_reset_confirm_title">Подтвердить сброс</string>
-    <string name="susfs_reset_confirm">Подтвердить сброс</string>
     <!-- SuSFS Toast Messages -->
     <string name="susfs_binary_not_found">Не удалось найти файл ksu_susfs</string>
     <string name="susfs_command_failed">Выполнение команды SuSFS не удалось</string>
@@ -476,11 +475,9 @@
     <string name="file_or_directory_path_label">Путь к файлу/папке</string>
     <string name="hint_use_default_value">Подсказка: Вы можете использовать «по умолчанию» для использования оригинального значения</string>
     <string name="add_kstat_path_title">Добавить путь Kstat</string>
-    <string name="kstat_command_description">Эта команда используется для добавления перед тем как путь монтируется в bind-mounted или overlaid, сохраняя исходную информацию о состоянии в памяти ядра.</string>
     <string name="add">Добавить</string>
     <string name="reset_kstat_config_title">Сбросить конфигурацию Kstat</string>
     <string name="reset_kstat_config_message">Вы уверены, что хотите очистить все конфигурации Kstat? Это действие нельзя отменить.</string>
-    <string name="confirm_reset">Подтвердить сброс</string>
     <string name="kstat_config_description_title">Описание конфигурации Kstat</string>
     <string name="kstat_config_description_add_statically">• add_sus_kstat_staticall: Статическая статистика информации о файлах/директориях</string>
     <string name="kstat_config_description_add">• add_sus_kstat: Добавить путь перед привязкой, сохраняя исходную статистику</string>

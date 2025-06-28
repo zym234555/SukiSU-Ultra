@@ -369,7 +369,6 @@
     <string name="susfs_apply">Apply</string>
     <!-- SuSFS Reset Confirmation -->
     <string name="susfs_reset_confirm_title">Confirm Reset</string>
-    <string name="susfs_reset_confirm">Confirm Reset</string>
     <!-- SuSFS Toast Messages -->
     <string name="susfs_binary_not_found">Cannot find ksu_susfs file</string>
     <string name="susfs_command_failed">SuSFS command execution failed</string>
@@ -491,11 +490,9 @@
     <string name="file_or_directory_path_label">File/Directory Path</string>
     <string name="hint_use_default_value">Hint: You can use ”default“ to use the original value</string>
     <string name="add_kstat_path_title">Add Kstat Path</string>
-    <string name="kstat_command_description">This command is used to add before the path is bind-mounted or overlaid, storing the original stat information in kernel memory.</string>
     <string name="add">Add</string>
     <string name="reset_kstat_config_title">Reset Kstat Configuration</string>
     <string name="reset_kstat_config_message">Are you sure you want to clear all Kstat configurations? This action cannot be undone.</string>
-    <string name="confirm_reset">Confirm Reset</string>
     <string name="kstat_config_description_title">Kstat Configuration Description</string>
     <string name="kstat_config_description_add_statically">• add_sus_kstat_statically: Static stat info of files/directories</string>
     <string name="kstat_config_description_add">• add_sus_kstat: Add path before bind mount, storing original stat info</string>
@@ -522,4 +519,24 @@
     <string name="susfs_android_data_path_set">Android Data path has been set to: %s</string>
     <string name="susfs_sdcard_path_set">SD card path has been set to: %s</string>
     <string name="susfs_path_setup_warning">Path setup may not be fully successful, but SUS paths will continue to be added</string>
+    <!-- 备份和还原相关字符串 -->
+    <string name="susfs_backup_title">Backup</string>
+    <string name="susfs_backup_description">Create a backup of all SuSFS configurations. The backup file will include all settings, paths, and configurations.</string>
+    <string name="susfs_backup_create">Create Backup</string>
+    <string name="susfs_backup_success">Backup created successfully: %s</string>
+    <string name="susfs_backup_failed">Backup creation failed: %s</string>
+    <string name="susfs_backup_file_not_found">Backup file not found</string>
+    <string name="susfs_backup_invalid_format">Invalid backup file format</string>
+    <string name="susfs_backup_version_mismatch">Backup version mismatch, but will attempt to restore</string>
+    <string name="susfs_restore_title">Restore</string>
+    <string name="susfs_restore_description">Restore SuSFS configurations from a backup file. This will overwrite all current settings.</string>
+    <string name="susfs_restore_select_file">Select Backup File</string>
+    <string name="susfs_restore_success">Configuration restored successfully from backup created on %s from device: %s</string>
+    <string name="susfs_restore_failed">Restore failed: %s</string>
+    <string name="susfs_restore_confirm_title">Confirm Restore</string>
+    <string name="susfs_restore_confirm_description">This will overwrite all current SuSFS configurations. Are you sure you want to continue?</string>
+    <string name="susfs_restore_confirm">Restore</string>
+    <string name="susfs_backup_info_date">Backup Date: %s</string>
+    <string name="susfs_backup_info_device">Device: %s</string>
+    <string name="susfs_backup_info_version">Version: %s</string>
 </resources>

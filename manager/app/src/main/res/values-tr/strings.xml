@@ -367,7 +367,6 @@
     <string name="susfs_apply">Uygula</string>
     <!-- SuSFS Reset Confirmation -->
     <string name="susfs_reset_confirm_title">Sıfırlamayı Onayla</string>
-    <string name="susfs_reset_confirm">Sıfırlamayı Onayla</string>
     <!-- SuSFS Toast Messages -->
     <string name="susfs_binary_not_found">ksu_susfs dosyası bulunamadı</string>
     <string name="susfs_command_failed">SuSFS komut çalıştırma başarısız</string>

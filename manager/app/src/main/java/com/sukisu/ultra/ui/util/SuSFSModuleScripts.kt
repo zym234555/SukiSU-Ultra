@@ -53,6 +53,7 @@ object ScriptGenerator {
     /**
      * 生成service.sh脚本内容
      */
+    @SuppressLint("SdCardPath")
     private fun generateServiceScript(config: SuSFSManager.ModuleConfig): String {
         return buildString {
             appendLine("#!/system/bin/sh")
@@ -67,6 +68,9 @@ object ScriptGenerator {
             if (shouldConfigureInService(config)) {
                 // 添加SUS路径 (仅在不支持隐藏挂载时)
                 if (!config.support158 && config.susPaths.isNotEmpty()) {
+                    appendLine()
+                    appendLine("until [ -d \"/sdcard/Android\" ]; do sleep 1; done")
+                    appendLine("sleep 45")
                     generateSusPathsSection(config.susPaths)
                 }
 
@@ -162,45 +166,48 @@ object ScriptGenerator {
         appendLine("# 隐藏BL 来自 Shamiko 脚本")
         appendLine(
             """
-            check_reset_prop() {
-                local NAME=$1
-                local EXPECTED=$2
-                local VALUE=$(resetprop ${'$'}NAME)
-                [ -z ${'$'}VALUE ] || [ ${'$'}VALUE = ${'$'}EXPECTED ] || resetprop ${'$'}NAME ${'$'}EXPECTED
-            }
-            
-            check_missing_prop() {
-                local NAME=$1
-                local EXPECTED=$2
-                local VALUE=$(resetprop ${'$'}NAME)
-                [ -z ${'$'}VALUE ] && resetprop ${'$'}NAME ${'$'}EXPECTED
-            }
-            
-            check_missing_match_prop() {
-                local NAME=$1
-                local EXPECTED=$2
-                local VALUE=$(resetprop ${'$'}NAME)
-                [ -z ${'$'}VALUE ] || [ ${'$'}VALUE = ${'$'}EXPECTED ] || resetprop ${'$'}NAME ${'$'}EXPECTED
-                [ -z ${'$'}VALUE ] && resetprop ${'$'}NAME ${'$'}EXPECTED
-            }
-            
-            contains_reset_prop() {
-                local NAME=$1
-                local CONTAINS=$2
-                local NEWVAL=$3
-                [[ "$(resetprop ${'$'}NAME)" = *"${'$'}CONTAINS"* ]] && resetprop ${'$'}NAME ${'$'}NEWVAL
-            }
-        """.trimIndent())
+        RESETPROP_BIN="/data/adb/ksu/bin/resetprop"
+        
+        check_reset_prop() {
+            local NAME=$1
+            local EXPECTED=$2
+            local VALUE=$("${'$'}RESETPROP_BIN" ${'$'}NAME)
+            [ -z ${'$'}VALUE ] || [ ${'$'}VALUE = ${'$'}EXPECTED ] || "${'$'}RESETPROP_BIN" ${'$'}NAME ${'$'}EXPECTED
+        }
+        
+        check_missing_prop() {
+            local NAME=$1
+            local EXPECTED=$2
+            local VALUE=$("${'$'}RESETPROP_BIN" ${'$'}NAME)
+            [ -z ${'$'}VALUE ] && "${'$'}RESETPROP_BIN" ${'$'}NAME ${'$'}EXPECTED
+        }
+        
+        check_missing_match_prop() {
+            local NAME=$1
+            local EXPECTED=$2
+            local VALUE=$("${'$'}RESETPROP_BIN" ${'$'}NAME)
+            [ -z ${'$'}VALUE ] || [ ${'$'}VALUE = ${'$'}EXPECTED ] || "${'$'}RESETPROP_BIN" ${'$'}NAME ${'$'}EXPECTED
+            [ -z ${'$'}VALUE ] && "${'$'}RESETPROP_BIN" ${'$'}NAME ${'$'}EXPECTED
+        }
+        
+        contains_reset_prop() {
+            local NAME=$1
+            local CONTAINS=$2
+            local NEWVAL=$3
+            [[ "$("${'$'}RESETPROP_BIN" ${'$'}NAME)" = *"${'$'}CONTAINS"* ]] && "${'$'}RESETPROP_BIN" ${'$'}NAME ${'$'}NEWVAL
+        }
+    """.trimIndent())
         appendLine()
-
-        appendLine("resetprop -w sys.boot_completed 0")
+        appendLine("sleep 30")
         appendLine()
+        appendLine("\"${'$'}RESETPROP_BIN\" -w sys.boot_completed 0")
 
         // 添加所有系统属性重置
         val systemProps = listOf(
             "ro.boot.vbmeta.invalidate_on_error" to "yes",
             "ro.boot.vbmeta.avb_version" to "1.2",
             "ro.boot.vbmeta.hash_alg" to "sha256",
+            "ro.boot.vbmeta.size" to "19968",
             "ro.boot.vbmeta.device_state" to "locked",
             "ro.boot.verifiedbootstate" to "green",
             "ro.boot.flash.locked" to "1",
@@ -327,6 +334,7 @@ object ScriptGenerator {
     /**
      * 生成boot-completed.sh脚本内容
      */
+    @SuppressLint("SdCardPath")
     private fun generateBootCompletedScript(config: SuSFSManager.ModuleConfig): String {
         return buildString {
             appendLine("#!/system/bin/sh")
@@ -352,6 +360,10 @@ object ScriptGenerator {
                 // 路径设置和SUS路径设置
                 if (config.susPaths.isNotEmpty()) {
                     generatePathSettingSection(config.androidDataPath, config.sdcardPath)
+                    appendLine()
+                    appendLine("until [ -d \"/sdcard/Android\" ]; do sleep 1; done")
+                    appendLine("sleep 45")
+                    appendLine()
                     generateSusPathsSection(config.susPaths)
                 }
             }
@@ -378,8 +390,8 @@ object ScriptGenerator {
      * 生成module.prop文件内容
      */
     fun generateModuleProp(moduleId: String): String {
-        val moduleVersion = "v1.0.1"
-        val moduleVersionCode = "1001"
+        val moduleVersion = "v1.0.2"
+        val moduleVersionCode = "1002"
 
         return """
             id=$moduleId

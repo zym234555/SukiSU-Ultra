@@ -1,6 +1,8 @@
 package com.sukisu.ultra.ui.screen
 
 import android.annotation.SuppressLint
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -80,6 +82,8 @@ import com.sukisu.ultra.ui.theme.CardConfig
 import com.sukisu.ultra.ui.util.SuSFSManager
 import com.sukisu.ultra.ui.util.SuSFSManager.isSusVersion_1_5_8
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.*
 
 /**
  * 标签页枚举类
@@ -123,8 +127,6 @@ fun SuSFSConfigScreen(
     var isLoading by remember { mutableStateOf(false) }
     var showConfirmReset by remember { mutableStateOf(false) }
     var autoStartEnabled by remember { mutableStateOf(false) }
-    var lastAppliedValue by remember { mutableStateOf("") }
-    var lastAppliedBuildTime by remember { mutableStateOf("") }
     var executeInPostFsData by remember { mutableStateOf(false) }
 
     // 槽位信息相关状态
@@ -165,12 +167,78 @@ fun SuSFSConfigScreen(
     var showResetUmountsDialog by remember { mutableStateOf(false) }
     var showResetKstatDialog by remember { mutableStateOf(false) }
 
+    // 备份还原相关状态
+    var showBackupDialog by remember { mutableStateOf(false) }
+    var showRestoreDialog by remember { mutableStateOf(false) }
+    var showRestoreConfirmDialog by remember { mutableStateOf(false) }
+    var selectedBackupFile by remember { mutableStateOf<String?>(null) }
+    var backupInfo by remember { mutableStateOf<SuSFSManager.BackupData?>(null) }
+
     val allTabs = SuSFSTab.getAllTabs(isSusVersion_1_5_8())
 
     // 实时判断是否可以启用开机自启动
     val canEnableAutoStart by remember {
         derivedStateOf {
             SuSFSManager.hasConfigurationForAutoStart(context)
+        }
+    }
+
+    // 文件选择器
+    val backupFileLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("application/json")
+    ) { uri ->
+        uri?.let { fileUri ->
+            val fileName = SuSFSManager.getRecommendedBackupPath(context)
+            coroutineScope.launch {
+                isLoading = true
+                val success = SuSFSManager.createBackup(context, fileName)
+                if (success) {
+                    // 复制到用户选择的位置
+                    try {
+                        context.contentResolver.openOutputStream(fileUri)?.use { outputStream ->
+                            java.io.File(fileName).inputStream().use { inputStream ->
+                                inputStream.copyTo(outputStream)
+                            }
+                        }
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                }
+                isLoading = false
+                showBackupDialog = false
+            }
+        }
+    }
+
+    val restoreFileLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        uri?.let { fileUri ->
+            coroutineScope.launch {
+                try {
+                    // 复制到临时文件
+                    val tempFile = java.io.File(context.cacheDir, "temp_restore.susfs_backup")
+                    context.contentResolver.openInputStream(fileUri)?.use { inputStream ->
+                        tempFile.outputStream().use { outputStream ->
+                            inputStream.copyTo(outputStream)
+                        }
+                    }
+
+                    // 验证备份文件
+                    val backup = SuSFSManager.validateBackupFile(tempFile.absolutePath)
+                    if (backup != null) {
+                        selectedBackupFile = tempFile.absolutePath
+                        backupInfo = backup
+                        showRestoreConfirmDialog = true
+                    } else {
+                        // 显示错误消息
+                    }
+                    tempFile.deleteOnExit()
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+                showRestoreDialog = false
+            }
         }
     }
 
@@ -198,8 +266,6 @@ fun SuSFSConfigScreen(
         unameValue = SuSFSManager.getUnameValue(context)
         buildTimeValue = SuSFSManager.getBuildTimeValue(context)
         autoStartEnabled = SuSFSManager.isAutoStartEnabled(context)
-        lastAppliedValue = SuSFSManager.getLastAppliedValue(context)
-        lastAppliedBuildTime = SuSFSManager.getLastAppliedBuildTime(context)
         executeInPostFsData = SuSFSManager.getExecuteInPostFsData(context)
         susPaths = SuSFSManager.getSusPaths(context)
         susMounts = SuSFSManager.getSusMounts(context)
@@ -226,6 +292,183 @@ fun SuSFSConfigScreen(
             autoStartEnabled = false
             SuSFSManager.configureAutoStart(context, false)
         }
+    }
+
+    // 备份对话框
+    if (showBackupDialog) {
+        AlertDialog(
+            onDismissRequest = { showBackupDialog = false },
+            title = {
+                Text(
+                    text = stringResource(R.string.susfs_backup_title),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text(stringResource(R.string.susfs_backup_description))
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        val dateFormat = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault())
+                        val timestamp = dateFormat.format(Date())
+                        backupFileLauncher.launch("SuSFS_Config_$timestamp.susfs_backup")
+                    },
+                    enabled = !isLoading,
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text(stringResource(R.string.susfs_backup_create))
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showBackupDialog = false },
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text(stringResource(R.string.cancel))
+                }
+            },
+            shape = RoundedCornerShape(12.dp)
+        )
+    }
+
+    // 还原对话框
+    if (showRestoreDialog) {
+        AlertDialog(
+            onDismissRequest = { showRestoreDialog = false },
+            title = {
+                Text(
+                    text = stringResource(R.string.susfs_restore_title),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text(stringResource(R.string.susfs_restore_description))
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        restoreFileLauncher.launch(arrayOf("application/json", "*/*"))
+                    },
+                    enabled = !isLoading,
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text(stringResource(R.string.susfs_restore_select_file))
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showRestoreDialog = false },
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text(stringResource(R.string.cancel))
+                }
+            },
+            shape = RoundedCornerShape(12.dp)
+        )
+    }
+
+    // 还原确认对话框
+    if (showRestoreConfirmDialog && backupInfo != null) {
+        AlertDialog(
+            onDismissRequest = {
+                showRestoreConfirmDialog = false
+                selectedBackupFile = null
+                backupInfo = null
+            },
+            title = {
+                Text(
+                    text = stringResource(R.string.susfs_restore_confirm_title),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(stringResource(R.string.susfs_restore_confirm_description))
+
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                        ),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(12.dp),
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+                            Text(
+                                text = stringResource(R.string.susfs_backup_info_date,
+                                    dateFormat.format(Date(backupInfo!!.timestamp))),
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                            Text(
+                                text = stringResource(R.string.susfs_backup_info_device, backupInfo!!.deviceInfo),
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                            Text(
+                                text = stringResource(R.string.susfs_backup_info_version, backupInfo!!.version),
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        selectedBackupFile?.let { filePath ->
+                            coroutineScope.launch {
+                                isLoading = true
+                                val success = SuSFSManager.restoreFromBackup(context, filePath)
+                                if (success) {
+                                    // 重新加载所有配置
+                                    unameValue = SuSFSManager.getUnameValue(context)
+                                    buildTimeValue = SuSFSManager.getBuildTimeValue(context)
+                                    autoStartEnabled = SuSFSManager.isAutoStartEnabled(context)
+                                    executeInPostFsData = SuSFSManager.getExecuteInPostFsData(context)
+                                    susPaths = SuSFSManager.getSusPaths(context)
+                                    susMounts = SuSFSManager.getSusMounts(context)
+                                    tryUmounts = SuSFSManager.getTryUmounts(context)
+                                    androidDataPath = SuSFSManager.getAndroidDataPath(context)
+                                    sdcardPath = SuSFSManager.getSdcardPath(context)
+                                    kstatConfigs = SuSFSManager.getKstatConfigs(context)
+                                    addKstatPaths = SuSFSManager.getAddKstatPaths(context)
+                                    hideSusMountsForAllProcs = SuSFSManager.getHideSusMountsForAllProcs(context)
+                                }
+                                isLoading = false
+                                showRestoreConfirmDialog = false
+                                selectedBackupFile = null
+                                backupInfo = null
+                            }
+                        }
+                    },
+                    enabled = !isLoading,
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text(stringResource(R.string.susfs_restore_confirm))
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        showRestoreConfirmDialog = false
+                        selectedBackupFile = null
+                        backupInfo = null
+                    },
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text(stringResource(R.string.cancel))
+                }
+            },
+            shape = RoundedCornerShape(12.dp)
+        )
     }
 
     // 槽位信息对话框
@@ -366,8 +609,6 @@ fun SuSFSConfigScreen(
                 if (SuSFSManager.resetToDefault(context)) {
                     unameValue = "default"
                     buildTimeValue = "default"
-                    lastAppliedValue = "default"
-                    lastAppliedBuildTime = "default"
                     autoStartEnabled = false
                 }
                 isLoading = false
@@ -530,8 +771,6 @@ fun SuSFSConfigScreen(
                                             val finalBuildTimeValue = buildTimeValue.trim().ifBlank { "default" }
                                             val success = SuSFSManager.setUname(context, finalUnameValue, finalBuildTimeValue)
                                             if (success) {
-                                                lastAppliedValue = finalUnameValue
-                                                lastAppliedBuildTime = finalBuildTimeValue
                                                 SuSFSManager.saveExecuteInPostFsData(context, executeInPostFsData)
                                             }
                                             isLoading = false
@@ -780,7 +1019,9 @@ fun SuSFSConfigScreen(
                                 }
                             },
                             onShowSlotInfo = { showSlotInfoDialog = true },
-                            context = context
+                            context = context,
+                            onShowBackupDialog = { showBackupDialog = true },
+                            onShowRestoreDialog = { showRestoreDialog = true }
                         )
                     }
                     SuSFSTab.SUS_PATHS -> {
@@ -939,7 +1180,9 @@ private fun BasicSettingsContent(
     isLoading: Boolean,
     onAutoStartToggle: (Boolean) -> Unit,
     onShowSlotInfo: () -> Unit,
-    context: android.content.Context
+    context: android.content.Context,
+    onShowBackupDialog: () -> Unit,
+    onShowRestoreDialog: () -> Unit
 ) {
     var scriptLocationExpanded by remember { mutableStateOf(false) }
 
@@ -1202,6 +1445,51 @@ private fun BasicSettingsContent(
                         fontWeight = FontWeight.Medium
                     )
                 }
+            }
+        }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            // 备份按钮
+            OutlinedButton(
+                onClick = onShowBackupDialog,
+                enabled = !isLoading,
+                shape = RoundedCornerShape(8.dp),
+                modifier = Modifier
+                    .weight(1f)
+                    .height(40.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Backup,
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                    stringResource(R.string.susfs_backup_title),
+                    fontWeight = FontWeight.Medium
+                )
+            }
+            // 还原按钮
+            OutlinedButton(
+                onClick = onShowRestoreDialog,
+                enabled = !isLoading,
+                shape = RoundedCornerShape(8.dp),
+                modifier = Modifier
+                    .weight(1f)
+                    .height(40.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Restore,
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                    stringResource(R.string.susfs_restore_title),
+                    fontWeight = FontWeight.Medium
+                )
             }
         }
     }

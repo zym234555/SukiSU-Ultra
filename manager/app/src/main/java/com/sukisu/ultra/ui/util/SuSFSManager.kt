@@ -16,6 +16,9 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 import androidx.core.content.edit
+import org.json.JSONObject
+import java.text.SimpleDateFormat
+import java.util.*
 
 /**
  * SuSFS 配置管理器
@@ -44,6 +47,7 @@ object SuSFSManager {
     private const val MODULE_ID = "susfs_manager"
     private const val MODULE_PATH = "/data/adb/modules/$MODULE_ID"
     private const val MIN_VERSION_FOR_HIDE_MOUNT = "1.5.8"
+    private const val BACKUP_FILE_EXTENSION = ".susfs_backup"
 
     data class SlotInfo(val slotName: String, val uname: String, val buildTime: String)
     data class CommandResult(val isSuccess: Boolean, val output: String, val errorOutput: String = "")
@@ -53,6 +57,60 @@ object SuSFSManager {
         val statusText: String = if (isEnabled) context.getString(R.string.susfs_feature_enabled) else context.getString(R.string.susfs_feature_disabled),
         val canConfigure: Boolean = false
     )
+
+    /**
+     * 备份数据类
+     */
+    data class BackupData(
+        val version: String,
+        val timestamp: Long,
+        val deviceInfo: String,
+        val configurations: Map<String, Any>
+    ) {
+        fun toJson(): String {
+            val jsonObject = JSONObject().apply {
+                put("version", version)
+                put("timestamp", timestamp)
+                put("deviceInfo", deviceInfo)
+                put("configurations", JSONObject(configurations))
+            }
+            return jsonObject.toString(2)
+        }
+
+        companion object {
+            fun fromJson(jsonString: String): BackupData? {
+                return try {
+                    val jsonObject = JSONObject(jsonString)
+                    val configurationsJson = jsonObject.getJSONObject("configurations")
+                    val configurations = mutableMapOf<String, Any>()
+
+                    configurationsJson.keys().forEach { key ->
+                        val value = configurationsJson.get(key)
+                        configurations[key] = when (value) {
+                            is org.json.JSONArray -> {
+                                val set = mutableSetOf<String>()
+                                for (i in 0 until value.length()) {
+                                    set.add(value.getString(i))
+                                }
+                                set
+                            }
+                            else -> value
+                        }
+                    }
+
+                    BackupData(
+                        version = jsonObject.getString("version"),
+                        timestamp = jsonObject.getLong("timestamp"),
+                        deviceInfo = jsonObject.getString("deviceInfo"),
+                        configurations = configurations
+                    )
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    null
+                }
+            }
+        }
+    }
 
     /**
      * 模块配置数据类
@@ -180,9 +238,6 @@ object SuSFSManager {
     fun getBuildTimeValue(context: Context): String =
         getPrefs(context).getString(KEY_BUILD_TIME_VALUE, DEFAULT_BUILD_TIME) ?: DEFAULT_BUILD_TIME
 
-    fun getLastAppliedValue(context: Context): String = getUnameValue(context)
-    fun getLastAppliedBuildTime(context: Context): String = getBuildTimeValue(context)
-
     fun setAutoStartEnabled(context: Context, enabled: Boolean) =
         getPrefs(context).edit { putBoolean(KEY_AUTO_START_ENABLED, enabled) }
 
@@ -260,6 +315,154 @@ object SuSFSManager {
     @SuppressLint("SdCardPath")
     fun getSdcardPath(context: Context): String =
         getPrefs(context).getString(KEY_SDCARD_PATH, "/sdcard") ?: "/sdcard"
+
+    // 获取所有配置的Map
+    private fun getAllConfigurations(context: Context): Map<String, Any> {
+        return mapOf(
+            KEY_UNAME_VALUE to getUnameValue(context),
+            KEY_BUILD_TIME_VALUE to getBuildTimeValue(context),
+            KEY_AUTO_START_ENABLED to isAutoStartEnabled(context),
+            KEY_SUS_PATHS to getSusPaths(context),
+            KEY_SUS_MOUNTS to getSusMounts(context),
+            KEY_TRY_UMOUNTS to getTryUmounts(context),
+            KEY_ANDROID_DATA_PATH to getAndroidDataPath(context),
+            KEY_SDCARD_PATH to getSdcardPath(context),
+            KEY_ENABLE_LOG to getEnableLogState(context),
+            KEY_EXECUTE_IN_POST_FS_DATA to getExecuteInPostFsData(context),
+            KEY_KSTAT_CONFIGS to getKstatConfigs(context),
+            KEY_ADD_KSTAT_PATHS to getAddKstatPaths(context),
+            KEY_HIDE_SUS_MOUNTS_FOR_ALL_PROCS to getHideSusMountsForAllProcs(context)
+        )
+    }
+
+    //生成备份文件名
+    private fun generateBackupFileName(): String {
+        val dateFormat = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault())
+        val timestamp = dateFormat.format(Date())
+        return "SuSFS_Config_$timestamp$BACKUP_FILE_EXTENSION"
+    }
+
+    //  获取设备信息
+    private fun getDeviceInfo(): String {
+        return try {
+            "${android.os.Build.MANUFACTURER} ${android.os.Build.MODEL} (${android.os.Build.VERSION.RELEASE})"
+        } catch (_: Exception) {
+            "Unknown Device"
+        }
+    }
+
+    // 创建配置备份
+    suspend fun createBackup(context: Context, backupFilePath: String): Boolean = withContext(Dispatchers.IO) {
+        try {
+            val configurations = getAllConfigurations(context)
+            val backupData = BackupData(
+                version = getSuSFSVersion(),
+                timestamp = System.currentTimeMillis(),
+                deviceInfo = getDeviceInfo(),
+                configurations = configurations
+            )
+
+            val backupFile = File(backupFilePath)
+            backupFile.parentFile?.mkdirs()
+
+            backupFile.writeText(backupData.toJson())
+
+            showToast(context, context.getString(R.string.susfs_backup_success, backupFile.name))
+            true
+        } catch (e: Exception) {
+            e.printStackTrace()
+            showToast(context, context.getString(R.string.susfs_backup_failed, e.message ?: "Unknown error"))
+            false
+        }
+    }
+
+    //从备份文件还原配置
+    suspend fun restoreFromBackup(context: Context, backupFilePath: String): Boolean = withContext(Dispatchers.IO) {
+        try {
+            val backupFile = File(backupFilePath)
+            if (!backupFile.exists()) {
+                showToast(context, context.getString(R.string.susfs_backup_file_not_found))
+                return@withContext false
+            }
+
+            val backupContent = backupFile.readText()
+            val backupData = BackupData.fromJson(backupContent)
+
+            if (backupData == null) {
+                showToast(context, context.getString(R.string.susfs_backup_invalid_format))
+                return@withContext false
+            }
+
+            // 检查备份版本兼容性
+            if (backupData.version != getSuSFSVersion()) {
+                showToast(context, context.getString(R.string.susfs_backup_version_mismatch))
+            }
+
+            // 还原所有配置
+            restoreConfigurations(context, backupData.configurations)
+
+            // 如果自启动已启用，更新模块
+            if (isAutoStartEnabled(context)) {
+                updateMagiskModule(context)
+            }
+
+            val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+            val backupDate = dateFormat.format(Date(backupData.timestamp))
+
+            showToast(context, context.getString(R.string.susfs_restore_success, backupDate, backupData.deviceInfo))
+            true
+        } catch (e: Exception) {
+            e.printStackTrace()
+            showToast(context, context.getString(R.string.susfs_restore_failed, e.message ?: "Unknown error"))
+            false
+        }
+    }
+
+
+     // 还原配置到SharedPreferences
+    private fun restoreConfigurations(context: Context, configurations: Map<String, Any>) {
+        val prefs = getPrefs(context)
+        prefs.edit {
+            configurations.forEach { (key, value) ->
+                when (value) {
+                    is String -> putString(key, value)
+                    is Boolean -> putBoolean(key, value)
+                    is Set<*> -> {
+                        @Suppress("UNCHECKED_CAST")
+                        putStringSet(key, value as Set<String>)
+                    }
+                    is Int -> putInt(key, value)
+                    is Long -> putLong(key, value)
+                    is Float -> putFloat(key, value)
+                }
+            }
+        }
+    }
+
+    // 验证备份文件
+    suspend fun validateBackupFile(backupFilePath: String): BackupData? = withContext(Dispatchers.IO) {
+        try {
+            val backupFile = File(backupFilePath)
+            if (!backupFile.exists()) {
+                return@withContext null
+            }
+
+            val backupContent = backupFile.readText()
+            BackupData.fromJson(backupContent)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
+
+    //获取备份文件路径
+    fun getRecommendedBackupPath(context: Context): String {
+        val documentsDir = File(context.getExternalFilesDir(null), "SuSFS_Backups")
+        if (!documentsDir.exists()) {
+            documentsDir.mkdirs()
+        }
+        return File(documentsDir, generateBackupFileName()).absolutePath
+    }
 
     // 槽位信息获取
     suspend fun getCurrentSlotInfo(): List<SlotInfo> = withContext(Dispatchers.IO) {
