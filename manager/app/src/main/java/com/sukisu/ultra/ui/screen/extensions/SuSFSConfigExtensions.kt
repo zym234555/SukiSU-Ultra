@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Update
@@ -91,6 +92,7 @@ fun PathItemCard(
     path: String,
     icon: ImageVector,
     onDelete: () -> Unit,
+    onEdit: (() -> Unit)? = null,
     isLoading: Boolean = false,
     additionalInfo: String? = null
 ) {
@@ -134,17 +136,35 @@ fun PathItemCard(
                     }
                 }
             }
-            IconButton(
-                onClick = onDelete,
-                enabled = !isLoading,
-                modifier = Modifier.size(32.dp)
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                Icon(
-                    imageVector = Icons.Default.Delete,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.size(16.dp)
-                )
+                if (onEdit != null) {
+                    IconButton(
+                        onClick = onEdit,
+                        enabled = !isLoading,
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Edit,
+                            contentDescription = stringResource(R.string.edit),
+                            tint = MaterialTheme.colorScheme.secondary,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+                }
+                IconButton(
+                    onClick = onDelete,
+                    enabled = !isLoading,
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = stringResource(R.string.delete),
+                        tint = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
             }
         }
     }
@@ -157,6 +177,7 @@ fun PathItemCard(
 fun KstatConfigItemCard(
     config: String,
     onDelete: () -> Unit,
+    onEdit: (() -> Unit)? = null,
     isLoading: Boolean = false
 ) {
     Card(
@@ -208,17 +229,35 @@ fun KstatConfigItemCard(
                     }
                 }
             }
-            IconButton(
-                onClick = onDelete,
-                enabled = !isLoading,
-                modifier = Modifier.size(32.dp)
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                Icon(
-                    imageVector = Icons.Default.Delete,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.size(16.dp)
-                )
+                if (onEdit != null) {
+                    IconButton(
+                        onClick = onEdit,
+                        enabled = !isLoading,
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Edit,
+                            contentDescription = stringResource(R.string.edit),
+                            tint = MaterialTheme.colorScheme.secondary,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+                }
+                IconButton(
+                    onClick = onDelete,
+                    enabled = !isLoading,
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = stringResource(R.string.delete),
+                        tint = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
             }
         }
     }
@@ -231,6 +270,7 @@ fun KstatConfigItemCard(
 fun AddKstatPathItemCard(
     path: String,
     onDelete: () -> Unit,
+    onEdit: (() -> Unit)? = null,
     onUpdate: () -> Unit,
     onUpdateFullClone: () -> Unit,
     isLoading: Boolean = false
@@ -269,6 +309,20 @@ fun AddKstatPathItemCard(
             Row(
                 horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
+                if (onEdit != null) {
+                    IconButton(
+                        onClick = onEdit,
+                        enabled = !isLoading,
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Edit,
+                            contentDescription = stringResource(R.string.edit),
+                            tint = MaterialTheme.colorScheme.secondary,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+                }
                 IconButton(
                     onClick = onUpdate,
                     enabled = !isLoading,
@@ -276,7 +330,7 @@ fun AddKstatPathItemCard(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Update,
-                        contentDescription = null,
+                        contentDescription = stringResource(R.string.update),
                         tint = MaterialTheme.colorScheme.secondary,
                         modifier = Modifier.size(16.dp)
                     )
@@ -288,7 +342,7 @@ fun AddKstatPathItemCard(
                 ) {
                     Icon(
                         imageVector = Icons.Default.PlayArrow,
-                        contentDescription = null,
+                        contentDescription = stringResource(R.string.susfs_update_full_clone),
                         tint = MaterialTheme.colorScheme.tertiary,
                         modifier = Modifier.size(16.dp)
                     )
@@ -300,7 +354,7 @@ fun AddKstatPathItemCard(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Delete,
-                        contentDescription = null,
+                        contentDescription = stringResource(R.string.delete),
                         tint = MaterialTheme.colorScheme.error,
                         modifier = Modifier.size(16.dp)
                     )

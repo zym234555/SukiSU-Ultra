@@ -51,7 +51,8 @@ fun SusPathsContent(
     susPaths: Set<String>,
     isLoading: Boolean,
     onAddPath: () -> Unit,
-    onRemovePath: (String) -> Unit
+    onRemovePath: (String) -> Unit,
+    onEditPath: ((String) -> Unit)? = null
 ) {
     Box(modifier = Modifier.fillMaxSize()) {
         LazyColumn(
@@ -70,6 +71,7 @@ fun SusPathsContent(
                         path = path,
                         icon = Icons.Default.Folder,
                         onDelete = { onRemovePath(path) },
+                        onEdit = if (onEditPath != null) { { onEditPath(path) } } else null,
                         isLoading = isLoading
                     )
                 }
@@ -116,6 +118,7 @@ fun SusMountsContent(
     isLoading: Boolean,
     onAddMount: () -> Unit,
     onRemoveMount: (String) -> Unit,
+    onEditMount: ((String) -> Unit)? = null,
     onToggleHideSusMountsForAllProcs: (Boolean) -> Unit
 ) {
     Box(modifier = Modifier.fillMaxSize()) {
@@ -145,6 +148,7 @@ fun SusMountsContent(
                         path = mount,
                         icon = Icons.Default.Storage,
                         onDelete = { onRemoveMount(mount) },
+                        onEdit = if (onEditMount != null) { { onEditMount(mount) } } else null,
                         isLoading = isLoading
                     )
                 }
@@ -189,7 +193,8 @@ fun TryUmountContent(
     isLoading: Boolean,
     onAddUmount: () -> Unit,
     onRunUmount: () -> Unit,
-    onRemoveUmount: (String) -> Unit
+    onRemoveUmount: (String) -> Unit,
+    onEditUmount: ((String) -> Unit)? = null
 ) {
     Box(modifier = Modifier.fillMaxSize()) {
         LazyColumn(
@@ -218,6 +223,7 @@ fun TryUmountContent(
                         icon = Icons.Default.Storage,
                         additionalInfo = stringResource(R.string.susfs_umount_mode_display, modeText, mode),
                         onDelete = { onRemoveUmount(umountEntry) },
+                        onEdit = if (onEditUmount != null) { { onEditUmount(umountEntry) } } else null,
                         isLoading = isLoading
                     )
                 }
@@ -282,7 +288,9 @@ fun KstatConfigContent(
     onAddKstatStatically: () -> Unit,
     onAddKstat: () -> Unit,
     onRemoveKstatConfig: (String) -> Unit,
+    onEditKstatConfig: ((String) -> Unit)? = null,
     onRemoveAddKstat: (String) -> Unit,
+    onEditAddKstat: ((String) -> Unit)? = null,
     onUpdateKstat: (String) -> Unit,
     onUpdateKstatFullClone: (String) -> Unit
 ) {
@@ -347,6 +355,7 @@ fun KstatConfigContent(
                     KstatConfigItemCard(
                         config = config,
                         onDelete = { onRemoveKstatConfig(config) },
+                        onEdit = if (onEditKstatConfig != null) { { onEditKstatConfig(config) } } else null,
                         isLoading = isLoading
                     )
                 }
@@ -365,6 +374,7 @@ fun KstatConfigContent(
                     AddKstatPathItemCard(
                         path = path,
                         onDelete = { onRemoveAddKstat(path) },
+                        onEdit = if (onEditAddKstat != null) { { onEditAddKstat(path) } } else null,
                         onUpdate = { onUpdateKstat(path) },
                         onUpdateFullClone = { onUpdateKstatFullClone(path) },
                         isLoading = isLoading

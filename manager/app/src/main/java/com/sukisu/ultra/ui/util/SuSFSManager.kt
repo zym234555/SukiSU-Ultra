@@ -800,6 +800,19 @@ object SuSFSManager {
         return true
     }
 
+    // 编辑SUS路径
+    suspend fun editSusPath(context: Context, oldPath: String, newPath: String): Boolean {
+        val currentPaths = getSusPaths(context).toMutableSet()
+        if (currentPaths.remove(oldPath)) {
+            currentPaths.add(newPath)
+            saveSusPaths(context, currentPaths)
+            if (isAutoStartEnabled(context)) updateMagiskModule(context)
+            showToast(context, "SUS path updated: $oldPath -> $newPath")
+            return true
+        }
+        return false
+    }
+
     // 添加SUS挂载
     suspend fun addSusMount(context: Context, mount: String): Boolean {
         val success = executeSusfsCommand(context, "add_sus_mount '$mount'")
@@ -815,6 +828,19 @@ object SuSFSManager {
         if (isAutoStartEnabled(context)) updateMagiskModule(context)
         showToast(context, "Removed SUS mount: $mount")
         return true
+    }
+
+    // 编辑SUS挂载
+    suspend fun editSusMount(context: Context, oldMount: String, newMount: String): Boolean {
+        val currentMounts = getSusMounts(context).toMutableSet()
+        if (currentMounts.remove(oldMount)) {
+            currentMounts.add(newMount)
+            saveSusMounts(context, currentMounts)
+            if (isAutoStartEnabled(context)) updateMagiskModule(context)
+            showToast(context, "SUS mount updated: $oldMount -> $newMount")
+            return true
+        }
+        return false
     }
 
     // 添加尝试卸载
@@ -837,6 +863,19 @@ object SuSFSManager {
         val path = umountEntry.split("|").firstOrNull() ?: umountEntry
         showToast(context, "Removed Try to uninstall: $path")
         return true
+    }
+
+    // 编辑尝试卸载
+    suspend fun editTryUmount(context: Context, oldEntry: String, newPath: String, newMode: Int): Boolean {
+        val currentUmounts = getTryUmounts(context).toMutableSet()
+        if (currentUmounts.remove(oldEntry)) {
+            currentUmounts.add("$newPath|$newMode")
+            saveTryUmounts(context, currentUmounts)
+            if (isAutoStartEnabled(context)) updateMagiskModule(context)
+            showToast(context, "Try umount updated: $oldEntry -> $newPath|$newMode")
+            return true
+        }
+        return false
     }
 
     suspend fun runTryUmount(context: Context): Boolean = executeSusfsCommand(context, "run_try_umount")
@@ -864,6 +903,23 @@ object SuSFSManager {
         return true
     }
 
+    // 编辑kstat配置
+    @SuppressLint("StringFormatInvalid")
+    suspend fun editKstatConfig(context: Context, oldConfig: String, path: String, ino: String, dev: String, nlink: String,
+                                size: String, atime: String, atimeNsec: String, mtime: String, mtimeNsec: String,
+                                ctime: String, ctimeNsec: String, blocks: String, blksize: String): Boolean {
+        val currentConfigs = getKstatConfigs(context).toMutableSet()
+        if (currentConfigs.remove(oldConfig)) {
+            val newConfigEntry = "$path|$ino|$dev|$nlink|$size|$atime|$atimeNsec|$mtime|$mtimeNsec|$ctime|$ctimeNsec|$blocks|$blksize"
+            currentConfigs.add(newConfigEntry)
+            saveKstatConfigs(context, currentConfigs)
+            if (isAutoStartEnabled(context)) updateMagiskModule(context)
+            showToast(context, context.getString(R.string.kstat_config_updated, path))
+            return true
+        }
+        return false
+    }
+
     // 添加kstat路径
     suspend fun addKstat(context: Context, path: String): Boolean {
         val success = executeSusfsCommand(context, "add_sus_kstat '$path'")
@@ -880,6 +936,20 @@ object SuSFSManager {
         if (isAutoStartEnabled(context)) updateMagiskModule(context)
         showToast(context, context.getString(R.string.kstat_path_removed, path))
         return true
+    }
+
+    // 编辑kstat路径
+    @SuppressLint("StringFormatInvalid")
+    suspend fun editAddKstat(context: Context, oldPath: String, newPath: String): Boolean {
+        val currentPaths = getAddKstatPaths(context).toMutableSet()
+        if (currentPaths.remove(oldPath)) {
+            currentPaths.add(newPath)
+            saveAddKstatPaths(context, currentPaths)
+            if (isAutoStartEnabled(context)) updateMagiskModule(context)
+            showToast(context, context.getString(R.string.kstat_path_updated, oldPath, newPath))
+            return true
+        }
+        return false
     }
 
     // 更新kstat

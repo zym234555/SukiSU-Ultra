@@ -164,6 +164,13 @@ fun SuSFSConfigScreen(
     var showAddKstatStaticallyDialog by remember { mutableStateOf(false) }
     var showAddKstatDialog by remember { mutableStateOf(false) }
 
+    // 编辑状态
+    var editingPath by remember { mutableStateOf<String?>(null) }
+    var editingMount by remember { mutableStateOf<String?>(null) }
+    var editingUmount by remember { mutableStateOf<String?>(null) }
+    var editingKstatConfig by remember { mutableStateOf<String?>(null) }
+    var editingKstatPath by remember { mutableStateOf<String?>(null) }
+
     // 重置确认对话框状态
     var showResetPathsDialog by remember { mutableStateOf(false) }
     var showResetMountsDialog by remember { mutableStateOf(false) }
@@ -499,94 +506,148 @@ fun SuSFSConfigScreen(
     // 各种对话框
     AddPathDialog(
         showDialog = showAddPathDialog,
-        onDismiss = { showAddPathDialog = false },
+        onDismiss = {
+            showAddPathDialog = false
+            editingPath = null
+        },
         onConfirm = { path ->
             coroutineScope.launch {
                 isLoading = true
-                if (SuSFSManager.addSusPath(context, path)) {
+                val success = if (editingPath != null) {
+                    SuSFSManager.editSusPath(context, editingPath!!, path)
+                } else {
+                    SuSFSManager.addSusPath(context, path)
+                }
+                if (success) {
                     susPaths = SuSFSManager.getSusPaths(context)
                 }
                 isLoading = false
                 showAddPathDialog = false
+                editingPath = null
             }
         },
         isLoading = isLoading,
-        titleRes = R.string.susfs_add_sus_path,
+        titleRes = if (editingPath != null) R.string.susfs_edit_sus_path else R.string.susfs_add_sus_path,
         labelRes = R.string.susfs_path_label,
-        placeholderRes = R.string.susfs_path_placeholder
+        placeholderRes = R.string.susfs_path_placeholder,
+        initialValue = editingPath ?: ""
     )
 
     AddPathDialog(
         showDialog = showAddMountDialog,
-        onDismiss = { showAddMountDialog = false },
+        onDismiss = {
+            showAddMountDialog = false
+            editingMount = null
+        },
         onConfirm = { mount ->
             coroutineScope.launch {
                 isLoading = true
-                if (SuSFSManager.addSusMount(context, mount)) {
+                val success = if (editingMount != null) {
+                    SuSFSManager.editSusMount(context, editingMount!!, mount)
+                } else {
+                    SuSFSManager.addSusMount(context, mount)
+                }
+                if (success) {
                     susMounts = SuSFSManager.getSusMounts(context)
                 }
                 isLoading = false
                 showAddMountDialog = false
+                editingMount = null
             }
         },
         isLoading = isLoading,
-        titleRes = R.string.susfs_add_sus_mount,
+        titleRes = if (editingMount != null) R.string.susfs_edit_sus_mount else R.string.susfs_add_sus_mount,
         labelRes = R.string.susfs_mount_path_label,
-        placeholderRes = R.string.susfs_path_placeholder
+        placeholderRes = R.string.susfs_path_placeholder,
+        initialValue = editingMount ?: ""
     )
 
     AddTryUmountDialog(
         showDialog = showAddUmountDialog,
-        onDismiss = { showAddUmountDialog = false },
+        onDismiss = {
+            showAddUmountDialog = false
+            editingUmount = null
+        },
         onConfirm = { path, mode ->
             coroutineScope.launch {
                 isLoading = true
-                if (SuSFSManager.addTryUmount(context, path, mode)) {
+                val success = if (editingUmount != null) {
+                    SuSFSManager.editTryUmount(context, editingUmount!!, path, mode)
+                } else {
+                    SuSFSManager.addTryUmount(context, path, mode)
+                }
+                if (success) {
                     tryUmounts = SuSFSManager.getTryUmounts(context)
                 }
                 isLoading = false
                 showAddUmountDialog = false
+                editingUmount = null
             }
         },
-        isLoading = isLoading
+        isLoading = isLoading,
+        initialPath = editingUmount?.split("|")?.get(0) ?: "",
+        initialMode = editingUmount?.split("|")?.get(1)?.toIntOrNull() ?: 0
     )
 
     AddKstatStaticallyDialog(
         showDialog = showAddKstatStaticallyDialog,
-        onDismiss = { showAddKstatStaticallyDialog = false },
+        onDismiss = {
+            showAddKstatStaticallyDialog = false
+            editingKstatConfig = null
+        },
         onConfirm = { path, ino, dev, nlink, size, atime, atimeNsec, mtime, mtimeNsec, ctime, ctimeNsec, blocks, blksize ->
             coroutineScope.launch {
                 isLoading = true
-                if (SuSFSManager.addKstatStatically(
+                val success = if (editingKstatConfig != null) {
+                    SuSFSManager.editKstatConfig(
+                        context, editingKstatConfig!!, path, ino, dev, nlink, size, atime, atimeNsec,
+                        mtime, mtimeNsec, ctime, ctimeNsec, blocks, blksize
+                    )
+                } else {
+                    SuSFSManager.addKstatStatically(
                         context, path, ino, dev, nlink, size, atime, atimeNsec,
                         mtime, mtimeNsec, ctime, ctimeNsec, blocks, blksize
-                    )) {
+                    )
+                }
+                if (success) {
                     kstatConfigs = SuSFSManager.getKstatConfigs(context)
                 }
                 isLoading = false
                 showAddKstatStaticallyDialog = false
+                editingKstatConfig = null
             }
         },
-        isLoading = isLoading
+        isLoading = isLoading,
+        initialConfig = editingKstatConfig ?: ""
     )
 
     AddPathDialog(
         showDialog = showAddKstatDialog,
-        onDismiss = { showAddKstatDialog = false },
+        onDismiss = {
+            showAddKstatDialog = false
+            editingKstatPath = null
+        },
         onConfirm = { path ->
             coroutineScope.launch {
                 isLoading = true
-                if (SuSFSManager.addKstat(context, path)) {
+                val success = if (editingKstatPath != null) {
+                    SuSFSManager.editAddKstat(context, editingKstatPath!!, path)
+                } else {
+                    SuSFSManager.addKstat(context, path)
+                }
+                if (success) {
                     addKstatPaths = SuSFSManager.getAddKstatPaths(context)
                 }
                 isLoading = false
                 showAddKstatDialog = false
+                editingKstatPath = null
             }
         },
         isLoading = isLoading,
-        titleRes = R.string.add_kstat_path_title,
+        titleRes = if (editingKstatPath != null) R.string.edit_kstat_path_title else R.string.add_kstat_path_title,
         labelRes = R.string.file_or_directory_path_label,
-        placeholderRes = R.string.susfs_path_placeholder
+        placeholderRes = R.string.susfs_path_placeholder,
+        initialValue = editingKstatPath ?: ""
     )
 
     // 确认对话框
@@ -1066,6 +1127,10 @@ fun SuSFSConfigScreen(
                                     }
                                     isLoading = false
                                 }
+                            },
+                            onEditPath = { path ->
+                                editingPath = path
+                                showAddPathDialog = true
                             }
                         )
                     }
@@ -1086,6 +1151,10 @@ fun SuSFSConfigScreen(
                                     }
                                     isLoading = false
                                 }
+                            },
+                            onEditMount = { mount ->
+                                editingMount = mount
+                                showAddMountDialog = true
                             },
                             onToggleHideSusMountsForAllProcs = { hideForAll ->
                                 coroutineScope.launch {
@@ -1113,6 +1182,10 @@ fun SuSFSConfigScreen(
                                     }
                                     isLoading = false
                                 }
+                            },
+                            onEditUmount = { umountEntry ->
+                                editingUmount = umountEntry
+                                showAddUmountDialog = true
                             }
                         )
                     }
@@ -1132,6 +1205,10 @@ fun SuSFSConfigScreen(
                                     isLoading = false
                                 }
                             },
+                            onEditKstatConfig = { config ->
+                                editingKstatConfig = config
+                                showAddKstatStaticallyDialog = true
+                            },
                             onRemoveAddKstat = { path ->
                                 coroutineScope.launch {
                                     isLoading = true
@@ -1140,6 +1217,10 @@ fun SuSFSConfigScreen(
                                     }
                                     isLoading = false
                                 }
+                            },
+                            onEditAddKstat = { path ->
+                                editingKstatPath = path
+                                showAddKstatDialog = true
                             },
                             onUpdateKstat = { path ->
                                 coroutineScope.launch {

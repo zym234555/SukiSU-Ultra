@@ -543,4 +543,16 @@
     <string name="hide_bl_script_description">Enable Hide Bootloader Unlock Status Scripts</string>
     <string name="cleanup_residue">Cleanup Residue</string>
     <string name="cleanup_residue_description">Clean up the residual files and directories of various modules and tools (may be deleted by mistake, resulting in loss and failure to start, use with caution)</string>
+    <string name="susfs_edit_sus_path">Edit SUS Path</string>
+    <string name="susfs_edit_sus_mount">Edit SUS Mount</string>
+    <string name="susfs_edit_try_umount">Edit Try Umount</string>
+    <string name="edit_kstat_statically_title">Edit Kstat Static Configuration</string>
+    <string name="edit_kstat_path_title">Edit Kstat Path</string>
+    <string name="susfs_save">Save</string>
+    <string name="edit">Edit</string>
+    <string name="delete">Delete</string>
+    <string name="update">Update</string>
+    <string name="kstat_config_updated">Kstat config update</string>
+    <string name="kstat_path_updated">Kstat path update</string>
+    <string name="susfs_update_full_clone">Susfs update full clone</string>
 </resources>

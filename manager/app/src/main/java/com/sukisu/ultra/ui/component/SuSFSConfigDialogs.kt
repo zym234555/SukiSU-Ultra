@@ -20,6 +20,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -42,9 +43,17 @@ fun AddPathDialog(
     isLoading: Boolean,
     titleRes: Int,
     labelRes: Int,
-    placeholderRes: Int
+    placeholderRes: Int,
+    initialValue: String = ""
 ) {
     var newPath by remember { mutableStateOf("") }
+
+    // 当对话框显示时，设置初始值
+    LaunchedEffect(showDialog, initialValue) {
+        if (showDialog) {
+            newPath = initialValue
+        }
+    }
 
     if (showDialog) {
         AlertDialog(
@@ -77,7 +86,7 @@ fun AddPathDialog(
                     enabled = newPath.isNotBlank() && !isLoading,
                     shape = RoundedCornerShape(8.dp)
                 ) {
-                    Text(stringResource(R.string.add))
+                    Text(stringResource(if (initialValue.isNotEmpty()) R.string.susfs_save else R.string.add))
                 }
             },
             dismissButton = {
@@ -105,18 +114,28 @@ fun AddTryUmountDialog(
     showDialog: Boolean,
     onDismiss: () -> Unit,
     onConfirm: (String, Int) -> Unit,
-    isLoading: Boolean
+    isLoading: Boolean,
+    initialPath: String = "",
+    initialMode: Int = 0
 ) {
     var newUmountPath by remember { mutableStateOf("") }
     var newUmountMode by remember { mutableIntStateOf(0) }
     var umountModeExpanded by remember { mutableStateOf(false) }
+
+    // 当对话框显示时，设置初始值
+    LaunchedEffect(showDialog, initialPath, initialMode) {
+        if (showDialog) {
+            newUmountPath = initialPath
+            newUmountMode = initialMode
+        }
+    }
 
     if (showDialog) {
         AlertDialog(
             onDismissRequest = onDismiss,
             title = {
                 Text(
-                    stringResource(R.string.susfs_add_try_umount),
+                    stringResource(if (initialPath.isNotEmpty()) R.string.susfs_edit_try_umount else R.string.susfs_add_try_umount),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )
@@ -186,7 +205,7 @@ fun AddTryUmountDialog(
                     enabled = newUmountPath.isNotBlank() && !isLoading,
                     shape = RoundedCornerShape(8.dp)
                 ) {
-                    Text(stringResource(R.string.add))
+                    Text(stringResource(if (initialPath.isNotEmpty()) R.string.susfs_save else R.string.add))
                 }
             },
             dismissButton = {
@@ -214,7 +233,8 @@ fun AddKstatStaticallyDialog(
     showDialog: Boolean,
     onDismiss: () -> Unit,
     onConfirm: (String, String, String, String, String, String, String, String, String, String, String, String, String) -> Unit,
-    isLoading: Boolean
+    isLoading: Boolean,
+    initialConfig: String = ""
 ) {
     var newKstatPath by remember { mutableStateOf("") }
     var newKstatIno by remember { mutableStateOf("") }
@@ -230,12 +250,49 @@ fun AddKstatStaticallyDialog(
     var newKstatBlocks by remember { mutableStateOf("") }
     var newKstatBlksize by remember { mutableStateOf("") }
 
+    // 当对话框显示时，解析初始配置
+    LaunchedEffect(showDialog, initialConfig) {
+        if (showDialog && initialConfig.isNotEmpty()) {
+            val parts = initialConfig.split("|")
+            if (parts.size >= 13) {
+                newKstatPath = parts[0]
+                newKstatIno = if (parts[1] == "default") "" else parts[1]
+                newKstatDev = if (parts[2] == "default") "" else parts[2]
+                newKstatNlink = if (parts[3] == "default") "" else parts[3]
+                newKstatSize = if (parts[4] == "default") "" else parts[4]
+                newKstatAtime = if (parts[5] == "default") "" else parts[5]
+                newKstatAtimeNsec = if (parts[6] == "default") "" else parts[6]
+                newKstatMtime = if (parts[7] == "default") "" else parts[7]
+                newKstatMtimeNsec = if (parts[8] == "default") "" else parts[8]
+                newKstatCtime = if (parts[9] == "default") "" else parts[9]
+                newKstatCtimeNsec = if (parts[10] == "default") "" else parts[10]
+                newKstatBlocks = if (parts[11] == "default") "" else parts[11]
+                newKstatBlksize = if (parts[12] == "default") "" else parts[12]
+            }
+        } else if (showDialog && initialConfig.isEmpty()) {
+            // 清空所有字段
+            newKstatPath = ""
+            newKstatIno = ""
+            newKstatDev = ""
+            newKstatNlink = ""
+            newKstatSize = ""
+            newKstatAtime = ""
+            newKstatAtimeNsec = ""
+            newKstatMtime = ""
+            newKstatMtimeNsec = ""
+            newKstatCtime = ""
+            newKstatCtimeNsec = ""
+            newKstatBlocks = ""
+            newKstatBlksize = ""
+        }
+    }
+
     if (showDialog) {
         AlertDialog(
             onDismissRequest = onDismiss,
             title = {
                 Text(
-                    stringResource(R.string.add_kstat_statically_title),
+                    stringResource(if (initialConfig.isNotEmpty()) R.string.edit_kstat_statically_title else R.string.add_kstat_statically_title),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )
@@ -431,7 +488,7 @@ fun AddKstatStaticallyDialog(
                     enabled = newKstatPath.isNotBlank() && !isLoading,
                     shape = RoundedCornerShape(8.dp)
                 ) {
-                    Text(stringResource(R.string.add))
+                    Text(stringResource(if (initialConfig.isNotEmpty()) R.string.susfs_save else R.string.add))
                 }
             },
             dismissButton = {
