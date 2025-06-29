@@ -39,6 +39,9 @@ object SuSFSManager {
     private const val KEY_KSTAT_CONFIGS = "kstat_configs"
     private const val KEY_ADD_KSTAT_PATHS = "add_kstat_paths"
     private const val KEY_HIDE_SUS_MOUNTS_FOR_ALL_PROCS = "hide_sus_mounts_for_all_procs"
+    private const val KEY_ENABLE_CLEANUP_RESIDUE = "enable_cleanup_residue"
+    private const val KEY_ENABLE_HIDE_BL = "enable_hide_bl"
+
 
     // 常量
     private const val SUSFS_BINARY_BASE_NAME = "ksu_susfs"
@@ -129,7 +132,9 @@ object SuSFSManager {
         val kstatConfigs: Set<String>,
         val addKstatPaths: Set<String>,
         val hideSusMountsForAllProcs: Boolean,
-        val support158: Boolean
+        val support158: Boolean,
+        val enableHideBl: Boolean,
+        val enableCleanupResidue: Boolean
     ) {
         /**
          * 检查是否有需要自启动的配置
@@ -221,7 +226,9 @@ object SuSFSManager {
             kstatConfigs = getKstatConfigs(context),
             addKstatPaths = getAddKstatPaths(context),
             hideSusMountsForAllProcs = getHideSusMountsForAllProcs(context),
-            support158 = isSusVersion_1_5_8()
+            support158 = isSusVersion_1_5_8(),
+            enableHideBl = getEnableHideBl(context),
+            enableCleanupResidue = getEnableCleanupResidue(context),
         )
     }
 
@@ -268,6 +275,21 @@ object SuSFSManager {
 
     fun getHideSusMountsForAllProcs(context: Context): Boolean =
         getPrefs(context).getBoolean(KEY_HIDE_SUS_MOUNTS_FOR_ALL_PROCS, true)
+
+    // 隐藏BL锁脚本
+    fun saveEnableHideBl(context: Context, enabled: Boolean) =
+        getPrefs(context).edit { putBoolean(KEY_ENABLE_HIDE_BL, enabled) }
+
+    fun getEnableHideBl(context: Context): Boolean =
+        getPrefs(context).getBoolean(KEY_ENABLE_HIDE_BL, true)
+
+
+    // 清理残留配置
+    fun saveEnableCleanupResidue(context: Context, enabled: Boolean) =
+        getPrefs(context).edit { putBoolean(KEY_ENABLE_CLEANUP_RESIDUE, enabled) }
+
+    fun getEnableCleanupResidue(context: Context): Boolean =
+        getPrefs(context).getBoolean(KEY_ENABLE_CLEANUP_RESIDUE, false)
 
     // 路径和配置管理
     fun saveSusPaths(context: Context, paths: Set<String>) =
@@ -331,7 +353,9 @@ object SuSFSManager {
             KEY_EXECUTE_IN_POST_FS_DATA to getExecuteInPostFsData(context),
             KEY_KSTAT_CONFIGS to getKstatConfigs(context),
             KEY_ADD_KSTAT_PATHS to getAddKstatPaths(context),
-            KEY_HIDE_SUS_MOUNTS_FOR_ALL_PROCS to getHideSusMountsForAllProcs(context)
+            KEY_HIDE_SUS_MOUNTS_FOR_ALL_PROCS to getHideSusMountsForAllProcs(context),
+            KEY_ENABLE_HIDE_BL to getEnableHideBl(context),
+            KEY_ENABLE_CLEANUP_RESIDUE to getEnableCleanupResidue(context)
         )
     }
 
@@ -419,7 +443,7 @@ object SuSFSManager {
     }
 
 
-     // 还原配置到SharedPreferences
+    // 还原配置到SharedPreferences
     private fun restoreConfigurations(context: Context, configurations: Map<String, Any>) {
         val prefs = getPrefs(context)
         prefs.edit {
@@ -570,7 +594,7 @@ object SuSFSManager {
     }
 
     /**
-     * 模块管理 
+     * 模块管理
      */
     private suspend fun updateMagiskModule(context: Context): Boolean {
         return removeMagiskModule() && createMagiskModule(context)

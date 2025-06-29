@@ -531,7 +531,7 @@
     <string name="susfs_restore_title">Restore</string>
     <string name="susfs_restore_description">Restore SuSFS configurations from a backup file. This will overwrite all current settings.</string>
     <string name="susfs_restore_select_file">Select Backup File</string>
-    <string name="susfs_restore_success">Configuration restored successfully from backup created on %s from device: %s</string>
+    <string name="susfs_restore_success" formatted="false">Configuration restored successfully from backup created on %s from device: %s</string>
     <string name="susfs_restore_failed">Restore failed: %s</string>
     <string name="susfs_restore_confirm_title">Confirm Restore</string>
     <string name="susfs_restore_confirm_description">This will overwrite all current SuSFS configurations. Are you sure you want to continue?</string>
@@ -539,4 +539,8 @@
     <string name="susfs_backup_info_date">Backup Date: %s</string>
     <string name="susfs_backup_info_device">Device: %s</string>
     <string name="susfs_backup_info_version">Version: %s</string>
+    <string name="hide_bl_script">Hide BL Script</string>
+    <string name="hide_bl_script_description">Enable Hide Bootloader Unlock Status Scripts</string>
+    <string name="cleanup_residue">Cleanup Residue</string>
+    <string name="cleanup_residue_description">Clean up the residual files and directories of various modules and tools (may be deleted by mistake, resulting in loss and failure to start, use with caution)</string>
 </resources>

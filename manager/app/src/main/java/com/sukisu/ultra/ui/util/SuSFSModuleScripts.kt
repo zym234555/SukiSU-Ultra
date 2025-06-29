@@ -65,7 +65,26 @@ object ScriptGenerator {
             appendLine(generateBinaryCheck(config.targetPath))
             appendLine()
 
+            // 添加日志设置
+            generateLogSettingSection(config.enableLog)
+
+            // 隐藏BL相关配置
+            if (config.enableHideBl) {
+                generateHideBlSection()
+            }
+
+            // 清理工具残留
+            if (config.enableCleanupResidue) {
+                generateCleanupResidueSection()
+            }
+
             if (shouldConfigureInService(config)) {
+                // 设置uname和构建时间
+                generateUnameSection(config)
+
+                // 添加Kstat配置
+                generateKstatSection(config.kstatConfigs, config.addKstatPaths)
+
                 // 添加SUS路径 (仅在不支持隐藏挂载时)
                 if (!config.support158 && config.susPaths.isNotEmpty()) {
                     appendLine()
@@ -73,19 +92,7 @@ object ScriptGenerator {
                     appendLine("sleep 45")
                     generateSusPathsSection(config.susPaths)
                 }
-
-                // 添加Kstat配置
-                generateKstatSection(config.kstatConfigs, config.addKstatPaths)
-
-                // 设置uname和构建时间
-                generateUnameSection(config)
-
             }
-
-            // 添加日志设置
-            generateLogSettingSection(config.enableLog)
-            // 隐藏BL相关配置
-            generateHideBlSection()
 
             appendLine("echo \"$(get_current_time): Service脚本执行完成\" >> \"${'$'}LOG_FILE\"")
         }
@@ -120,6 +127,7 @@ object ScriptGenerator {
         }
     }
 
+    @SuppressLint("SdCardPath")
     private fun StringBuilder.generateKstatSection(
         kstatConfigs: Set<String>,
         addKstatPaths: Set<String>
@@ -128,6 +136,7 @@ object ScriptGenerator {
         if (addKstatPaths.isNotEmpty()) {
             appendLine("# 添加Kstat路径")
             addKstatPaths.forEach { path ->
+                appendLine("until [ -d \"/sdcard/Android\" ]; do sleep 1; done")
                 appendLine("\"${'$'}SUSFS_BIN\" add_sus_kstat '$path'")
                 appendLine("echo \"$(get_current_time): 添加Kstat路径: $path\" >> \"${'$'}LOG_FILE\"")
             }
@@ -142,9 +151,10 @@ object ScriptGenerator {
                 if (parts.size >= 13) {
                     val path = parts[0]
                     val params = parts.drop(1).joinToString("' '", "'", "'")
+                    appendLine("sleep 5")
                     appendLine("\"${'$'}SUSFS_BIN\" add_sus_kstat_statically '$path' $params")
                     appendLine("echo \"$(get_current_time): 添加Kstat静态配置: $path\" >> \"${'$'}LOG_FILE\"")
-
+                    appendLine("sleep 3")
                     appendLine("\"${'$'}SUSFS_BIN\" update_sus_kstat '$path'")
                     appendLine("echo \"$(get_current_time): 更新Kstat配置: $path\" >> \"${'$'}LOG_FILE\"")
                 }
@@ -255,6 +265,79 @@ object ScriptGenerator {
 
         appendLine("# Hide cloudphone detection")
         appendLine("[ -n \"$(resetprop ro.kernel.qemu)\" ] && resetprop ro.kernel.qemu \"\"")
+        appendLine()
+    }
+
+    // 新增清理残留脚本生成函数
+    private fun StringBuilder.generateCleanupResidueSection() {
+        appendLine("# 清理工具残留文件")
+        appendLine("echo \"$(get_current_time): 开始清理工具残留\" >> \"${'$'}LOG_FILE\"")
+        appendLine()
+
+        // 定义需要清理的路径数组
+        appendLine("""
+        CLEANUP_PATHS=(
+            "/data/local/stryker/|Stryker残留"
+            "/data/system/AppRetention|AppRetention残留"
+            "/data/local/tmp/luckys|Luck Tool残留"
+            "/data/local/tmp/HyperCeiler|西米露残留"
+            "/data/local/tmp/simpleHook|simple Hook残留"
+            "/data/local/tmp/DisabledAllGoogleServices|谷歌省电模块残留"
+            "/data/local/MIO|解包软件"
+            "/data/DNA|解包软件"
+            "/data/local/tmp/cleaner_starter|质感清理残留"
+            "/data/local/tmp/byyang|"
+            "/data/local/tmp/mount_mask|"
+            "/data/local/tmp/mount_mark|"
+            "/data/local/tmp/scriptTMP|"
+            "/data/local/luckys|"
+            "/data/local/tmp/horae_control.log|"
+            "/data/gpu_freq_table.conf|"
+            "/storage/emulated/0/Download/advanced/|"
+            "/storage/emulated/0/Documents/advanced/|爱玩机"
+            "/storage/emulated/0/Android/naki/|旧版asoulopt"
+            "/data/swap_config.conf|scene附加模块2"
+            "/data/local/tmp/resetprop|"
+            "/dev/cpuset/AppOpt/|AppOpt模块"
+            "/storage/emulated/0/Android/Clash/|Clash for Magisk模块"
+            "/storage/emulated/0/Android/Yume-Yunyun/|网易云后台优化模块"
+            "/data/local/tmp/Surfing_update|Surfing模块缓存"
+            "/data/encore/custom_default_cpu_gov|encore模块"
+            "/data/encore/default_cpu_gov|encore模块"
+            "/data/local/tmp/yshell|"
+            "/data/local/tmp/encore_logo.png|"
+            "/storage/emulated/legacy/|"
+            "/storage/emulated/elgg/|"
+            "/data/system/junge/|"
+        )
+    """.trimIndent())
+
+        appendLine()
+        appendLine("""
+        TOTAL=${'$'}{#CLEANUP_PATHS[@]}
+        CURRENT=0
+        
+        for item in "${'$'}{CLEANUP_PATHS[@]}"; do
+            ((CURRENT++))
+            path="${'$'}{item%%|*}"
+            desc="${'$'}{item#*|}"
+            
+            if [ -n "${'$'}desc" ]; then
+                echo "$(get_current_time): [${'$'}CURRENT/${'$'}TOTAL] 清理: ${'$'}path (${'$'}desc)" >> "${'$'}LOG_FILE"
+            else
+                echo "$(get_current_time): [${'$'}CURRENT/${'$'}TOTAL] 清理: ${'$'}path" >> "${'$'}LOG_FILE"
+            fi
+            
+            if rm -rf "${'$'}path" 2>/dev/null; then
+                echo "$(get_current_time): ✓ 成功清理: ${'$'}path" >> "${'$'}LOG_FILE"
+            else
+                echo "$(get_current_time): ✗ 清理失败或不存在: ${'$'}path" >> "${'$'}LOG_FILE"
+            fi
+        done
+    """.trimIndent())
+
+        appendLine()
+        appendLine("echo \"$(get_current_time): 工具残留清理完成\" >> \"${'$'}LOG_FILE\"")
         appendLine()
     }
 

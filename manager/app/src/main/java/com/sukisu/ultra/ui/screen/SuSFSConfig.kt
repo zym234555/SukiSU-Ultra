@@ -129,6 +129,8 @@ fun SuSFSConfigScreen(
     var showConfirmReset by remember { mutableStateOf(false) }
     var autoStartEnabled by remember { mutableStateOf(false) }
     var executeInPostFsData by remember { mutableStateOf(false) }
+    var enableHideBl by remember { mutableStateOf(true) }
+    var enableCleanupResidue by remember { mutableStateOf(false) }
 
     // 槽位信息相关状态
     var slotInfoList by remember { mutableStateOf(emptyList<SuSFSManager.SlotInfo>()) }
@@ -276,6 +278,8 @@ fun SuSFSConfigScreen(
         kstatConfigs = SuSFSManager.getKstatConfigs(context)
         addKstatPaths = SuSFSManager.getAddKstatPaths(context)
         hideSusMountsForAllProcs = SuSFSManager.getHideSusMountsForAllProcs(context)
+        enableHideBl = SuSFSManager.getEnableHideBl(context)
+        enableCleanupResidue = SuSFSManager.getEnableCleanupResidue(context)
 
         loadSlotInfo()
     }
@@ -442,6 +446,8 @@ fun SuSFSConfigScreen(
                                     kstatConfigs = SuSFSManager.getKstatConfigs(context)
                                     addKstatPaths = SuSFSManager.getAddKstatPaths(context)
                                     hideSusMountsForAllProcs = SuSFSManager.getHideSusMountsForAllProcs(context)
+                                    enableHideBl = SuSFSManager.getEnableHideBl(context)
+                                    enableCleanupResidue = SuSFSManager.getEnableCleanupResidue(context)
                                 }
                                 isLoading = false
                                 showRestoreConfirmDialog = false
@@ -773,6 +779,8 @@ fun SuSFSConfigScreen(
                                             val success = SuSFSManager.setUname(context, finalUnameValue, finalBuildTimeValue)
                                             if (success) {
                                                 SuSFSManager.saveExecuteInPostFsData(context, executeInPostFsData)
+                                                SuSFSManager.saveEnableHideBl(context, enableHideBl)
+                                                SuSFSManager.saveEnableCleanupResidue(context, enableCleanupResidue)
                                             }
                                             isLoading = false
                                         }
@@ -1022,7 +1030,27 @@ fun SuSFSConfigScreen(
                             onShowSlotInfo = { showSlotInfoDialog = true },
                             context = context,
                             onShowBackupDialog = { showBackupDialog = true },
-                            onShowRestoreDialog = { showRestoreDialog = true }
+                            onShowRestoreDialog = { showRestoreDialog = true },
+                            enableHideBl = enableHideBl,
+                            onEnableHideBlChange = { enabled ->
+                                enableHideBl = enabled
+                                SuSFSManager.saveEnableHideBl(context, enabled)
+                                if (SuSFSManager.isAutoStartEnabled(context)) {
+                                    coroutineScope.launch {
+                                        SuSFSManager.configureAutoStart(context, true)
+                                    }
+                                }
+                            },
+                            enableCleanupResidue = enableCleanupResidue,
+                            onEnableCleanupResidueChange = { enabled ->
+                                enableCleanupResidue = enabled
+                                SuSFSManager.saveEnableCleanupResidue(context, enabled)
+                                if (SuSFSManager.isAutoStartEnabled(context)) {
+                                    coroutineScope.launch {
+                                        SuSFSManager.configureAutoStart(context, true)
+                                    }
+                                }
+                            }
                         )
                     }
                     SuSFSTab.SUS_PATHS -> {
@@ -1183,7 +1211,11 @@ private fun BasicSettingsContent(
     onShowSlotInfo: () -> Unit,
     context: android.content.Context,
     onShowBackupDialog: () -> Unit,
-    onShowRestoreDialog: () -> Unit
+    onShowRestoreDialog: () -> Unit,
+    enableHideBl: Boolean,
+    onEnableHideBlChange: (Boolean) -> Unit,
+    enableCleanupResidue: Boolean,
+    onEnableCleanupResidueChange: (Boolean) -> Unit
 ) {
     var scriptLocationExpanded by remember { mutableStateOf(false) }
     val isAbDevice = isAbDevice()
@@ -1390,6 +1422,108 @@ private fun BasicSettingsContent(
                     checked = autoStartEnabled,
                     onCheckedChange = onAutoStartToggle,
                     enabled = !isLoading && canEnableAutoStart
+                )
+            }
+        }
+
+        // 隐藏BL脚本开关
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surface
+            ),
+            shape = RoundedCornerShape(12.dp)
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(12.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Security,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = stringResource(R.string.hide_bl_script),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(
+                        text = stringResource(R.string.hide_bl_script_description),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        lineHeight = 14.sp
+                    )
+                }
+                Switch(
+                    checked = enableHideBl,
+                    onCheckedChange = onEnableHideBlChange,
+                    enabled = !isLoading
+                )
+            }
+        }
+
+        // 清理残留脚本开关
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surface
+            ),
+            shape = RoundedCornerShape(12.dp)
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(12.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.CleaningServices,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = stringResource(R.string.cleanup_residue),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(
+                        text = stringResource(R.string.cleanup_residue_description),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        lineHeight = 14.sp
+                    )
+                }
+                Switch(
+                    checked = enableCleanupResidue,
+                    onCheckedChange = onEnableCleanupResidueChange,
+                    enabled = !isLoading
                 )
             }
         }
