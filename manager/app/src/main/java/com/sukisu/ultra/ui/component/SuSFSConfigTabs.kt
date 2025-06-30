@@ -19,6 +19,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Storage
 import androidx.compose.material3.Button
@@ -27,6 +28,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -34,6 +36,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.sukisu.ultra.R
 import com.sukisu.ultra.ui.screen.extensions.AddKstatPathItemCard
 import com.sukisu.ultra.ui.screen.extensions.EmptyStateCard
@@ -42,6 +45,7 @@ import com.sukisu.ultra.ui.screen.extensions.KstatConfigItemCard
 import com.sukisu.ultra.ui.screen.extensions.PathItemCard
 import com.sukisu.ultra.ui.screen.extensions.SusMountHidingControlCard
 import com.sukisu.ultra.ui.util.SuSFSManager
+import com.sukisu.ultra.ui.util.SuSFSManager.isSusVersion_1_5_8
 
 /**
  * SUS路径内容组件
@@ -190,11 +194,13 @@ fun SusMountsContent(
 @Composable
 fun TryUmountContent(
     tryUmounts: Set<String>,
+    umountForZygoteIsoService: Boolean,
     isLoading: Boolean,
     onAddUmount: () -> Unit,
     onRunUmount: () -> Unit,
     onRemoveUmount: (String) -> Unit,
-    onEditUmount: ((String) -> Unit)? = null
+    onEditUmount: ((String) -> Unit)? = null,
+    onToggleUmountForZygoteIsoService: (Boolean) -> Unit
 ) {
     Box(modifier = Modifier.fillMaxSize()) {
         LazyColumn(
@@ -202,6 +208,60 @@ fun TryUmountContent(
                 .fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            if (isSusVersion_1_5_8()) {
+                item {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surface
+                        ),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(12.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Security,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = stringResource(R.string.umount_zygote_iso_service),
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Medium,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                }
+                                Spacer(modifier = Modifier.height(6.dp))
+                                Text(
+                                    text = stringResource(R.string.umount_zygote_iso_service_description),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    lineHeight = 14.sp
+                                )
+                            }
+                            Switch(
+                                checked = umountForZygoteIsoService,
+                                onCheckedChange = onToggleUmountForZygoteIsoService,
+                                enabled = !isLoading
+                            )
+                        }
+                    }
+                }
+            }
+
             if (tryUmounts.isEmpty()) {
                 item {
                     EmptyStateCard(

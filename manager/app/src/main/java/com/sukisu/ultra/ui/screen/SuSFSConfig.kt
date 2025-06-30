@@ -148,6 +148,8 @@ fun SuSFSConfigScreen(
     // SUS挂载隐藏控制状态
     var hideSusMountsForAllProcs by remember { mutableStateOf(true) }
 
+    var umountForZygoteIsoService by remember { mutableStateOf(false) }
+
     // Kstat配置相关状态
     var kstatConfigs by remember { mutableStateOf(emptySet<String>()) }
     var addKstatPaths by remember { mutableStateOf(emptySet<String>()) }
@@ -287,6 +289,7 @@ fun SuSFSConfigScreen(
         hideSusMountsForAllProcs = SuSFSManager.getHideSusMountsForAllProcs(context)
         enableHideBl = SuSFSManager.getEnableHideBl(context)
         enableCleanupResidue = SuSFSManager.getEnableCleanupResidue(context)
+        umountForZygoteIsoService = SuSFSManager.getUmountForZygoteIsoService(context)
 
         loadSlotInfo()
     }
@@ -455,6 +458,7 @@ fun SuSFSConfigScreen(
                                     hideSusMountsForAllProcs = SuSFSManager.getHideSusMountsForAllProcs(context)
                                     enableHideBl = SuSFSManager.getEnableHideBl(context)
                                     enableCleanupResidue = SuSFSManager.getEnableCleanupResidue(context)
+                                    umountForZygoteIsoService = SuSFSManager.getUmountForZygoteIsoService(context)
                                 }
                                 isLoading = false
                                 showRestoreConfirmDialog = false
@@ -1171,6 +1175,7 @@ fun SuSFSConfigScreen(
                     SuSFSTab.TRY_UMOUNT -> {
                         TryUmountContent(
                             tryUmounts = tryUmounts,
+                            umountForZygoteIsoService = umountForZygoteIsoService,
                             isLoading = isLoading,
                             onAddUmount = { showAddUmountDialog = true },
                             onRunUmount = { showRunUmountDialog = true },
@@ -1186,9 +1191,20 @@ fun SuSFSConfigScreen(
                             onEditUmount = { umountEntry ->
                                 editingUmount = umountEntry
                                 showAddUmountDialog = true
+                            },
+                            onToggleUmountForZygoteIsoService = { enabled ->
+                                coroutineScope.launch {
+                                    isLoading = true
+                                    val success = SuSFSManager.setUmountForZygoteIsoService(context, enabled)
+                                    if (success) {
+                                        umountForZygoteIsoService = enabled
+                                    }
+                                    isLoading = false
+                                }
                             }
                         )
                     }
+
                     SuSFSTab.KSTAT_CONFIG -> {
                         KstatConfigContent(
                             kstatConfigs = kstatConfigs,
