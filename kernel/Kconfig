@@ -16,7 +16,7 @@ config KSU_DEBUG
 	    Enable KernelSU debug mode.
 
 config KSU_MULTI_MANAGER_SUPPORT
-    bool "KernelSU debug mode"
+    bool "Multi KernelSU manager support"
     depends on KSU
     default n
     help
