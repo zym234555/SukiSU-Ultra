@@ -1,19 +1,34 @@
 package com.sukisu.ultra.ui.component
 
+import android.graphics.drawable.Drawable
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Apps
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.RadioButtonUnchecked
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedTextField
@@ -26,11 +41,16 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.sukisu.ultra.R
+import com.sukisu.ultra.ui.util.SuSFSManager
 
 /**
  * 添加路径对话框
@@ -104,6 +124,287 @@ fun AddPathDialog(
         )
     }
 }
+
+/**
+ * 快捷添加应用路径对话框
+ */
+@Composable
+fun AddAppPathDialog(
+    showDialog: Boolean,
+    onDismiss: () -> Unit,
+    onConfirm: (List<String>) -> Unit,
+    isLoading: Boolean,
+    apps: List<SuSFSManager.AppInfo> = emptyList(),
+    onLoadApps: () -> Unit,
+    existingSusPaths: Set<String> = emptySet()
+) {
+    var searchText by remember { mutableStateOf("") }
+    var selectedApps by remember { mutableStateOf(setOf<SuSFSManager.AppInfo>()) }
+
+    // 获取已添加的包名
+    val addedPackageNames = remember(existingSusPaths) {
+        existingSusPaths.mapNotNull { path ->
+            val regex = Regex(".*/Android/data/([^/]+)/?.*")
+            regex.find(path)?.groupValues?.get(1)
+        }.toSet()
+    }
+
+    // 过滤掉已添加的应用
+    val availableApps = remember(apps, addedPackageNames) {
+        apps.filter { app ->
+            !addedPackageNames.contains(app.packageName)
+        }
+    }
+
+    val filteredApps = remember(availableApps, searchText) {
+        if (searchText.isBlank()) {
+            availableApps
+        } else {
+            availableApps.filter { app ->
+                app.appName.contains(searchText, ignoreCase = true) ||
+                        app.packageName.contains(searchText, ignoreCase = true)
+            }
+        }
+    }
+
+    LaunchedEffect(showDialog) {
+        if (showDialog && apps.isEmpty()) {
+            onLoadApps()
+        }
+        // 当对话框显示时清空选择
+        if (showDialog) {
+            selectedApps = setOf()
+        }
+    }
+
+    if (showDialog) {
+        AlertDialog(
+            onDismissRequest = onDismiss,
+            title = {
+                Text(
+                    text = stringResource(R.string.susfs_add_app_path),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    OutlinedTextField(
+                        value = searchText,
+                        onValueChange = { searchText = it },
+                        label = { Text(stringResource(R.string.search_apps)) },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.Search,
+                                contentDescription = null
+                            )
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(8.dp)
+                    )
+
+                    // 显示统计信息
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        if (selectedApps.isNotEmpty()) {
+                            Text(
+                                text = stringResource(R.string.selected_apps_count, selectedApps.size),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.primary,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                        if (addedPackageNames.isNotEmpty()) {
+                            Text(
+                                text = stringResource(R.string.already_added_apps_count, addedPackageNames.size),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+
+                    if (filteredApps.isEmpty()) {
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                            )
+                        ) {
+                            Text(
+                                text = if (availableApps.isEmpty()) {
+                                    stringResource(R.string.all_apps_already_added)
+                                } else {
+                                    stringResource(R.string.no_apps_found)
+                                },
+                                modifier = Modifier.padding(16.dp),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    } else {
+                        LazyColumn(
+                            modifier = Modifier.height(300.dp),
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            items(filteredApps) { app ->
+                                val isSelected = selectedApps.contains(app)
+
+                                Card(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = if (isSelected) {
+                                            MaterialTheme.colorScheme.primaryContainer
+                                        } else {
+                                            MaterialTheme.colorScheme.surface
+                                        }
+                                    ),
+                                    onClick = {
+                                        selectedApps = if (isSelected) {
+                                            selectedApps - app
+                                        } else {
+                                            selectedApps + app
+                                        }
+                                    }
+                                ) {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(12.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        // 应用图标
+                                        AppIcon(
+                                            packageName = app.packageName,
+                                            modifier = Modifier.size(40.dp)
+                                        )
+
+                                        Column(
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .padding(start = 12.dp)
+                                        ) {
+                                            Text(
+                                                text = app.appName,
+                                                style = MaterialTheme.typography.bodyLarge,
+                                                fontWeight = FontWeight.Medium,
+                                                color = if (isSelected) {
+                                                    MaterialTheme.colorScheme.onPrimaryContainer
+                                                } else {
+                                                    MaterialTheme.colorScheme.onSurface
+                                                }
+                                            )
+                                            Text(
+                                                text = app.packageName,
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                color = if (isSelected) {
+                                                    MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                                                } else {
+                                                    MaterialTheme.colorScheme.onSurfaceVariant
+                                                }
+                                            )
+                                        }
+
+                                        // 选择指示器
+                                        if (isSelected) {
+                                            Icon(
+                                                imageVector = Icons.Default.CheckCircle,
+                                                contentDescription = null,
+                                                tint = MaterialTheme.colorScheme.primary,
+                                                modifier = Modifier.size(24.dp)
+                                            )
+                                        } else {
+                                            Icon(
+                                                imageVector = Icons.Default.RadioButtonUnchecked,
+                                                contentDescription = null,
+                                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                modifier = Modifier.size(24.dp)
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        if (selectedApps.isNotEmpty()) {
+                            onConfirm(selectedApps.map { it.packageName })
+                        }
+                        selectedApps = setOf()
+                        searchText = ""
+                    },
+                    enabled = selectedApps.isNotEmpty() && !isLoading,
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text(
+                        text = stringResource(R.string.add)
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        onDismiss()
+                        selectedApps = setOf()
+                        searchText = ""
+                    },
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text(stringResource(R.string.cancel))
+                }
+            },
+            shape = RoundedCornerShape(12.dp)
+        )
+    }
+}
+
+
+/**
+ * 应用图标组件
+ */
+@Composable
+fun AppIcon(
+    packageName: String,
+    modifier: Modifier = Modifier
+) {
+    val context = LocalContext.current
+    var appIcon by remember(packageName) { mutableStateOf<Drawable?>(null) }
+
+    LaunchedEffect(packageName) {
+        try {
+            val packageManager = context.packageManager
+            val applicationInfo = packageManager.getApplicationInfo(packageName, 0)
+            appIcon = packageManager.getApplicationIcon(applicationInfo)
+        } catch (_: Exception) {
+            appIcon = null
+        }
+    }
+
+    if (appIcon != null) {
+        Image(
+            painter = rememberDrawablePainter(appIcon),
+            contentDescription = null,
+            modifier = modifier
+                .clip(RoundedCornerShape(8.dp))
+        )
+    } else {
+        // 默认图标
+        Icon(
+            imageVector = Icons.Default.Apps,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = modifier
+        )
+    }
+}
+
 
 /**
  * 添加尝试卸载对话框

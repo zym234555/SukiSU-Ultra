@@ -559,4 +559,13 @@
     <string name="umount_zygote_iso_service_description">Enable this option to unmount Zygote isolation service mount points at system startup</string>
     <string name="umount_zygote_iso_service_enabled">Zygote isolation service unmount enabled</string>
     <string name="umount_zygote_iso_service_disabled">Zygote isolation service unmount disabled</string>
+    <string name="app_paths_section">Application Path</string>
+    <string name="other_paths_section">Other paths</string>
+    <string name="add_custom_path">Other</string>
+    <string name="add_app_path">App</string>
+    <string name="susfs_add_app_path">Add App Path</string>
+    <string name="search_apps">Search Apps</string>
+    <string name="selected_apps_count">%1$d apps selected</string>
+    <string name="already_added_apps_count">%1$d apps already added</string>
+    <string name="all_apps_already_added">All apps have been added</string>
 </resources>

@@ -3,6 +3,8 @@ package com.sukisu.ultra.ui.util
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.SharedPreferences
+import android.content.pm.ApplicationInfo
+import android.content.pm.PackageManager
 import android.widget.Toast
 import com.dergoogler.mmrl.platform.Platform.Companion.context
 import com.sukisu.ultra.Natives
@@ -16,6 +18,7 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 import androidx.core.content.edit
+import com.sukisu.ultra.ui.viewmodel.SuperUserViewModel
 import org.json.JSONObject
 import java.text.SimpleDateFormat
 import java.util.*
@@ -60,6 +63,15 @@ object SuSFSManager {
         val isEnabled: Boolean,
         val statusText: String = if (isEnabled) context.getString(R.string.susfs_feature_enabled) else context.getString(R.string.susfs_feature_disabled),
         val canConfigure: Boolean = false
+    )
+
+    /**
+     * 应用信息数据类
+     */
+    data class AppInfo(
+        val packageName: String,
+        val appName: String,
+        val isSystemApp: Boolean
     )
 
     /**
@@ -348,6 +360,120 @@ object SuSFSManager {
     @SuppressLint("SdCardPath")
     fun getSdcardPath(context: Context): String =
         getPrefs(context).getString(KEY_SDCARD_PATH, "/sdcard") ?: "/sdcard"
+
+    /**
+     * 获取已安装的应用列表
+     */
+    @SuppressLint("QueryPermissionsNeeded")
+    suspend fun getInstalledApps(): List<AppInfo> = withContext(Dispatchers.IO) {
+        try {
+            val pm = context.packageManager
+            val allApps = mutableMapOf<String, AppInfo>()
+
+            // 从SuperUser中获取应用
+            SuperUserViewModel.apps.forEach { superUserApp ->
+                try {
+                    val isSystemApp = superUserApp.packageInfo.applicationInfo?.let {
+                        (it.flags and ApplicationInfo.FLAG_SYSTEM) != 0
+                    } ?: false
+                    if (!isSystemApp) {
+                        allApps[superUserApp.packageName] = AppInfo(
+                            packageName = superUserApp.packageName,
+                            appName = superUserApp.label,
+                            isSystemApp = false
+                        )
+                    }
+                } catch (_: Exception) {
+                }
+            }
+
+            // 从PackageManager获取所有应用
+            val installedPackages = pm.getInstalledPackages(PackageManager.GET_META_DATA)
+            installedPackages.forEach { packageInfo ->
+                val packageName = packageInfo.packageName
+                val isSystemApp = packageInfo.applicationInfo?.let { (it.flags and ApplicationInfo.FLAG_SYSTEM) != 0 }
+
+                // 只处理非系统应用且不在SuperUser列表中的应用
+                if (!isSystemApp!! && !allApps.containsKey(packageName)) {
+                    try {
+                        val appName = packageInfo.applicationInfo?.loadLabel(pm).toString()
+                        allApps[packageName] = AppInfo(
+                            packageName = packageName,
+                            appName = appName,
+                            isSystemApp = false
+                        )
+                    } catch (_: Exception) {
+                        allApps[packageName] = AppInfo(
+                            packageName = packageName,
+                            appName = packageName,
+                            isSystemApp = false
+                        )
+                    }
+                }
+            }
+
+            // 添加可能遗漏的当前应用
+            val currentPackageName = context.packageName
+            if (!allApps.containsKey(currentPackageName)) {
+                try {
+                    val currentAppInfo = pm.getPackageInfo(currentPackageName, 0)
+                    val currentAppName = currentAppInfo.applicationInfo?.loadLabel(pm).toString()
+                    allApps[currentPackageName] = AppInfo(
+                        packageName = currentPackageName,
+                        appName = currentAppName,
+                        isSystemApp = false
+                    )
+                } catch (_: Exception) {
+                    allApps[currentPackageName] = AppInfo(
+                        packageName = currentPackageName,
+                        appName = "com.sukisu.ultra",
+                        isSystemApp = false
+                    )
+                }
+            }
+
+            allApps.values.sortedBy { it.appName }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            emptyList()
+        }
+    }
+
+
+    /**
+     * 快捷添加应用路径
+     */
+    suspend fun addAppPaths(context: Context, packageName: String): Boolean {
+        val androidDataPath = getAndroidDataPath(context)
+        getSdcardPath(context)
+
+        val path1 = "$androidDataPath/$packageName"
+        val path2 = "/data/media/0/Android/data/$packageName"
+
+        var successCount = 0
+        var totalCount = 0
+
+        // 添加第一个路径
+        totalCount++
+        if (addSusPath(context, path1)) {
+            successCount++
+        }
+
+        // 添加第二个路径
+        totalCount++
+        if (addSusPath(context, path2)) {
+            successCount++
+        }
+
+        val success = successCount > 0
+        if (success) {
+            ""
+        } else {
+            ""
+        }
+
+        return success
+    }
 
     // 获取所有配置的Map
     private fun getAllConfigurations(context: Context): Map<String, Any> {

@@ -68,6 +68,7 @@ import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootGraph
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import com.sukisu.ultra.R
+import com.sukisu.ultra.ui.component.AddAppPathDialog
 import com.sukisu.ultra.ui.component.AddKstatStaticallyDialog
 import com.sukisu.ultra.ui.component.AddPathDialog
 import com.sukisu.ultra.ui.component.AddTryUmountDialog
@@ -158,8 +159,12 @@ fun SuSFSConfigScreen(
     var enabledFeatures by remember { mutableStateOf(emptyList<SuSFSManager.EnabledFeature>()) }
     var isLoadingFeatures by remember { mutableStateOf(false) }
 
+    // 应用列表相关状态
+    var installedApps by remember { mutableStateOf(emptyList<SuSFSManager.AppInfo>()) }
+
     // 对话框状态
     var showAddPathDialog by remember { mutableStateOf(false) }
+    var showAddAppPathDialog by remember { mutableStateOf(false) }
     var showAddMountDialog by remember { mutableStateOf(false) }
     var showAddUmountDialog by remember { mutableStateOf(false) }
     var showRunUmountDialog by remember { mutableStateOf(false) }
@@ -260,6 +265,13 @@ fun SuSFSConfigScreen(
             isLoadingFeatures = true
             enabledFeatures = SuSFSManager.getEnabledFeatures(context)
             isLoadingFeatures = false
+        }
+    }
+
+    // 加载应用列表
+    fun loadInstalledApps() {
+        coroutineScope.launch {
+            installedApps = SuSFSManager.getInstalledApps()
         }
     }
 
@@ -535,6 +547,31 @@ fun SuSFSConfigScreen(
         labelRes = R.string.susfs_path_label,
         placeholderRes = R.string.susfs_path_placeholder,
         initialValue = editingPath ?: ""
+    )
+
+    AddAppPathDialog(
+        showDialog = showAddAppPathDialog,
+        onDismiss = { showAddAppPathDialog = false },
+        onConfirm = { packageNames ->
+            coroutineScope.launch {
+                isLoading = true
+                var successCount = 0
+                packageNames.forEach { packageName ->
+                    if (SuSFSManager.addAppPaths(context, packageName)) {
+                        successCount++
+                    }
+                }
+                if (successCount > 0) {
+                    susPaths = SuSFSManager.getSusPaths(context)
+                }
+                isLoading = false
+                showAddAppPathDialog = false
+            }
+        },
+        isLoading = isLoading,
+        apps = installedApps,
+        onLoadApps = { loadInstalledApps() },
+        existingSusPaths = susPaths
     )
 
     AddPathDialog(
@@ -1123,6 +1160,7 @@ fun SuSFSConfigScreen(
                             susPaths = susPaths,
                             isLoading = isLoading,
                             onAddPath = { showAddPathDialog = true },
+                            onAddAppPath = { showAddAppPathDialog = true },
                             onRemovePath = { path ->
                                 coroutineScope.launch {
                                     isLoading = true
