@@ -4,7 +4,9 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.SharedPreferences
 import android.content.pm.ApplicationInfo
+import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
+import android.util.Log
 import android.widget.Toast
 import com.dergoogler.mmrl.platform.Platform.Companion.context
 import com.sukisu.ultra.Natives
@@ -71,6 +73,7 @@ object SuSFSManager {
     data class AppInfo(
         val packageName: String,
         val appName: String,
+        val packageInfo: PackageInfo,
         val isSystemApp: Boolean
     )
 
@@ -380,6 +383,7 @@ object SuSFSManager {
                         allApps[superUserApp.packageName] = AppInfo(
                             packageName = superUserApp.packageName,
                             appName = superUserApp.label,
+                            packageInfo = superUserApp.packageInfo,
                             isSystemApp = false
                         )
                     }
@@ -387,48 +391,50 @@ object SuSFSManager {
                 }
             }
 
-            // 从PackageManager获取所有应用
-            val installedPackages = pm.getInstalledPackages(PackageManager.GET_META_DATA)
-            installedPackages.forEach { packageInfo ->
-                val packageName = packageInfo.packageName
-                val isSystemApp = packageInfo.applicationInfo?.let { (it.flags and ApplicationInfo.FLAG_SYSTEM) != 0 }
-
-                // 只处理非系统应用且不在SuperUser列表中的应用
-                if (!isSystemApp!! && !allApps.containsKey(packageName)) {
-                    try {
-                        val appName = packageInfo.applicationInfo?.loadLabel(pm).toString()
-                        allApps[packageName] = AppInfo(
-                            packageName = packageName,
-                            appName = appName,
-                            isSystemApp = false
-                        )
-                    } catch (_: Exception) {
-                        allApps[packageName] = AppInfo(
-                            packageName = packageName,
-                            appName = packageName,
-                            isSystemApp = false
-                        )
+            try {
+                // 尝试从PackageManager获取所有应用
+                val installedPackages = pm.getInstalledPackages(PackageManager.GET_META_DATA)
+                installedPackages.forEach { packageInfo ->
+                    val packageName = packageInfo.packageName
+                    val isSystemApp = packageInfo.applicationInfo?.let {
+                        (it.flags and ApplicationInfo.FLAG_SYSTEM) != 0
+                    } ?: false
+                    // 只处理非系统应用且不在SuperUser列表中的应用
+                    if (!isSystemApp && !allApps.containsKey(packageName)) {
+                        try {
+                            val appName = packageInfo.applicationInfo?.loadLabel(pm)?.toString() ?: packageName
+                            allApps[packageName] = AppInfo(
+                                packageName = packageName,
+                                appName = appName,
+                                packageInfo = packageInfo,
+                                isSystemApp = false
+                            )
+                        } catch (_: Exception) {
+                            allApps[packageName] = AppInfo(
+                                packageName = packageName,
+                                appName = packageName,
+                                packageInfo = packageInfo,
+                                isSystemApp = false
+                            )
+                        }
                     }
                 }
+            } catch (e: Exception) {
+                Log.e("SuSFSManager", "Error getting installed packages", e)
             }
-
             // 添加可能遗漏的当前应用
             val currentPackageName = context.packageName
             if (!allApps.containsKey(currentPackageName)) {
                 try {
                     val currentAppInfo = pm.getPackageInfo(currentPackageName, 0)
-                    val currentAppName = currentAppInfo.applicationInfo?.loadLabel(pm).toString()
+                    val currentAppName = currentAppInfo.applicationInfo?.loadLabel(pm)?.toString() ?: "com.sukisu.ultra"
                     allApps[currentPackageName] = AppInfo(
                         packageName = currentPackageName,
                         appName = currentAppName,
+                        packageInfo = currentAppInfo,
                         isSystemApp = false
                     )
                 } catch (_: Exception) {
-                    allApps[currentPackageName] = AppInfo(
-                        packageName = currentPackageName,
-                        appName = "com.sukisu.ultra",
-                        isSystemApp = false
-                    )
                 }
             }
 

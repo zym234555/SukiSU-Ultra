@@ -1,6 +1,9 @@
 package com.sukisu.ultra.ui.component
 
+import android.annotation.SuppressLint
+import android.content.pm.PackageInfo
 import android.graphics.drawable.Drawable
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -15,7 +18,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Apps
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.RadioButtonUnchecked
 import androidx.compose.material.icons.filled.Search
@@ -48,6 +50,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.sukisu.ultra.R
 import com.sukisu.ultra.ui.util.SuSFSManager
@@ -279,6 +283,7 @@ fun AddAppPathDialog(
                                         // 应用图标
                                         AppIcon(
                                             packageName = app.packageName,
+                                            packageInfo = app.packageInfo,
                                             modifier = Modifier.size(40.dp)
                                         )
 
@@ -372,35 +377,35 @@ fun AddAppPathDialog(
 @Composable
 fun AppIcon(
     packageName: String,
-    modifier: Modifier = Modifier
+    packageInfo: PackageInfo? = null,
+    @SuppressLint("ModifierParameter") modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    var appIcon by remember(packageName) { mutableStateOf<Drawable?>(null) }
+    if (packageInfo != null) {
+        AsyncImage(
+            model = ImageRequest.Builder(context)
+                .data(packageInfo)
+                .crossfade(true)
+                .build(),
+            contentDescription = null,
+            modifier = modifier.clip(RoundedCornerShape(8.dp))
+        )
+    } else {
+        var appIcon by remember(packageName) { mutableStateOf<Drawable?>(null) }
 
-    LaunchedEffect(packageName) {
-        try {
-            val packageManager = context.packageManager
-            val applicationInfo = packageManager.getApplicationInfo(packageName, 0)
-            appIcon = packageManager.getApplicationIcon(applicationInfo)
-        } catch (_: Exception) {
-            appIcon = null
+        LaunchedEffect(packageName) {
+            try {
+                val packageManager = context.packageManager
+                val applicationInfo = packageManager.getApplicationInfo(packageName, 0)
+                appIcon = packageManager.getApplicationIcon(applicationInfo)
+            } catch (_: Exception) {
+                Log.d("获取应用图标失败", packageName)
+            }
         }
-    }
-
-    if (appIcon != null) {
         Image(
             painter = rememberDrawablePainter(appIcon),
             contentDescription = null,
-            modifier = modifier
-                .clip(RoundedCornerShape(8.dp))
-        )
-    } else {
-        // 默认图标
-        Icon(
-            imageVector = Icons.Default.Apps,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.primary,
-            modifier = modifier
+            modifier = modifier.clip(RoundedCornerShape(8.dp))
         )
     }
 }

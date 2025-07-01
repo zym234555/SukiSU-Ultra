@@ -1,6 +1,8 @@
 package com.sukisu.ultra.ui.screen.extensions
 
 import android.annotation.SuppressLint
+import android.content.pm.PackageInfo
+import android.content.pm.PackageManager
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -219,7 +221,7 @@ fun KstatConfigItemCard(
                         )
                         if (parts.size > 1) {
                             Text(
-                                text = "${parts.drop(1).joinToString(" ")}",
+                                text = parts.drop(1).joinToString(" "),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -651,14 +653,36 @@ fun AppPathGroupCard(
 ) {
     val context = LocalContext.current
     var appName by remember(packageName) { mutableStateOf("") }
+    var packageInfo by remember(packageName) { mutableStateOf<PackageInfo?>(null) }
 
     LaunchedEffect(packageName) {
         try {
             val packageManager = context.packageManager
-            val applicationInfo = packageManager.getApplicationInfo(packageName, 0)
-            appName = packageManager.getApplicationLabel(applicationInfo).toString()
+            val appInfo = packageManager.getPackageInfo(packageName, PackageManager.GET_META_DATA)
+            packageInfo = appInfo
+
+            appName = try {
+                appInfo.applicationInfo?.let {
+                    packageManager.getApplicationLabel(it).toString()
+                } ?: packageName
+            } catch (_: Exception) {
+                packageName
+            }
         } catch (_: Exception) {
-            appName = packageName
+            try {
+                val installedApps = SuSFSManager.getInstalledApps()
+                val foundApp = installedApps.find { it.packageName == packageName }
+                if (foundApp != null) {
+                    appName = foundApp.appName
+                    packageInfo = foundApp.packageInfo
+                } else {
+                    appName = packageName
+                    packageInfo = null
+                }
+            } catch (_: Exception) {
+                appName = packageName
+                packageInfo = null
+            }
         }
     }
 
@@ -679,6 +703,7 @@ fun AppPathGroupCard(
                 // 应用图标
                 AppIcon(
                     packageName = packageName,
+                    packageInfo = packageInfo,
                     modifier = Modifier.size(32.dp)
                 )
 
