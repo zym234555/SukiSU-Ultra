@@ -517,7 +517,7 @@
     <string name="susfs_android_data_path_set">Android Data 路徑已設定為：%s</string>
     <string name="susfs_sdcard_path_set">SD 卡路徑已設定為：%s</string>
     <string name="susfs_path_setup_warning">路徑設定可能沒有完全成功，但仍會繼續新增 SUS 路徑</string>
-    <!-- 備份和還原相關字串 -->
+    <!-- 备份和还原相关字符串 -->
     <string name="susfs_backup_title">備份</string>
     <string name="susfs_backup_description">建立所有 SuSFS 設定的備份。備份檔案會包含所有設定、路徑與配置信息</string>
     <string name="susfs_backup_create">建立備份</string>
