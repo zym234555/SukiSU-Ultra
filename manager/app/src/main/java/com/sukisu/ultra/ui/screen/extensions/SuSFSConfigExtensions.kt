@@ -3,6 +3,7 @@ package com.sukisu.ultra.ui.screen.extensions
 import android.annotation.SuppressLint
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
+import android.graphics.drawable.Drawable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -56,8 +57,47 @@ import androidx.compose.ui.unit.sp
 import com.sukisu.ultra.R
 import com.sukisu.ultra.ui.component.AppIcon
 import com.sukisu.ultra.ui.util.SuSFSManager
+import com.sukisu.ultra.ui.viewmodel.SuperUserViewModel
 import kotlinx.coroutines.launch
 
+// 应用信息缓存
+object AppInfoCache {
+    private val appInfoMap = mutableMapOf<String, CachedAppInfo>()
+
+    data class CachedAppInfo(
+        val appName: String,
+        val packageInfo: PackageInfo?,
+        val drawable: Drawable?,
+        val timestamp: Long = System.currentTimeMillis()
+    )
+
+    fun getAppInfo(packageName: String): CachedAppInfo? {
+        return appInfoMap[packageName]
+    }
+
+    fun putAppInfo(packageName: String, appInfo: CachedAppInfo) {
+        appInfoMap[packageName] = appInfo
+    }
+
+    fun clearCache() {
+        appInfoMap.clear()
+    }
+
+    fun hasCache(packageName: String): Boolean {
+        return appInfoMap.containsKey(packageName)
+    }
+
+    fun getAppInfoFromSuperUser(packageName: String): CachedAppInfo? {
+        val superUserApp = SuperUserViewModel.apps.find { it.packageName == packageName }
+        return superUserApp?.let { app ->
+            CachedAppInfo(
+                appName = app.label,
+                packageInfo = app.packageInfo,
+                drawable = null
+            )
+        }
+    }
+}
 
 /**
  * 空状态显示组件
@@ -652,36 +692,78 @@ fun AppPathGroupCard(
     isLoading: Boolean
 ) {
     val context = LocalContext.current
-    var appName by remember(packageName) { mutableStateOf("") }
-    var packageInfo by remember(packageName) { mutableStateOf<PackageInfo?>(null) }
+    val coroutineScope = rememberCoroutineScope()
+    val superUserApps = SuperUserViewModel.apps
+    var cachedAppInfo by remember(packageName, superUserApps.size) {
+        mutableStateOf(AppInfoCache.getAppInfo(packageName))
+    }
+    var isLoadingAppInfo by remember(packageName, superUserApps.size) { mutableStateOf(false) }
 
-    LaunchedEffect(packageName) {
-        try {
-            val packageManager = context.packageManager
-            val appInfo = packageManager.getPackageInfo(packageName, PackageManager.GET_META_DATA)
-            packageInfo = appInfo
+    LaunchedEffect(packageName, superUserApps.size) {
+        if (cachedAppInfo == null || superUserApps.isNotEmpty()) {
+            isLoadingAppInfo = true
+            coroutineScope.launch {
+                try {
+                    val superUserAppInfo = AppInfoCache.getAppInfoFromSuperUser(packageName)
 
-            appName = try {
-                appInfo.applicationInfo?.let {
-                    packageManager.getApplicationLabel(it).toString()
-                } ?: packageName
-            } catch (_: Exception) {
-                packageName
-            }
-        } catch (_: Exception) {
-            try {
-                val installedApps = SuSFSManager.getInstalledApps()
-                val foundApp = installedApps.find { it.packageName == packageName }
-                if (foundApp != null) {
-                    appName = foundApp.appName
-                    packageInfo = foundApp.packageInfo
-                } else {
-                    appName = packageName
-                    packageInfo = null
+                    if (superUserAppInfo != null) {
+                        val packageManager = context.packageManager
+                        val drawable = try {
+                            superUserAppInfo.packageInfo?.applicationInfo?.let {
+                                packageManager.getApplicationIcon(it)
+                            }
+                        } catch (_: Exception) {
+                            null
+                        }
+
+                        val newCachedInfo = AppInfoCache.CachedAppInfo(
+                            appName = superUserAppInfo.appName,
+                            packageInfo = superUserAppInfo.packageInfo,
+                            drawable = drawable
+                        )
+
+                        AppInfoCache.putAppInfo(packageName, newCachedInfo)
+                        cachedAppInfo = newCachedInfo
+                    } else {
+                        val packageManager = context.packageManager
+                        val appInfo = packageManager.getPackageInfo(packageName, PackageManager.GET_META_DATA)
+
+                        val appName = try {
+                            appInfo.applicationInfo?.let {
+                                packageManager.getApplicationLabel(it).toString()
+                            } ?: packageName
+                        } catch (_: Exception) {
+                            packageName
+                        }
+
+                        val drawable = try {
+                            appInfo.applicationInfo?.let {
+                                packageManager.getApplicationIcon(it)
+                            }
+                        } catch (_: Exception) {
+                            null
+                        }
+
+                        val newCachedInfo = AppInfoCache.CachedAppInfo(
+                            appName = appName,
+                            packageInfo = appInfo,
+                            drawable = drawable
+                        )
+
+                        AppInfoCache.putAppInfo(packageName, newCachedInfo)
+                        cachedAppInfo = newCachedInfo
+                    }
+                } catch (_: Exception) {
+                    val newCachedInfo = AppInfoCache.CachedAppInfo(
+                        appName = packageName,
+                        packageInfo = null,
+                        drawable = null
+                    )
+                    AppInfoCache.putAppInfo(packageName, newCachedInfo)
+                    cachedAppInfo = newCachedInfo
+                } finally {
+                    isLoadingAppInfo = false
                 }
-            } catch (_: Exception) {
-                appName = packageName
-                packageInfo = null
             }
         }
     }
@@ -703,20 +785,22 @@ fun AppPathGroupCard(
                 // 应用图标
                 AppIcon(
                     packageName = packageName,
-                    packageInfo = packageInfo,
+                    packageInfo = cachedAppInfo?.packageInfo,
                     modifier = Modifier.size(32.dp)
                 )
 
                 Spacer(modifier = Modifier.width(12.dp))
 
                 Column(modifier = Modifier.weight(1f)) {
+                    val displayName = cachedAppInfo?.appName?.ifEmpty { packageName } ?: packageName
                     Text(
-                        text = appName.ifEmpty { packageName },
+                        text = displayName,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Medium,
                         color = MaterialTheme.colorScheme.onSurface
                     )
-                    if (appName.isNotEmpty() && appName != packageName) {
+                    if (!isLoadingAppInfo && cachedAppInfo?.appName?.isNotEmpty() == true &&
+                        cachedAppInfo?.appName != packageName) {
                         Text(
                             text = packageName,
                             style = MaterialTheme.typography.bodySmall,
@@ -753,7 +837,7 @@ fun AppPathGroupCard(
                 }
             }
 
-           // 显示所有路径
+            // 显示所有路径
             Spacer(modifier = Modifier.height(8.dp))
 
             paths.forEach { path ->

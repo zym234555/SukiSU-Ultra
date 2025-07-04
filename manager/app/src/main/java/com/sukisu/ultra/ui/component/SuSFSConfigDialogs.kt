@@ -2,7 +2,6 @@ package com.sukisu.ultra.ui.component
 
 import android.annotation.SuppressLint
 import android.content.pm.PackageInfo
-import android.graphics.drawable.Drawable
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
@@ -55,6 +54,7 @@ import coil.request.ImageRequest
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.sukisu.ultra.R
 import com.sukisu.ultra.ui.util.SuSFSManager
+import com.sukisu.ultra.ui.screen.extensions.AppInfoCache
 
 /**
  * 添加路径对话框
@@ -391,15 +391,28 @@ fun AppIcon(
             modifier = modifier.clip(RoundedCornerShape(8.dp))
         )
     } else {
-        var appIcon by remember(packageName) { mutableStateOf<Drawable?>(null) }
+        var appIcon by remember(packageName) {
+            mutableStateOf(
+                AppInfoCache.getAppInfo(packageName)?.drawable
+            )
+        }
 
         LaunchedEffect(packageName) {
-            try {
-                val packageManager = context.packageManager
-                val applicationInfo = packageManager.getApplicationInfo(packageName, 0)
-                appIcon = packageManager.getApplicationIcon(applicationInfo)
-            } catch (_: Exception) {
-                Log.d("获取应用图标失败", packageName)
+            if (appIcon == null && !AppInfoCache.hasCache(packageName)) {
+                try {
+                    val packageManager = context.packageManager
+                    val applicationInfo = packageManager.getApplicationInfo(packageName, 0)
+                    val drawable = packageManager.getApplicationIcon(applicationInfo)
+                    appIcon = drawable
+                    val cachedInfo = AppInfoCache.CachedAppInfo(
+                        appName = packageName,
+                        packageInfo = null,
+                        drawable = drawable
+                    )
+                    AppInfoCache.putAppInfo(packageName, cachedInfo)
+                } catch (_: Exception) {
+                    Log.d("获取应用图标失败", packageName)
+                }
             }
         }
         Image(

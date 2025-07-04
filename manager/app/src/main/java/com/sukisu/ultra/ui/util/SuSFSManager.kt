@@ -5,7 +5,6 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageInfo
-import android.content.pm.PackageManager
 import android.util.Log
 import android.widget.Toast
 import com.dergoogler.mmrl.platform.Platform.Companion.context
@@ -21,6 +20,8 @@ import java.io.FileOutputStream
 import java.io.IOException
 import androidx.core.content.edit
 import com.sukisu.ultra.ui.viewmodel.SuperUserViewModel
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import org.json.JSONObject
 import java.text.SimpleDateFormat
 import java.util.*
@@ -57,6 +58,7 @@ object SuSFSManager {
     private const val MODULE_PATH = "/data/adb/modules/$MODULE_ID"
     private const val MIN_VERSION_FOR_HIDE_MOUNT = "1.5.8"
     private const val BACKUP_FILE_EXTENSION = ".susfs_backup"
+    private const val MEDIA_DATA_PATH = "/data/media/0/Android/data"
 
     data class SlotInfo(val slotName: String, val uname: String, val buildTime: String)
     data class CommandResult(val isSuccess: Boolean, val output: String, val errorOutput: String = "")
@@ -370,7 +372,6 @@ object SuSFSManager {
     @SuppressLint("QueryPermissionsNeeded")
     suspend fun getInstalledApps(): List<AppInfo> = withContext(Dispatchers.IO) {
         try {
-            val pm = context.packageManager
             val allApps = mutableMapOf<String, AppInfo>()
 
             // 从SuperUser中获取应用
@@ -391,54 +392,30 @@ object SuSFSManager {
                 }
             }
 
-            try {
-                // 尝试从PackageManager获取所有应用
-                val installedPackages = pm.getInstalledPackages(PackageManager.GET_META_DATA)
-                installedPackages.forEach { packageInfo ->
-                    val packageName = packageInfo.packageName
-                    val isSystemApp = packageInfo.applicationInfo?.let {
-                        (it.flags and ApplicationInfo.FLAG_SYSTEM) != 0
-                    } ?: false
-                    // 只处理非系统应用且不在SuperUser列表中的应用
-                    if (!isSystemApp && !allApps.containsKey(packageName)) {
-                        try {
-                            val appName = packageInfo.applicationInfo?.loadLabel(pm)?.toString() ?: packageName
-                            allApps[packageName] = AppInfo(
-                                packageName = packageName,
-                                appName = appName,
-                                packageInfo = packageInfo,
-                                isSystemApp = false
-                            )
-                        } catch (_: Exception) {
-                            allApps[packageName] = AppInfo(
-                                packageName = packageName,
-                                appName = packageName,
-                                packageInfo = packageInfo,
-                                isSystemApp = false
-                            )
-                        }
-                    }
-                }
-            } catch (e: Exception) {
-                Log.e("SuSFSManager", "Error getting installed packages", e)
-            }
-            // 添加可能遗漏的当前应用
-            val currentPackageName = context.packageName
-            if (!allApps.containsKey(currentPackageName)) {
-                try {
-                    val currentAppInfo = pm.getPackageInfo(currentPackageName, 0)
-                    val currentAppName = currentAppInfo.applicationInfo?.loadLabel(pm)?.toString() ?: "com.sukisu.ultra"
-                    allApps[currentPackageName] = AppInfo(
-                        packageName = currentPackageName,
-                        appName = currentAppName,
-                        packageInfo = currentAppInfo,
-                        isSystemApp = false
-                    )
-                } catch (_: Exception) {
-                }
-            }
+            // 检查每个应用的数据目录是否存在
+            val filteredApps = allApps.values.map { appInfo ->
+                async(Dispatchers.IO) {
+                    val dataPath = "$MEDIA_DATA_PATH/${appInfo.packageName}"
+                    val exists = try {
+                        val shell = getRootShell()
+                        val outputList = mutableListOf<String>()
+                        val errorList = mutableListOf<String>()
 
-            allApps.values.sortedBy { it.appName }
+                        val result = shell.newJob()
+                            .add("[ -d \"$dataPath\" ] && echo 'exists' || echo 'not_exists'")
+                            .to(outputList, errorList)
+                            .exec()
+
+                        result.isSuccess && outputList.isNotEmpty() && outputList[0].trim() == "exists"
+                    } catch (e: Exception) {
+                        Log.w("SuSFSManager", "Failed to check directory for ${appInfo.packageName}: ${e.message}")
+                        false
+                    }
+                    if (exists) appInfo else null
+                }
+            }.awaitAll().filterNotNull()
+
+            filteredApps.sortedBy { it.appName }
         } catch (e: Exception) {
             e.printStackTrace()
             emptyList()
@@ -454,7 +431,7 @@ object SuSFSManager {
         getSdcardPath(context)
 
         val path1 = "$androidDataPath/$packageName"
-        val path2 = "/data/media/0/Android/data/$packageName"
+        val path2 = "$MEDIA_DATA_PATH/$packageName"
 
         var successCount = 0
         var totalCount = 0
@@ -623,13 +600,9 @@ object SuSFSManager {
         }
     }
 
-    //获取备份文件路径
-    fun getRecommendedBackupPath(context: Context): String {
-        val documentsDir = File(context.getExternalFilesDir(null), "SuSFS_Backups")
-        if (!documentsDir.exists()) {
-            documentsDir.mkdirs()
-        }
-        return File(documentsDir, generateBackupFileName()).absolutePath
+    // 获取备份文件路径
+    fun getDefaultBackupFileName(): String {
+        return generateBackupFileName()
     }
 
     // 槽位信息获取

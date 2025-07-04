@@ -84,6 +84,7 @@ import com.sukisu.ultra.ui.util.SuSFSManager
 import com.sukisu.ultra.ui.util.SuSFSManager.isSusVersion_1_5_8
 import com.sukisu.ultra.ui.util.isAbDevice
 import kotlinx.coroutines.launch
+import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -205,21 +206,22 @@ fun SuSFSConfigScreen(
         contract = ActivityResultContracts.CreateDocument("application/json")
     ) { uri ->
         uri?.let { fileUri ->
-            val fileName = SuSFSManager.getRecommendedBackupPath(context)
+            val fileName = SuSFSManager.getDefaultBackupFileName()
+            val tempFile = File(context.cacheDir, fileName)
             coroutineScope.launch {
                 isLoading = true
-                val success = SuSFSManager.createBackup(context, fileName)
+                val success = SuSFSManager.createBackup(context, tempFile.absolutePath)
                 if (success) {
-                    // 复制到用户选择的位置
                     try {
                         context.contentResolver.openOutputStream(fileUri)?.use { outputStream ->
-                            java.io.File(fileName).inputStream().use { inputStream ->
+                            tempFile.inputStream().use { inputStream ->
                                 inputStream.copyTo(outputStream)
                             }
                         }
                     } catch (e: Exception) {
                         e.printStackTrace()
                     }
+                    tempFile.delete()
                 }
                 isLoading = false
                 showBackupDialog = false
@@ -233,8 +235,7 @@ fun SuSFSConfigScreen(
         uri?.let { fileUri ->
             coroutineScope.launch {
                 try {
-                    // 复制到临时文件
-                    val tempFile = java.io.File(context.cacheDir, "temp_restore.susfs_backup")
+                    val tempFile = File(context.cacheDir, "temp_restore.susfs_backup")
                     context.contentResolver.openInputStream(fileUri)?.use { inputStream ->
                         tempFile.outputStream().use { outputStream ->
                             inputStream.copyTo(outputStream)
@@ -247,8 +248,6 @@ fun SuSFSConfigScreen(
                         selectedBackupFile = tempFile.absolutePath
                         backupInfo = backup
                         showRestoreConfirmDialog = true
-                    } else {
-                        // 显示错误消息
                     }
                     tempFile.deleteOnExit()
                 } catch (e: Exception) {
@@ -1173,7 +1172,8 @@ fun SuSFSConfigScreen(
                             onEditPath = { path ->
                                 editingPath = path
                                 showAddPathDialog = true
-                            }
+                            },
+                            forceRefreshApps = selectedTab == SuSFSTab.SUS_PATHS
                         )
                     }
                     SuSFSTab.SUS_MOUNTS -> {

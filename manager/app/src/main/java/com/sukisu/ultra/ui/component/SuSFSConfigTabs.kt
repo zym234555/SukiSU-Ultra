@@ -32,6 +32,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -41,6 +42,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sukisu.ultra.R
 import com.sukisu.ultra.ui.screen.extensions.AddKstatPathItemCard
+import com.sukisu.ultra.ui.screen.extensions.AppInfoCache
 import com.sukisu.ultra.ui.screen.extensions.AppPathGroupCard
 import com.sukisu.ultra.ui.screen.extensions.EmptyStateCard
 import com.sukisu.ultra.ui.screen.extensions.FeatureStatusCard
@@ -50,6 +52,7 @@ import com.sukisu.ultra.ui.screen.extensions.SectionHeader
 import com.sukisu.ultra.ui.screen.extensions.SusMountHidingControlCard
 import com.sukisu.ultra.ui.util.SuSFSManager
 import com.sukisu.ultra.ui.util.SuSFSManager.isSusVersion_1_5_8
+import com.sukisu.ultra.ui.viewmodel.SuperUserViewModel
 
 /**
  * SUS路径内容组件
@@ -61,8 +64,24 @@ fun SusPathsContent(
     onAddPath: () -> Unit,
     onAddAppPath: () -> Unit,
     onRemovePath: (String) -> Unit,
-    onEditPath: ((String) -> Unit)? = null
+    onEditPath: ((String) -> Unit)? = null,
+    forceRefreshApps: Boolean = false
 ) {
+    val superUserApps = SuperUserViewModel.apps
+    val superUserIsRefreshing = remember { SuperUserViewModel().isRefreshing }
+
+    LaunchedEffect(superUserIsRefreshing, superUserApps.size) {
+        if (!superUserIsRefreshing && superUserApps.isNotEmpty()) {
+            AppInfoCache.clearCache()
+        }
+    }
+
+    LaunchedEffect(forceRefreshApps) {
+        if (forceRefreshApps) {
+            AppInfoCache.clearCache()
+        }
+    }
+
     val (appPathGroups, otherPaths) = remember(susPaths) {
         val appPathRegex = Regex(".*/Android/data/([^/]+)/?.*")
         val appPathMap = mutableMapOf<String, MutableList<String>>()
