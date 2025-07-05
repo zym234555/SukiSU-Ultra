@@ -580,4 +580,10 @@
     <string name="invalid_sign_config">Invalid signature configuration</string>
     <string name="dynamic_sign_disabled_success">Dynamic signature disabled</string>
     <string name="dynamic_sign_clear_failed">Failed to clear dynamic signature</string>
+    <string name="dynamic_signature">Dynamic</string>
+    <string name="signature_index">Signature %1$d</string>
+    <string name="unknown_signature">Unknown</string>
+    <string name="multi_manager_list">Active Manager</string>
+    <string name="no_active_manager">No active manager</string>
+    <string name="default_signature">SukiSU</string>
 </resources>

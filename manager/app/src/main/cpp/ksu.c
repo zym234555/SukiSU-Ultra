@@ -37,6 +37,7 @@
 #define CMD_HOOK_TYPE 101
 #define CMD_GET_SUSFS_FEATURE_STATUS 102
 #define CMD_DYNAMIC_SIGN 103
+#define CMD_GET_MANAGERS 104
 
 #define DYNAMIC_SIGN_OP_SET 0
 #define DYNAMIC_SIGN_OP_GET 1
@@ -173,4 +174,12 @@ bool clear_dynamic_sign() {
     struct dynamic_sign_user_config config;
     config.operation = DYNAMIC_SIGN_OP_CLEAR;
     return ksuctl(CMD_DYNAMIC_SIGN, &config, NULL);
+}
+
+bool get_managers_list(struct manager_list_info* info) {
+    if (info == NULL) {
+        return false;
+    }
+
+    return ksuctl(CMD_GET_MANAGERS, info, NULL);
 }

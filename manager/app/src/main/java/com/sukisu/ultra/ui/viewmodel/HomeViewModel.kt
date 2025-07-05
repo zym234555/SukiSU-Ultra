@@ -60,7 +60,9 @@ class HomeViewModel : ViewModel() {
         val susSUMode: String = "",
         val superuserCount: Int = 0,
         val moduleCount: Int = 0,
-        val kpmModuleCount: Int = 0
+        val kpmModuleCount: Int = 0,
+        val managersList: Natives.ManagersList? = null,
+        val isDynamicSignEnabled: Boolean = false
     )
 
     private val gson = Gson()
@@ -242,6 +244,26 @@ class HomeViewModel : ViewModel() {
                     }
                 }
 
+                // 获取动态签名状态和管理器列表
+                val dynamicSignConfig = try {
+                    Natives.getDynamicSign()
+                } catch (e: Exception) {
+                    Log.w(TAG, "Failed to get dynamic sign config", e)
+                    null
+                }
+
+                val isDynamicSignEnabled = dynamicSignConfig?.isValid() == true
+                val managersList = if (isDynamicSignEnabled) {
+                    try {
+                        Natives.getManagersList()
+                    } catch (e: Exception) {
+                        Log.w(TAG, "Failed to get managers list", e)
+                        null
+                    }
+                } else {
+                    null
+                }
+
                 systemInfo = SystemInfo(
                     kernelRelease = uname.release,
                     androidVersion = Build.VERSION.RELEASE,
@@ -256,7 +278,9 @@ class HomeViewModel : ViewModel() {
                     susSUMode = susSUMode,
                     superuserCount = getSuperuserCount(),
                     moduleCount = getModuleCount(),
-                    kpmModuleCount = getKpmModuleCount()
+                    kpmModuleCount = getKpmModuleCount(),
+                    managersList = managersList,
+                    isDynamicSignEnabled = isDynamicSignEnabled
                 )
             } catch (e: Exception) {
                 Log.e(TAG, "Error fetching system info", e)

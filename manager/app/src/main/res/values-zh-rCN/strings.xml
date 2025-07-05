@@ -578,4 +578,9 @@
     <string name="invalid_sign_config">无效的签名配置</string>
     <string name="dynamic_sign_disabled_success">动态签名已禁用</string>
     <string name="dynamic_sign_clear_failed">清除动态签名错误</string>
+    <string name="dynamic_signature">动态</string>
+    <string name="signature_index">签名%1$d</string>
+    <string name="unknown_signature">未知</string>
+    <string name="multi_manager_list">活跃管理器</string>
+    <string name="no_active_manager">无活跃管理器</string>
 </resources>

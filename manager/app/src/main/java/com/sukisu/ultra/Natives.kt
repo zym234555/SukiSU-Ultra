@@ -118,6 +118,12 @@ object Natives {
      */
     external fun clearDynamicSign(): Boolean
 
+    /**
+     * Get active managers list when dynamic sign is enabled
+     * @return ManagersList object containing active managers, or null if failed or not enabled
+     */
+    external fun getManagersList(): ManagersList?
+
     private const val NON_ROOT_DEFAULT_PROFILE_KEY = "$"
     private const val NOBODY_UID = 9999
 
@@ -177,7 +183,6 @@ object Natives {
         val size: Int = 0,
         val hash: String = ""
     ) : Parcelable {
-        constructor() : this(0, "")
 
         fun isValid(): Boolean {
             return size > 0 && hash.length == 64 && hash.all {
@@ -185,6 +190,22 @@ object Natives {
             }
         }
     }
+
+    @Immutable
+    @Parcelize
+    @Keep
+    data class ManagersList(
+        val count: Int = 0,
+        val managers: List<ManagerInfo> = emptyList()
+    ) : Parcelable
+
+    @Immutable
+    @Parcelize
+    @Keep
+    data class ManagerInfo(
+        val uid: Int = 0,
+        val signatureIndex: Int = 0
+    ) : Parcelable
 
     @Immutable
     @Parcelize

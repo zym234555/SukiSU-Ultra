@@ -7,6 +7,7 @@
 
 #include "prelude.h"
 #include <linux/capability.h>
+#include <sys/types.h>
 
 bool become_manager(const char *);
 
@@ -105,6 +106,14 @@ struct app_profile {
     };
 };
 
+struct manager_list_info {
+    int count;
+    struct {
+        uid_t uid;
+        int signature_index;
+    } managers[2];
+};
+
 bool set_app_profile(const struct app_profile* profile);
 
 bool get_app_profile(char* key, struct app_profile* profile);
@@ -124,5 +133,7 @@ bool set_dynamic_sign(unsigned int size, const char* hash);
 bool get_dynamic_sign(struct dynamic_sign_user_config* config);
 
 bool clear_dynamic_sign();
+
+bool get_managers_list(struct manager_list_info* info);
 
 #endif //KERNELSU_KSU_H
