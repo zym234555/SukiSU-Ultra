@@ -734,9 +734,9 @@ private fun InfoCard(
                                 else -> if (signatureIndex >= 0) "(${stringResource(R.string.signature_index, signatureIndex)})" else "(${stringResource(R.string.unknown_signature)})"
                             }
                         )
-                        append("; ")
+                        append(" | ")
                     }
-                }.trimEnd(' ', ';')
+                }.trimEnd(' ', '|')
 
                 InfoCardItem(
                     stringResource(R.string.multi_manager_list),
