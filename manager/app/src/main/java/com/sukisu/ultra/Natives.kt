@@ -29,6 +29,8 @@ object Natives {
 
     const val MINIMAL_SUPPORTED_KPM = 12800
 
+    const val MINIMAL_SUPPORTED_DYNAMIC_SIGN = 13215
+
     const val ROOT_UID = 0
     const val ROOT_GID = 0
 

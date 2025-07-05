@@ -122,11 +122,11 @@ fun SettingScreen(navigator: DestinationsNavigator) {
             }
 
             // 配置卡片
-            SettingsGroupCard(
-                title = stringResource(R.string.configuration),
-                content = {
-                    // 配置文件模板入口
-                    KsuIsValid {
+            KsuIsValid {
+                SettingsGroupCard(
+                    title = stringResource(R.string.configuration),
+                    content = {
+                        // 配置文件模板入口
                         SettingItem(
                             icon = Icons.Filled.Fence,
                             title = stringResource(R.string.settings_profile_template),
@@ -135,14 +135,12 @@ fun SettingScreen(navigator: DestinationsNavigator) {
                                 navigator.navigate(AppProfileTemplateScreenDestination)
                             }
                         )
-                    }
+                        
+                        // 卸载模块开关
+                        var umountChecked by rememberSaveable {
+                            mutableStateOf(Natives.isDefaultUmountModules())
+                        }
 
-                    // 卸载模块开关
-                    var umountChecked by rememberSaveable {
-                        mutableStateOf(Natives.isDefaultUmountModules())
-                    }
-
-                    KsuIsValid {
                         SwitchItem(
                             icon = Icons.Filled.FolderDelete,
                             title = stringResource(R.string.settings_umount_modules_default),
@@ -154,10 +152,8 @@ fun SettingScreen(navigator: DestinationsNavigator) {
                                 }
                             }
                         )
-                    }
 
-                    // SU 禁用开关
-                    KsuIsValid {
+                        // SU 禁用开关
                         if (Natives.version >= Natives.MINIMAL_SUPPORTED_SU_COMPAT) {
                             var isSuDisabled by rememberSaveable {
                                 mutableStateOf(!Natives.isSuEnabled())
@@ -176,8 +172,8 @@ fun SettingScreen(navigator: DestinationsNavigator) {
                             )
                         }
                     }
-                }
-            )
+                )
+            }
 
             // 应用设置卡片
             SettingsGroupCard(

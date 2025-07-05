@@ -73,11 +73,13 @@ import kotlin.math.roundToInt
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.NavigateNext
 import androidx.compose.material3.Card
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -86,6 +88,7 @@ import com.sukisu.ultra.ui.theme.getCardElevation
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.sp
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import com.sukisu.ultra.ksuApp
@@ -671,6 +674,17 @@ fun MoreSettingsScreen(
         }
     }
 
+    fun parseDynamicSignSize(input: String): Int? {
+        return try {
+            when {
+                input.startsWith("0x", true) -> input.substring(2).toInt(16)
+                else -> input.toInt()
+            }
+        } catch (_: NumberFormatException) {
+            null
+        }
+    }
+
     // 动态签名配置对话框
     if (showDynamicSignDialog) {
         AlertDialog(
@@ -699,25 +713,34 @@ fun MoreSettingsScreen(
                     Spacer(modifier = Modifier.height(16.dp))
 
                     // 签名大小输入
-                    androidx.compose.material3.OutlinedTextField(
+                    OutlinedTextField(
                         value = dynamicSignSize,
-                        onValueChange = { dynamicSignSize = it },
+                        onValueChange = { input ->
+                            val isValid = when {
+                                input.isEmpty() -> true
+                                input.matches(Regex("^\\d+$")) -> true
+                                input.matches(Regex("^0[xX][0-9a-fA-F]*$")) -> true
+                                else -> false
+                            }
+                            if (isValid) {
+                                dynamicSignSize = input
+                            }
+                        },
                         label = { Text(stringResource(R.string.signature_size)) },
                         enabled = isDynamicSignEnabled,
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
-                        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
-                            keyboardType = androidx.compose.ui.text.input.KeyboardType.Number
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Text
                         )
                     )
 
                     Spacer(modifier = Modifier.height(12.dp))
 
                     // 签名哈希输入
-                    androidx.compose.material3.OutlinedTextField(
+                    OutlinedTextField(
                         value = dynamicSignHash,
                         onValueChange = { hash ->
-                            // 只允许十六进制字符
                             if (hash.all { it in '0'..'9' || it in 'a'..'f' || it in 'A'..'F' }) {
                                 dynamicSignHash = hash
                             }
@@ -737,7 +760,7 @@ fun MoreSettingsScreen(
                 Button(
                     onClick = {
                         if (isDynamicSignEnabled) {
-                            val size = dynamicSignSize.toIntOrNull()
+                            val size = parseDynamicSignSize(dynamicSignSize)
                             if (size != null && size > 0 && dynamicSignHash.length == 64) {
                                 val success = Natives.setDynamicSign(size, dynamicSignHash)
                                 if (success) {
@@ -785,7 +808,7 @@ fun MoreSettingsScreen(
                         showDynamicSignDialog = false
                     },
                     enabled = if (isDynamicSignEnabled) {
-                        dynamicSignSize.toIntOrNull()?.let { it > 0 } == true &&
+                        parseDynamicSignSize(dynamicSignSize)?.let { it > 0 } == true &&
                                 dynamicSignHash.length == 64
                     } else true
                 ) {
@@ -1375,16 +1398,21 @@ fun MoreSettingsScreen(
                         )
                     }
                     // 动态签名设置
-                    SettingItem(
-                        icon = Icons.Filled.Security,
-                        title = stringResource(R.string.dynamic_sign_title),
-                        subtitle = if (isDynamicSignEnabled) {
-                            stringResource(R.string.dynamic_sign_enabled_summary, dynamicSignSize)
-                        } else {
-                            stringResource(R.string.dynamic_sign_disabled)
-                        },
-                        onClick = { showDynamicSignDialog = true }
-                    )
+                    if (Natives.version >= Natives.MINIMAL_SUPPORTED_DYNAMIC_SIGN) {
+                        SettingItem(
+                            icon = Icons.Filled.Security,
+                            title = stringResource(R.string.dynamic_sign_title),
+                            subtitle = if (isDynamicSignEnabled) {
+                                stringResource(
+                                    R.string.dynamic_sign_enabled_summary,
+                                    dynamicSignSize
+                                )
+                            } else {
+                                stringResource(R.string.dynamic_sign_disabled)
+                            },
+                            onClick = { showDynamicSignDialog = true }
+                        )
+                    }
                 }
             }
         }
