@@ -36,6 +36,11 @@
 #define CMD_ENABLE_KPM 100
 #define CMD_HOOK_TYPE 101
 #define CMD_GET_SUSFS_FEATURE_STATUS 102
+#define CMD_DYNAMIC_SIGN 103
+
+#define DYNAMIC_SIGN_OP_SET 0
+#define DYNAMIC_SIGN_OP_GET 1
+#define DYNAMIC_SIGN_OP_CLEAR 2
 
 static bool ksuctl(int cmd, void* arg1, void* arg2) {
     int32_t result = 0;
@@ -139,4 +144,33 @@ bool get_susfs_feature_status(struct susfs_feature_status* status) {
     }
 
     return ksuctl(CMD_GET_SUSFS_FEATURE_STATUS, status, NULL);
+}
+
+bool set_dynamic_sign(unsigned int size, const char* hash) {
+    if (hash == NULL) {
+        return false;
+    }
+
+    struct dynamic_sign_user_config config;
+    config.operation = DYNAMIC_SIGN_OP_SET;
+    config.size = size;
+    strncpy(config.hash, hash, sizeof(config.hash) - 1);
+    config.hash[sizeof(config.hash) - 1] = '\0';
+
+    return ksuctl(CMD_DYNAMIC_SIGN, &config, NULL);
+}
+
+bool get_dynamic_sign(struct dynamic_sign_user_config* config) {
+    if (config == NULL) {
+        return false;
+    }
+
+    config->operation = DYNAMIC_SIGN_OP_GET;
+    return ksuctl(CMD_DYNAMIC_SIGN, config, NULL);
+}
+
+bool clear_dynamic_sign() {
+    struct dynamic_sign_user_config config;
+    config.operation = DYNAMIC_SIGN_OP_CLEAR;
+    return ksuctl(CMD_DYNAMIC_SIGN, &config, NULL);
 }

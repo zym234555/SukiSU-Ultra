@@ -352,3 +352,46 @@ NativeBridgeNP(getFullVersion, jstring) {
     get_full_version((char *) &buff);
     return GetEnvironment()->NewStringUTF(env, buff);
 }
+
+NativeBridge(setDynamicSign, jboolean, jint size, jstring hash) {
+    if (!hash) {
+        LogDebug("setDynamicSign: hash is null");
+        return false;
+    }
+
+    const char* chash = GetEnvironment()->GetStringUTFChars(env, hash, nullptr);
+    bool result = set_dynamic_sign((unsigned int)size, chash);
+    GetEnvironment()->ReleaseStringUTFChars(env, hash, chash);
+
+    LogDebug("setDynamicSign: size=0x%x, result=%d", size, result);
+    return result;
+}
+
+NativeBridgeNP(getDynamicSign, jobject) {
+    struct dynamic_sign_user_config config;
+    bool result = get_dynamic_sign(&config);
+
+    if (!result) {
+        LogDebug("getDynamicSign: failed to get dynamic sign config");
+        return NULL;
+    }
+
+    jclass cls = GetEnvironment()->FindClass(env, "com/sukisu/ultra/Natives$DynamicSignConfig");
+    jmethodID constructor = GetEnvironment()->GetMethodID(env, cls, "<init>", "()V");
+    jobject obj = GetEnvironment()->NewObject(env, cls, constructor);
+
+    jfieldID sizeField = GetEnvironment()->GetFieldID(env, cls, "size", "I");
+    jfieldID hashField = GetEnvironment()->GetFieldID(env, cls, "hash", "Ljava/lang/String;");
+
+    GetEnvironment()->SetIntField(env, obj, sizeField, (jint)config.size);
+    GetEnvironment()->SetObjectField(env, obj, hashField, GetEnvironment()->NewStringUTF(env, config.hash));
+
+    LogDebug("getDynamicSign: size=0x%x, hash=%.16s...", config.size, config.hash);
+    return obj;
+}
+
+NativeBridgeNP(clearDynamicSign, jboolean) {
+    bool result = clear_dynamic_sign();
+    LogDebug("clearDynamicSign: result=%d", result);
+    return result;
+}

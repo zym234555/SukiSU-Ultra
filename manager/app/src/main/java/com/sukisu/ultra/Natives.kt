@@ -95,6 +95,27 @@ object Natives {
      */
     external fun getSusfsFeatureStatus(): SusfsFeatureStatus?
 
+    /**
+     * Set dynamic signature configuration
+     * @param size APK signature size
+     * @param hash APK signature hash (64 character hex string)
+     * @return true if successful, false otherwise
+     */
+    external fun setDynamicSign(size: Int, hash: String): Boolean
+
+
+    /**
+     * Get current dynamic signature configuration
+     * @return DynamicSignConfig object containing current configuration, or null if not set
+     */
+    external fun getDynamicSign(): DynamicSignConfig?
+
+    /**
+     * Clear dynamic signature configuration
+     * @return true if successful, false otherwise
+     */
+    external fun clearDynamicSign(): Boolean
+
     private const val NON_ROOT_DEFAULT_PROFILE_KEY = "$"
     private const val NOBODY_UID = 9999
 
@@ -147,6 +168,21 @@ object Natives {
         val statusSusSu: Boolean = false
     ) : Parcelable
 
+    @Immutable
+    @Parcelize
+    @Keep
+    data class DynamicSignConfig(
+        val size: Int = 0,
+        val hash: String = ""
+    ) : Parcelable {
+        constructor() : this(0, "")
+
+        fun isValid(): Boolean {
+            return size > 0 && hash.length == 64 && hash.all {
+                it in '0'..'9' || it in 'a'..'f' || it in 'A'..'F'
+            }
+        }
+    }
 
     @Immutable
     @Parcelize
