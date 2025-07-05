@@ -30,6 +30,7 @@
 #define CMD_HOOK_TYPE 101
 #define CMD_GET_SUSFS_FEATURE_STATUS 102
 #define CMD_DYNAMIC_SIGN 103
+#define CMD_GET_MANAGERS 104
 
 #define EVENT_POST_FS_DATA 1
 #define EVENT_BOOT_COMPLETED 2
@@ -55,6 +56,14 @@ struct dynamic_sign_user_config {
     unsigned int operation;
     unsigned int size;
     char hash[65];
+};
+
+struct manager_list_info {
+    int count;
+    struct {
+        uid_t uid;
+        int signature_index;
+    } managers[2];
 };
 
 // SUSFS Functional State Structures
