@@ -19,6 +19,13 @@ NativeBridgeNP(getVersion, jint) {
     return get_version();
 }
 
+// get VERSION FULL
+NativeBridgeNP(getFullVersion, jstring) {
+    char buff[255] = { 0 };
+    get_full_version((char *) &buff);
+    return GetEnvironment()->NewStringUTF(env, buff);
+}
+
 NativeBridgeNP(getAllowList, jintArray) {
     int uids[1024];
     int size = 0;
@@ -291,16 +298,19 @@ NativeBridge(setSuEnabled, jboolean, jboolean enabled) {
     return set_su_enabled(enabled);
 }
 
+// Check if KPM is enabled
 NativeBridgeNP(isKPMEnabled, jboolean) {
     return is_KPM_enable();
 }
 
+// Get HOOK type
 NativeBridgeNP(getHookType, jstring) {
     char hook_type[16];
     get_hook_type(hook_type, sizeof(hook_type));
     return GetEnvironment()->NewStringUTF(env, hook_type);
 }
 
+// SuSFS Related Function Status
 NativeBridgeNP(getSusfsFeatureStatus, jobject) {
     struct susfs_feature_status status;
     bool result = get_susfs_feature_status(&status);
@@ -313,46 +323,25 @@ NativeBridgeNP(getSusfsFeatureStatus, jobject) {
     jmethodID constructor = GetEnvironment()->GetMethodID(env, cls, "<init>", "()V");
     jobject obj = GetEnvironment()->NewObject(env, cls, constructor);
 
-    // 设置各个字段
-    jfieldID statusSusPathField = GetEnvironment()->GetFieldID(env, cls, "statusSusPath", "Z");
-    jfieldID statusSusMountField = GetEnvironment()->GetFieldID(env, cls, "statusSusMount", "Z");
-    jfieldID statusAutoDefaultMountField = GetEnvironment()->GetFieldID(env, cls, "statusAutoDefaultMount", "Z");
-    jfieldID statusAutoBindMountField = GetEnvironment()->GetFieldID(env, cls, "statusAutoBindMount", "Z");
-    jfieldID statusSusKstatField = GetEnvironment()->GetFieldID(env, cls, "statusSusKstat", "Z");
-    jfieldID statusTryUmountField = GetEnvironment()->GetFieldID(env, cls, "statusTryUmount", "Z");
-    jfieldID statusAutoTryUmountBindField = GetEnvironment()->GetFieldID(env, cls, "statusAutoTryUmountBind", "Z");
-    jfieldID statusSpoofUnameField = GetEnvironment()->GetFieldID(env, cls, "statusSpoofUname", "Z");
-    jfieldID statusEnableLogField = GetEnvironment()->GetFieldID(env, cls, "statusEnableLog", "Z");
-    jfieldID statusHideSymbolsField = GetEnvironment()->GetFieldID(env, cls, "statusHideSymbols", "Z");
-    jfieldID statusSpoofCmdlineField = GetEnvironment()->GetFieldID(env, cls, "statusSpoofCmdline", "Z");
-    jfieldID statusOpenRedirectField = GetEnvironment()->GetFieldID(env, cls, "statusOpenRedirect", "Z");
-    jfieldID statusMagicMountField = GetEnvironment()->GetFieldID(env, cls, "statusMagicMount", "Z");
-    jfieldID statusSusSuField = GetEnvironment()->GetFieldID(env, cls, "statusSusSu", "Z");
-
-    GetEnvironment()->SetBooleanField(env, obj, statusSusPathField, status.status_sus_path);
-    GetEnvironment()->SetBooleanField(env, obj, statusSusMountField, status.status_sus_mount);
-    GetEnvironment()->SetBooleanField(env, obj, statusAutoDefaultMountField, status.status_auto_default_mount);
-    GetEnvironment()->SetBooleanField(env, obj, statusAutoBindMountField, status.status_auto_bind_mount);
-    GetEnvironment()->SetBooleanField(env, obj, statusSusKstatField, status.status_sus_kstat);
-    GetEnvironment()->SetBooleanField(env, obj, statusTryUmountField, status.status_try_umount);
-    GetEnvironment()->SetBooleanField(env, obj, statusAutoTryUmountBindField, status.status_auto_try_umount_bind);
-    GetEnvironment()->SetBooleanField(env, obj, statusSpoofUnameField, status.status_spoof_uname);
-    GetEnvironment()->SetBooleanField(env, obj, statusEnableLogField, status.status_enable_log);
-    GetEnvironment()->SetBooleanField(env, obj, statusHideSymbolsField, status.status_hide_symbols);
-    GetEnvironment()->SetBooleanField(env, obj, statusSpoofCmdlineField, status.status_spoof_cmdline);
-    GetEnvironment()->SetBooleanField(env, obj, statusOpenRedirectField, status.status_open_redirect);
-    GetEnvironment()->SetBooleanField(env, obj, statusMagicMountField, status.status_magic_mount);
-    GetEnvironment()->SetBooleanField(env, obj, statusSusSuField, status.status_sus_su);
+    SET_BOOLEAN_FIELD(obj, cls, statusSusPath, status.status_sus_path);
+    SET_BOOLEAN_FIELD(obj, cls, statusSusMount, status.status_sus_mount);
+    SET_BOOLEAN_FIELD(obj, cls, statusAutoDefaultMount, status.status_auto_default_mount);
+    SET_BOOLEAN_FIELD(obj, cls, statusAutoBindMount, status.status_auto_bind_mount);
+    SET_BOOLEAN_FIELD(obj, cls, statusSusKstat, status.status_sus_kstat);
+    SET_BOOLEAN_FIELD(obj, cls, statusTryUmount, status.status_try_umount);
+    SET_BOOLEAN_FIELD(obj, cls, statusAutoTryUmountBind, status.status_auto_try_umount_bind);
+    SET_BOOLEAN_FIELD(obj, cls, statusSpoofUname, status.status_spoof_uname);
+    SET_BOOLEAN_FIELD(obj, cls, statusEnableLog, status.status_enable_log);
+    SET_BOOLEAN_FIELD(obj, cls, statusHideSymbols, status.status_hide_symbols);
+    SET_BOOLEAN_FIELD(obj, cls, statusSpoofCmdline, status.status_spoof_cmdline);
+    SET_BOOLEAN_FIELD(obj, cls, statusOpenRedirect, status.status_open_redirect);
+    SET_BOOLEAN_FIELD(obj, cls, statusMagicMount, status.status_magic_mount);
+    SET_BOOLEAN_FIELD(obj, cls, statusSusSu, status.status_sus_su);
 
     return obj;
 }
 
-NativeBridgeNP(getFullVersion, jstring) {
-    char buff[255] = { 0 };
-    get_full_version((char *) &buff);
-    return GetEnvironment()->NewStringUTF(env, buff);
-}
-
+// dynamic sign
 NativeBridge(setDynamicSign, jboolean, jint size, jstring hash) {
     if (!hash) {
         LogDebug("setDynamicSign: hash is null");
@@ -376,15 +365,11 @@ NativeBridgeNP(getDynamicSign, jobject) {
         return NULL;
     }
 
+    jobject obj = CREATE_JAVA_OBJECT("com/sukisu/ultra/Natives$DynamicSignConfig");
     jclass cls = GetEnvironment()->FindClass(env, "com/sukisu/ultra/Natives$DynamicSignConfig");
-    jmethodID constructor = GetEnvironment()->GetMethodID(env, cls, "<init>", "()V");
-    jobject obj = GetEnvironment()->NewObject(env, cls, constructor);
 
-    jfieldID sizeField = GetEnvironment()->GetFieldID(env, cls, "size", "I");
-    jfieldID hashField = GetEnvironment()->GetFieldID(env, cls, "hash", "Ljava/lang/String;");
-
-    GetEnvironment()->SetIntField(env, obj, sizeField, (jint)config.size);
-    GetEnvironment()->SetObjectField(env, obj, hashField, GetEnvironment()->NewStringUTF(env, config.hash));
+    SET_INT_FIELD(obj, cls, size, (jint)config.size);
+    SET_STRING_FIELD(obj, cls, hash, config.hash);
 
     LogDebug("getDynamicSign: size=0x%x, hash=%.16s...", config.size, config.hash);
     return obj;
@@ -396,41 +381,35 @@ NativeBridgeNP(clearDynamicSign, jboolean) {
     return result;
 }
 
+// Get a list of active managers
 NativeBridgeNP(getManagersList, jobject) {
-    struct manager_list_info info;
-    bool result = get_managers_list(&info);
+    struct manager_list_info managerListInfo;
+    bool result = get_managers_list(&managerListInfo);
 
     if (!result) {
-        LogDebug("getManagersList: failed to get managers list");
+        LogDebug("getManagersList: failed to get active managers list");
         return NULL;
     }
 
-    jclass cls = GetEnvironment()->FindClass(env, "com/sukisu/ultra/Natives$ManagersList");
-    jmethodID constructor = GetEnvironment()->GetMethodID(env, cls, "<init>", "()V");
-    jobject obj = GetEnvironment()->NewObject(env, cls, constructor);
+    jobject obj = CREATE_JAVA_OBJECT("com/sukisu/ultra/Natives$ManagersList");
+    jclass managerListCls = GetEnvironment()->FindClass(env, "com/sukisu/ultra/Natives$ManagersList");
 
-    jfieldID countField = GetEnvironment()->GetFieldID(env, cls, "count", "I");
-    jfieldID managersField = GetEnvironment()->GetFieldID(env, cls, "managers", "Ljava/util/List;");
+    SET_INT_FIELD(obj, managerListCls, count, (jint)managerListInfo.count);
 
-    GetEnvironment()->SetIntField(env, obj, countField, (jint)info.count);
+    jobject managersList = CREATE_ARRAYLIST();
 
-    jclass arrayListCls = GetEnvironment()->FindClass(env, "java/util/ArrayList");
-    jmethodID arrayListConstructor = GetEnvironment()->GetMethodID(env, arrayListCls, "<init>", "()V");
-    jobject managersList = GetEnvironment()->NewObject(env, arrayListCls, arrayListConstructor);
-    jmethodID addMethod = GetEnvironment()->GetMethodID(env, arrayListCls, "add", "(Ljava/lang/Object;)Z");
-
-    jclass managerInfoCls = GetEnvironment()->FindClass(env, "com/sukisu/ultra/Natives$ManagerInfo");
-    jmethodID managerInfoConstructor = GetEnvironment()->GetMethodID(env, managerInfoCls, "<init>", "(II)V");
-
-    for (int i = 0; i < info.count; i++) {
-        jobject managerInfo = GetEnvironment()->NewObject(env, managerInfoCls, managerInfoConstructor,
-        (jint)info.managers[i].uid,
-                (jint)info.managers[i].signature_index);
-        GetEnvironment()->CallBooleanMethod(env, managersList, addMethod, managerInfo);
+    for (int i = 0; i < managerListInfo.count; i++) {
+        jobject managerInfo = CREATE_JAVA_OBJECT_WITH_PARAMS(
+                "com/sukisu/ultra/Natives$ManagerInfo",
+                "(II)V",
+                (jint)managerListInfo.managers[i].uid,
+                (jint)managerListInfo.managers[i].signature_index
+        );
+        ADD_TO_LIST(managersList, managerInfo);
     }
 
-    GetEnvironment()->SetObjectField(env, obj, managersField, managersList);
+    SET_OBJECT_FIELD(obj, managerListCls, managers, managersList);
 
-    LogDebug("getManagersList: count=%d", info.count);
+    LogDebug("getManagersList: count=%d", managerListInfo.count);
     return obj;
 }
