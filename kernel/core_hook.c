@@ -424,6 +424,57 @@ int ksu_handle_prctl(int option, unsigned long arg2, unsigned long arg3,
 		return 0;
 	}
 
+	// Allow the root manager to configure dynamic signatures
+	if (arg2 == CMD_DYNAMIC_SIGN) {
+    	if (!from_root && !from_manager) {
+        	return 0;
+    	}
+    
+    	struct dynamic_sign_user_config config;
+    
+    	if (copy_from_user(&config, (void __user *)arg3, sizeof(config))) {
+        	pr_err("copy dynamic sign config failed\n");
+        	return 0;
+    	}
+    
+    	int ret = ksu_handle_dynamic_sign(&config);
+    	
+    	if (ret == 0 && config.operation == DYNAMIC_SIGN_OP_GET) {
+        	if (copy_to_user((void __user *)arg3, &config, sizeof(config))) {
+            	pr_err("copy dynamic sign config back failed\n");
+            	return 0;
+        	}
+    	}
+    	
+    	if (ret == 0) {
+        	if (copy_to_user(result, &reply_ok, sizeof(reply_ok))) {
+            	pr_err("dynamic_sign: prctl reply error\n");
+        	}
+    	}
+    	return 0;
+	}
+
+	// Allow root manager to get active managers
+	if (arg2 == CMD_GET_MANAGERS) {
+		if (!from_root && !from_manager) {
+			return 0;
+		}
+		
+		struct manager_list_info manager_info;
+		int ret = ksu_get_active_managers(&manager_info);
+		
+		if (ret == 0) {
+			if (copy_to_user((void __user *)arg3, &manager_info, sizeof(manager_info))) {
+				pr_err("copy manager list failed\n");
+				return 0;
+			}
+			if (copy_to_user(result, &reply_ok, sizeof(reply_ok))) {
+				pr_err("get_managers: prctl reply error\n");
+			}
+		}
+		return 0;
+	}
+
 	if (arg2 == CMD_REPORT_EVENT) {
 		if (!from_root) {
 			return 0;
@@ -438,6 +489,10 @@ int ksu_handle_prctl(int option, unsigned long arg2, unsigned long arg3,
 				post_fs_data_lock = true;
 				pr_info("post-fs-data triggered\n");
 				ksu_on_post_fs_data();
+				// Initializing Dynamic Signatures
+        		ksu_dynamic_sign_init();
+        		ksu_load_dynamic_sign();
+        		pr_info("Dynamic sign config loaded during post-fs-data\n");
 			}
 			break;
 		}
@@ -867,8 +922,11 @@ int ksu_handle_prctl(int option, unsigned long arg2, unsigned long arg3,
 		}
 		if (arg2 == CMD_SUSFS_SHOW_ENABLED_FEATURES) {
 			int error = 0;
-			u64 enabled_features = 0;
-			if (!ksu_access_ok((void __user*)arg3, sizeof(u64))) {
+			if (arg4 <= 0) {
+				pr_err("susfs: CMD_SUSFS_SHOW_ENABLED_FEATURES -> arg4 cannot be <= 0\n");
+				return 0;
+			}
+			if (!ksu_access_ok((void __user*)arg3, arg4)) {
 				pr_err("susfs: CMD_SUSFS_SHOW_ENABLED_FEATURES -> arg3 is not accessible\n");
 				return 0;
 			}
@@ -876,49 +934,7 @@ int ksu_handle_prctl(int option, unsigned long arg2, unsigned long arg3,
 				pr_err("susfs: CMD_SUSFS_SHOW_ENABLED_FEATURES -> arg5 is not accessible\n");
 				return 0;
 			}
-#ifdef CONFIG_KSU_SUSFS_SUS_PATH
-			enabled_features |= (1 << 0);
-#endif
-#ifdef CONFIG_KSU_SUSFS_SUS_MOUNT
-			enabled_features |= (1 << 1);
-#endif
-#ifdef CONFIG_KSU_SUSFS_AUTO_ADD_SUS_KSU_DEFAULT_MOUNT
-			enabled_features |= (1 << 2);
-#endif
-#ifdef CONFIG_KSU_SUSFS_AUTO_ADD_SUS_BIND_MOUNT
-			enabled_features |= (1 << 3);
-#endif
-#ifdef CONFIG_KSU_SUSFS_SUS_KSTAT
-			enabled_features |= (1 << 4);
-#endif
-#ifdef CONFIG_KSU_SUSFS_TRY_UMOUNT
-			enabled_features |= (1 << 5);
-#endif
-#ifdef CONFIG_KSU_SUSFS_AUTO_ADD_TRY_UMOUNT_FOR_BIND_MOUNT
-			enabled_features |= (1 << 6);
-#endif
-#ifdef CONFIG_KSU_SUSFS_SPOOF_UNAME
-			enabled_features |= (1 << 7);
-#endif
-#ifdef CONFIG_KSU_SUSFS_ENABLE_LOG
-			enabled_features |= (1 << 8);
-#endif
-#ifdef CONFIG_KSU_SUSFS_HIDE_KSU_SUSFS_SYMBOLS
-			enabled_features |= (1 << 9);
-#endif
-#ifdef CONFIG_KSU_SUSFS_SPOOF_CMDLINE_OR_BOOTCONFIG
-			enabled_features |= (1 << 10);
-#endif
-#ifdef CONFIG_KSU_SUSFS_OPEN_REDIRECT
-			enabled_features |= (1 << 11);
-#endif
-#ifdef CONFIG_KSU_SUSFS_HAS_MAGIC_MOUNT
-			enabled_features |= (1 << 12);
-#endif
-#ifdef CONFIG_KSU_SUSFS_SUS_SU
-			enabled_features |= (1 << 13);
-#endif
-			error = copy_to_user((void __user*)arg3, (void*)&enabled_features, sizeof(enabled_features));
+			error = susfs_get_enabled_features((char __user*)arg3, arg4);
 			pr_info("susfs: CMD_SUSFS_SHOW_ENABLED_FEATURES -> ret: %d\n", error);
 			if (copy_to_user((void __user*)arg5, &error, sizeof(error)))
 				pr_info("susfs: copy_to_user() failed\n");
@@ -1228,7 +1244,7 @@ int ksu_handle_setuid(struct cred *new, const struct cred *old)
 		//   the detection, really big helps here!
 		else if (new_uid.val >= 90000 && new_uid.val < 1000000 && susfs_is_umount_for_zygote_iso_service_enabled) {
 			task_lock(current);
-			current->susfs_task_state |= TASK_STRUCT_NON_ROOT_USER_APP_PROC;
+			susfs_set_current_non_root_user_app_proc();
 			task_unlock(current);
 			goto out_susfs_try_umount_all;
 		}
@@ -1247,7 +1263,7 @@ int ksu_handle_setuid(struct cred *new, const struct cred *old)
 #ifdef CONFIG_KSU_SUSFS
 	else {
 		task_lock(current);
-		current->susfs_task_state |= TASK_STRUCT_NON_ROOT_USER_APP_PROC;
+		susfs_set_current_non_root_user_app_proc();
 		task_unlock(current);
 	}
 #endif
