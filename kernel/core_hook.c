@@ -204,7 +204,6 @@ static void disable_seccomp(void)
 {
 	struct task_struct *tsk = get_current();
 
-	pr_info("%s++\n", __func__);
 	spin_lock_irq(&tsk->sighand->siglock);
 	assert_spin_locked(&tsk->sighand->siglock);
 
@@ -223,6 +222,7 @@ static void disable_seccomp(void)
 		goto out;
 	}
 
+	// TODO: Add kernel 6.11+ support
 	// 5.9+ have filter_count and use seccomp_filter_release
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 9, 0)
 	seccomp_filter_release(tsk);
@@ -235,7 +235,6 @@ static void disable_seccomp(void)
 
 out:
 	spin_unlock_irq(&tsk->sighand->siglock);
-	pr_info("%s--\n", __func__);
 }
 
 void ksu_escape_to_root(void)
@@ -285,7 +284,7 @@ void ksu_escape_to_root(void)
 
 	setup_groups(profile, newcreds);
 	commit_creds(newcreds);
-	
+
 	disable_seccomp();
 	ksu_setup_selinux(profile->selinux_domain);
 }
