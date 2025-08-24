@@ -29,7 +29,7 @@
 #define CMD_ENABLE_KPM 100
 #define CMD_HOOK_TYPE 101
 #define CMD_GET_SUSFS_FEATURE_STATUS 102
-#define CMD_DYNAMIC_SIGN 103
+#define CMD_DYNAMIC_MANAGER 103
 #define CMD_GET_MANAGERS 104
 
 #define EVENT_POST_FS_DATA 1
@@ -48,11 +48,11 @@
 #endif
 #define KSU_FULL_VERSION_STRING 255
 
-#define DYNAMIC_SIGN_OP_SET 0
-#define DYNAMIC_SIGN_OP_GET 1
-#define DYNAMIC_SIGN_OP_CLEAR 2
+#define DYNAMIC_MANAGER_OP_SET 0
+#define DYNAMIC_MANAGER_OP_GET 1
+#define DYNAMIC_MANAGER_OP_CLEAR 2
 
-struct dynamic_sign_user_config {
+struct dynamic_manager_user_config {
     unsigned int operation;
     unsigned int size;
     char hash[65];
