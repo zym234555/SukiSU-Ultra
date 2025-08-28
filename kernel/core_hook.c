@@ -135,10 +135,10 @@ static bool ksu_module_mounted = false;
 extern int handle_sepolicy(unsigned long arg3, void __user *arg4);
 
 bool ksu_su_compat_enabled = true;
-extern void ksu_sucompat_init();
-extern void ksu_sucompat_exit();
+extern void ksu_sucompat_init(void);
+extern void ksu_sucompat_exit(void);
 
-static inline bool is_allow_su()
+static inline bool is_allow_su(void)
 {
 	if (is_manager()) {
 		// we are manager, allow!
@@ -322,7 +322,8 @@ int ksu_handle_rename(struct dentry *old_dentry, struct dentry *new_dentry)
 }
 
 #ifdef CONFIG_EXT4_FS
-static void nuke_ext4_sysfs() {
+static void nuke_ext4_sysfs(void) 
+{
 	struct path path;
 	int err = kern_path("/data/adb/modules", 0, &path);
 	if (err) {
@@ -342,7 +343,9 @@ static void nuke_ext4_sysfs() {
  	path_put(&path);
 }
 #else
-static inline void nuke_ext4_sysfs() { }
+static inline void nuke_ext4_sysfs(void)
+{
+}
 #endif
 
 int ksu_handle_prctl(int option, unsigned long arg2, unsigned long arg3,

@@ -14,11 +14,11 @@ void setenforce(bool);
 
 bool getenforce(void);
 
-bool is_ksu_domain();
+bool is_ksu_domain(void);
 
 bool is_zygote(void *cred);
 
-void apply_kernelsu_rules();
+void apply_kernelsu_rules(void);
 
 #ifdef CONFIG_KSU_SUSFS_SUS_MOUNT
 bool susfs_is_sid_equal(void *sec, u32 sid2);
@@ -32,6 +32,6 @@ void susfs_set_init_sid(void);
 bool susfs_is_current_init_domain(void);
 #endif
 
-u32 ksu_get_devpts_sid();
+u32 ksu_get_devpts_sid(void);
 
 #endif

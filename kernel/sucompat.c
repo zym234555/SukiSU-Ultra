@@ -28,7 +28,7 @@
 #define SU_PATH "/system/bin/su"
 #define SH_PATH "/system/bin/sh"
 
-extern void escape_to_root();
+extern void escape_to_root(void);
 
 static const char sh_path[] = "/system/bin/sh";
 static const char ksud_path[] = KSUD_PATH;
@@ -372,7 +372,7 @@ static void destroy_kprobe(struct kprobe **kp_ptr)
 #endif
 
 // sucompat: permited process can execute 'su' to gain root access.
-void ksu_sucompat_init()
+void ksu_sucompat_init(void)
 {
 #ifdef CONFIG_KSU_KPROBES_HOOK
 	su_kps[0] = init_kprobe(SYS_EXECVE_SYMBOL, execve_handler_pre);
@@ -389,7 +389,7 @@ void ksu_sucompat_init()
 #endif
 }
 
-void ksu_sucompat_exit()
+void ksu_sucompat_exit(void)
 {
 #ifdef CONFIG_KSU_KPROBES_HOOK
 	int i;

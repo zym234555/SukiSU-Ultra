@@ -101,7 +101,7 @@ static inline u32 current_sid(void)
 }
 #endif
 
-bool is_ksu_domain()
+bool is_ksu_domain(void)
 {
 	char *domain;
 	u32 seclen;
@@ -222,7 +222,7 @@ void susfs_set_kernel_sid(void)
 
 #define DEVPTS_DOMAIN "u:object_r:ksu_file:s0"
 
-u32 ksu_get_devpts_sid()
+u32 ksu_get_devpts_sid(void)
 {
 	u32 devpts_sid = 0;
 	int err = security_secctx_to_secid(DEVPTS_DOMAIN, strlen(DEVPTS_DOMAIN),
